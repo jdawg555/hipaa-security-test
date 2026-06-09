@@ -196,6 +196,26 @@ def google_config_from_identity(config: dict[str, Any]) -> tuple[str, str] | Non
     return None
 
 
+def discover_from_config(config: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
+    """Discover SaaS apps from enabled identity providers. Returns (apps, source_label)."""
+    discovered: list[dict[str, Any]] = []
+    sources: list[str] = []
+
+    okta = okta_config_from_identity(config)
+    if okta:
+        domain, token = okta
+        discovered.extend(discover_okta_apps(domain, token))
+        sources.append("okta")
+
+    google = google_config_from_identity(config)
+    if google:
+        creds_path, admin = google
+        discovered.extend(discover_google_apps(creds_path, admin))
+        sources.append("google")
+
+    return discovered, "+".join(sources) if sources else ""
+
+
 def okta_config_from_identity(config: dict[str, Any]) -> tuple[str, str] | None:
     okta = config.get("identity", {}).get("okta", {})
     if not okta.get("enabled", False):

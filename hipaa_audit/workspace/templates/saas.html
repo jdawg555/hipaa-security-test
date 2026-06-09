@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>SaaS inventory</h1>
+<p class="subtitle">Discovered apps from Okta/Google — link to vendors for shadow IT control.</p>
+
+<p>
+  <form method="post" action="/saas/discover" style="display:inline">
+    <button class="btn" type="submit">Discover apps</button>
+  </form>
+  {% if discovered_at %}<span style="color:var(--muted);font-size:.85rem;margin-left:.75rem">Last discovery: {{ discovered_at }}</span>{% endif %}
+</p>
+
+{% if apps %}
+<table style="margin-top:1rem">
+  <thead><tr><th>Name</th><th>Provider</th><th>Vendor</th><th>PHI risk</th><th>Link</th></tr></thead>
+  <tbody>
+    {% for a in apps %}
+    <tr>
+      <td>{{ a.name }}</td>
+      <td>{{ a.provider }}</td>
+      <td>{{ a.vendor_id or '—' }}</td>
+      <td>{{ a.phi_risk }}</td>
+      <td>
+        <form method="post" action="/saas/link" class="inline-form">
+          <input type="hidden" name="app_id" value="{{ a.id }}">
+          <select name="vendor_id" class="input-sm" required>
+            <option value="">Vendor</option>
+            {% for v in vendors %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}
+          </select>
+          <select name="phi_risk" class="input-sm">
+            <option value="unknown">unknown</option>
+            <option value="none">none</option>
+            <option value="partial">partial</option>
+            <option value="full">full</option>
+          </select>
+          <button class="btn secondary btn-sm" type="submit">Link</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="margin-top:1rem">No apps inventoried. Enable Okta or Google, add credentials via <a href="/integrations">Integrations</a>, then discover.</p>
+{% endif %}
+{% endblock %}

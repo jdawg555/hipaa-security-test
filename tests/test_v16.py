@@ -8,7 +8,7 @@ from hipaa_audit.access_reviews import (
     record_decision,
     start_campaign,
 )
-from hipaa_audit.vendors import add_vendor, assess_vendors, review_vendor
+from hipaa_audit.vendors import add_vendor, delete_vendor, update_vendor, assess_vendors, review_vendor
 
 ROOT = Path(__file__).resolve().parent.parent
 

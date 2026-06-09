@@ -5,8 +5,9 @@ org_name: "Your Organization Name"
 
 # Workspace UI (hipaa-audit serve) — auto-scan interval in hours, 0 = manual only
 workspace:
-  schedule_hours: 0
+  schedule_hours: 24
   onboarded: false
+  secrets_path: compliance/.workspace-secrets.yaml
 
 # Frameworks to include in scans (HIPAA always on; SOC 2 optional)
 frameworks:
@@ -20,6 +21,11 @@ templates_dir: templates
 sra_path: templates/sra-template.md
 risk_register_path: templates/risk-register.md
 baa_register_path: templates/baa-register.md
+
+# Structured BAA tracking (workspace /baas page)
+baas:
+  register_path: compliance/baas.yaml
+  expiry_warning_days: 30
 
 # External scanner evidence (run scripts/collect-external-evidence.sh)
 integrations:

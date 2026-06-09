@@ -2,11 +2,18 @@
 {% block content %}
 <h1>Personnel</h1>
 <p class="subtitle">Workforce compliance — policy acknowledgments and HIPAA training (Vanta Personnel module).</p>
-<p>Enable the <strong>Personnel</strong> integration, then maintain:</p>
+
+<div class="grid">
+  <div class="card"><strong class="stat">{{ ack_count }}</strong>Policy acknowledgments</div>
+  <div class="card"><strong class="stat">{{ training_rows }}</strong>Training records</div>
+</div>
+
+<p style="margin-top:1rem">Maintain registers:</p>
 <ul>
   <li><code>compliance/acknowledgments.yaml</code> — who signed which policy</li>
   <li><code>compliance/training-log.csv</code> — training completion dates</li>
 </ul>
 <p><code>hipaa-audit import-training</code> creates the training CSV template.</p>
-<p><a class="btn secondary" href="/integrations">Enable personnel integration</a></p>
+<p><a class="btn secondary" href="/integrations">Enable personnel integration</a>
+   <a class="btn secondary" href="/policies" style="margin-left:.5rem">View policies</a></p>
 {% endblock %}

@@ -36,9 +36,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    surfaces: [workspace.integrations]
+    surfaces: [workspace.integrations, workspace.connect]
     gaps: [oauth_connect]
-    modules: [platform.adapters]
+    modules: [platform.adapters, workspace.secrets]
 
   - id: P-04
     name: Continuous monitoring
@@ -47,7 +47,7 @@ capabilities:
     vanta: full
     drata: full
     surfaces: [workspace.dashboard, workspace.monitoring]
-    gaps: [default_hourly_schedule, integration_health_dashboard]
+    gaps: [hourly_default_ci_polish]
     modules: [scan_runner]
 
   - id: P-05
@@ -70,10 +70,10 @@ capabilities:
   - id: P-07
     name: Posture score and history
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [workspace_charts]
+    surfaces: [workspace.dashboard]
     modules: [posture]
 
   - id: P-08
@@ -91,7 +91,8 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [in_app_editor, version_history]
+    gaps: [version_history]
+    surfaces: [workspace.policies]
     modules: [policies]
 
   - id: P-10
@@ -137,16 +138,17 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [azure_ad_apps, auto_link_vendors]
+    gaps: [azure_ad_apps]
+    surfaces: [workspace.saas]
     modules: [apps]
 
   - id: P-15
     name: Vendor risk register
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [workspace_vendor_crud]
+    surfaces: [workspace.vendors]
     modules: [vendors]
 
   - id: P-16
@@ -164,8 +166,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [structured_baa_register, expiry_alerts]
-    modules: [repo.baa_register]
+    gaps: [workspace_expiry_alerts]
+    surfaces: [workspace.baas]
+    modules: [baas]
 
   - id: P-18
     name: Trust center
@@ -207,8 +210,18 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [connection_wizard]
+    surfaces: [workspace.connect]
     modules: [identity]
+
+  - id: P-27
+    name: Slack notifications
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    surfaces: [workspace.settings]
+    gaps: [task_assignment_notify]
+    modules: [notify]
 
   - id: P-28
     name: Multi-user RBAC

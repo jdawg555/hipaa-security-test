@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Business Associate Agreements</h1>
+<p class="subtitle">Structured BAA register with expiry tracking — Vanta/Drata vendor compliance.</p>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">Add BAA</h2>
+  <form method="post" action="/baas/add" class="form-grid">
+    <label>Vendor
+      <select name="vendor_id" required onchange="this.form.vendor_name.value=this.options[this.selectedIndex].text">
+        <option value="">Select vendor</option>
+        {% for v in vendors %}
+        <option value="{{ v.id }}">{{ v.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Vendor name <input type="text" name="vendor_name" required></label>
+    <label>Effective date <input type="date" name="effective_date" required></label>
+    <label>Expiry date <input type="date" name="expiry_date" required></label>
+    <label>Document path <input type="text" name="document_path" placeholder="compliance/legal/vendor-baa.pdf"></label>
+    <label>Signed by <input type="text" name="signed_by" placeholder="Jane Doe, CISO"></label>
+    <label class="full">Notes <input type="text" name="notes"></label>
+    <div class="full"><button class="btn" type="submit">Add BAA</button></div>
+  </form>
+</div>
+
+{% if baas %}
+<table>
+  <thead><tr><th>ID</th><th>Vendor</th><th>Effective</th><th>Expires</th><th>Status</th><th>Document</th><th></th></tr></thead>
+  <tbody>
+    {% for b in baas %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.vendor_name }}</td>
+      <td>{{ b.effective_date }}</td>
+      <td>{{ b.expiry_date }}</td>
+      <td>{{ b.status }}</td>
+      <td style="font-size:.8rem">{{ b.document_path or '—' }}</td>
+      <td>
+        <form method="post" action="/baas/delete" style="display:inline">
+          <input type="hidden" name="baa_id" value="{{ b.id }}">
+          <button class="btn secondary btn-sm" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No BAAs yet. Add vendors first, then record agreements here.</p>
+{% endif %}
+<p style="margin-top:1rem"><a class="btn secondary" href="/vendors">Manage vendors</a></p>
+{% endblock %}

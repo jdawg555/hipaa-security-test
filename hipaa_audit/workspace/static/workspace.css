@@ -60,6 +60,12 @@ th { background: #f8fafc; }
   font-weight: 400; padding: .55rem .65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: .88rem;
 }
 .form-grid textarea { resize: vertical; min-height: 5rem; }
+.chart { display: flex; align-items: flex-end; gap: .5rem; height: 140px; padding-top: .5rem; }
+.chart-bar {
+  flex: 1; min-width: 28px; background: var(--accent); border-radius: 4px 4px 0 0;
+  position: relative; display: flex; align-items: flex-end; justify-content: center;
+}
+.chart-bar span { font-size: .65rem; color: #fff; padding-bottom: .25rem; font-weight: 600; }
 .toggle { position: relative; width: 44px; height: 24px; }
 .toggle input { opacity: 0; width: 0; height: 0; }
 .slider {

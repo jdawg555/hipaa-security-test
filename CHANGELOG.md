@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.3.0] — 2026-05-28
+
+### Phase 2 — Connection layer
+
+- **Connection wizard** — `/integrations/connect/{id}` saves credentials to gitignored `compliance/.workspace-secrets.yaml` and tests connection
+- **Integration health dashboard** — enabled integrations with connection status on the main dashboard
+- **Default 24h auto-scan** — onboarding sets `workspace.schedule_hours: 24`
+- **Slack settings in workspace** — enable alerts, webhook, score-drop threshold in Settings
+
+### Phase 3 — Workflow UI
+
+- **Vendor CRUD** — add, edit, delete vendors in the workspace
+- **BAA register** — structured `compliance/baas.yaml` with `/baas` page and expiry assessment
+- **SaaS inventory UI** — `/saas` discover from Okta/Google and link apps to vendors
+- **Policy web editor** — edit markdown policies in the browser
+- **Posture trend chart** — bar chart on dashboard from scan history
+- **Personnel summary** — ack and training counts on Personnel page
+
 ## [2.2.0] — 2026-05-28
 
 ### Added

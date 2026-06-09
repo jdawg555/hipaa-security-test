@@ -2,21 +2,74 @@
 {% block content %}
 <h1>Vendors</h1>
 <p class="subtitle">Third-party risk — BAAs, SIG-lite questionnaires, vendor portal.</p>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">Add vendor</h2>
+  <form method="post" action="/vendors/add" class="form-grid">
+    <label>Name <input type="text" name="name" required></label>
+    <label>PHI access
+      <select name="phi_access">
+        <option value="none">none</option>
+        <option value="partial">partial</option>
+        <option value="full">full</option>
+      </select>
+    </label>
+    <label>Risk tier
+      <select name="risk_tier">
+        <option value="low">low</option>
+        <option value="medium" selected>medium</option>
+        <option value="high">high</option>
+      </select>
+    </label>
+    <label style="align-self:end"><input type="checkbox" name="baa_executed"> BAA executed</label>
+    <div class="full"><button class="btn" type="submit">Add vendor</button></div>
+  </form>
+</div>
+
 {% if vendors %}
 <table>
-  <thead><tr><th>ID</th><th>Name</th><th>PHI</th><th>BAA</th><th>Last review</th></tr></thead>
+  <thead><tr><th>ID</th><th>Name</th><th>PHI</th><th>Risk</th><th>BAA</th><th>Last review</th><th></th></tr></thead>
   <tbody>
     {% for v in vendors %}
     <tr>
-      <td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.phi_access }}</td>
-      <td>{{ 'Yes' if v.baa_executed else 'No' }}</td><td>{{ v.last_review or '—' }}</td>
+      <td>{{ v.id }}</td>
+      <td>
+        <form method="post" action="/vendors/update" class="inline-form">
+          <input type="hidden" name="vendor_id" value="{{ v.id }}">
+          <input type="text" name="name" value="{{ v.name }}" class="input-sm" required>
+      </td>
+      <td>
+          <select name="phi_access" class="input-sm">
+            {% for p in ['none','partial','full'] %}
+            <option value="{{ p }}" {% if v.phi_access == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+      </td>
+      <td>
+          <select name="risk_tier" class="input-sm">
+            {% for r in ['low','medium','high'] %}
+            <option value="{{ r }}" {% if v.risk_tier == r %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+      </td>
+      <td><input type="checkbox" name="baa_executed" {% if v.baa_executed %}checked{% endif %}></td>
+      <td>{{ v.last_review or '—' }}</td>
+      <td>
+          <button class="btn secondary btn-sm" type="submit">Save</button>
+        </form>
+        <form method="post" action="/vendors/delete" style="display:inline">
+          <input type="hidden" name="vendor_id" value="{{ v.id }}">
+          <button class="btn secondary btn-sm" type="submit">Delete</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% else %}
-<p>No vendors yet. CLI: <code>hipaa-audit vendor init</code> then <code>hipaa-audit vendor add "Vendor Name"</code></p>
+<p>No vendors yet — add one above or run <code>hipaa-audit vendor add</code>.</p>
 {% endif %}
+
 {% if questionnaires %}
 <h2 style="margin-top:1.5rem">Questionnaires</h2>
 <table>
@@ -28,5 +81,8 @@
   </tbody>
 </table>
 {% endif %}
-<p style="margin-top:1rem"><a class="btn secondary" href="/integrations">Enable vendor module</a></p>
+<p style="margin-top:1rem">
+  <a class="btn secondary" href="/baas">BAA register</a>
+  <a class="btn secondary" href="/integrations" style="margin-left:.5rem">Enable vendor module</a>
+</p>
 {% endblock %}

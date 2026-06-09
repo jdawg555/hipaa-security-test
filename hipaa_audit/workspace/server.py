@@ -19,14 +19,22 @@ from hipaa_audit.access_reviews import (
     record_decision,
     start_campaign,
 )
+from hipaa_audit.apps import discover_from_config, link_app, load_inventory, merge_discovered
+from hipaa_audit.baas import add_baa, delete_baa, load_baas, update_baa
 from hipaa_audit.controls import PACKAGE_ROOT
 from hipaa_audit.devices import load_devices
 from hipaa_audit.export_auditor import build_auditor_bundle
 from hipaa_audit.questionnaires import load_questionnaires
-from hipaa_audit.report import _load_history
+from hipaa_audit.report import _load_history, load_history_points
 from hipaa_audit.platform.adapters.registry import record_connection_test, test_integration_connection
 from hipaa_audit.tasks import assign_task, complete_task, list_open_tasks, load_tasks
-from hipaa_audit.vendors import load_vendors
+from hipaa_audit.vendors import add_vendor, delete_vendor, load_vendors, update_vendor
+from hipaa_audit.workspace.secrets import (
+    CONNECT_FIELDS,
+    apply_workspace_secrets,
+    merge_secrets,
+    secrets_path,
+)
 from hipaa_audit.workspace.config_store import (
     apply_integration_toggle,
     ensure_bootstrapped,
@@ -67,6 +75,7 @@ def _bootstrap_repo(repo_path: Path, org_name: str) -> None:
         (src / "compliance" / "saas-inventory.example.yaml", repo_path / "compliance" / "saas-inventory.yaml"),
         (src / "compliance" / "certifications.example.yaml", repo_path / "compliance" / "certifications.yaml"),
         (src / "compliance" / "devices.example.yaml", repo_path / "compliance" / "devices.yaml"),
+        (src / "compliance" / "baas.example.yaml", repo_path / "compliance" / "baas.yaml"),
         (src / "compliance" / "vendor-questionnaires.example.yaml", repo_path / "compliance" / "vendor-questionnaires.yaml"),
         (src / "compliance" / "acknowledgments.example.yaml", repo_path / "compliance" / "acknowledgments.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", repo_path / ".github" / "workflows" / "compliance-audit.yml"),
@@ -83,6 +92,7 @@ def _bootstrap_repo(repo_path: Path, org_name: str) -> None:
     config = load_workspace_config(repo_path)
     config["org_name"] = org_name
     config.setdefault("workspace", {})["onboarded"] = True
+    config.setdefault("workspace", {})["schedule_hours"] = 24
     save_workspace_config(repo_path, config)
     (repo_path / "evidence").mkdir(exist_ok=True)
 
@@ -123,6 +133,7 @@ def create_app(repo_path: Path) -> FastAPI:
         state = get_scan_state()
         summary = report.get("summary", {}) if report else {}
         ctx = base_ctx("dashboard")
+        integrations = integration_status(config)
         ctx.update(
             {
                 "flash": flash,
@@ -131,8 +142,11 @@ def create_app(repo_path: Path) -> FastAPI:
                 "summary": summary,
                 "last_scan": report.get("generated_at") if report else state.last_finished,
                 "open_tasks": len(list_open_tasks(repo_path / config.get("tasks_path", "compliance/tasks.yaml"))),
-                "integrations_on": sum(1 for i in integration_status(config) if i["enabled"]),
+                "integrations_on": sum(1 for i in integrations if i["enabled"]),
+                "integrations": integrations,
                 "history": _load_history(repo_path),
+                "history_points": load_history_points(repo_path),
+                "schedule_hours": config.get("workspace", {}).get("schedule_hours", 0),
                 "scan_running": state.running,
             }
         )
@@ -187,9 +201,55 @@ def create_app(repo_path: Path) -> FastAPI:
         save_workspace_config(repo_path, config)
         return RedirectResponse("/integrations", status_code=303)
 
+    @app.get("/integrations/connect/{integration_id}", response_class=HTMLResponse)
+    def integrations_connect(integration_id: str) -> HTMLResponse:
+        if not ensure_bootstrapped(repo_path):
+            return RedirectResponse("/onboarding", status_code=302)
+        fields = CONNECT_FIELDS.get(integration_id)
+        if not fields:
+            return RedirectResponse("/integrations", status_code=302)
+        config = load_workspace_config(repo_path)
+        cards = {c["id"]: c for c in integration_status(config)}
+        ctx = base_ctx("integrations")
+        ctx.update(
+            {
+                "integration_id": integration_id,
+                "integration_name": cards.get(integration_id, {}).get("name", integration_id),
+                "fields": fields,
+            }
+        )
+        return _render("connect.html", **ctx)
+
+    @app.post("/integrations/connect/{integration_id}")
+    async def integrations_connect_save(integration_id: str, request: Request) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        form = await request.form()
+        updates = {
+            k: str(v).strip()
+            for k, v in form.items()
+            if str(v).strip() and not k.endswith("_note")
+        }
+        if updates:
+            merge_secrets(secrets_path(repo_path, config), updates)
+        if integration_id != "aws":
+            if integration_id == "jamf":
+                config.setdefault("devices", {})["enabled"] = True
+            else:
+                config = apply_integration_toggle(config, integration_id, True)
+            save_workspace_config(repo_path, config)
+        apply_workspace_secrets(repo_path, config)
+        result = test_integration_connection(integration_id, config, repo_path=repo_path)
+        config = load_workspace_config(repo_path)
+        config = record_connection_test(config, integration_id, result)
+        save_workspace_config(repo_path, config)
+        status = "ok" if result.ok else "fail"
+        msg = result.message.replace(" ", "+")[:100]
+        return RedirectResponse(f"/integrations?test={status}&msg={msg}", status_code=303)
+
     @app.post("/integrations/test")
     def integrations_test(integration_id: str = Form(...)) -> RedirectResponse:
         config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
         result = test_integration_connection(integration_id, config, repo_path=repo_path)
         config = record_connection_test(config, integration_id, result)
         save_workspace_config(repo_path, config)
@@ -234,17 +294,186 @@ def create_app(repo_path: Path) -> FastAPI:
 
     @app.get("/personnel", response_class=HTMLResponse)
     def personnel() -> HTMLResponse:
-        return _render("personnel.html", **base_ctx("personnel"))
+        config = load_workspace_config(repo_path)
+        ack_path = repo_path / config.get("personnel", {}).get(
+            "acknowledgments_path", "compliance/acknowledgments.yaml"
+        )
+        training_path = repo_path / config.get("personnel", {}).get("training_csv", "compliance/training-log.csv")
+        ack_count = 0
+        if ack_path.exists():
+            import yaml
+
+            ack_count = len((yaml.safe_load(ack_path.read_text()) or {}).get("acknowledgments", []))
+        training_rows = 0
+        if training_path.exists():
+            training_rows = max(0, len(training_path.read_text().strip().splitlines()) - 1)
+        ctx = base_ctx("personnel")
+        ctx.update({"ack_count": ack_count, "training_rows": training_rows})
+        return _render("personnel.html", **ctx)
 
     @app.get("/vendors", response_class=HTMLResponse)
-    def vendors_page() -> HTMLResponse:
+    def vendors_page(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
         vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
         qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
         ctx = base_ctx("vendors")
         ctx["vendors"] = load_vendors(vpath).get("vendors", [])
         ctx["questionnaires"] = load_questionnaires(qpath).get("questionnaires", [])
+        ctx["flash"] = request.query_params.get("flash", "")
         return _render("vendors.html", **ctx)
+
+    @app.post("/vendors/add")
+    def vendors_add(
+        name: str = Form(...),
+        phi_access: str = Form("none"),
+        risk_tier: str = Form("medium"),
+        baa_executed: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        add_vendor(
+            vpath,
+            name=name,
+            phi_access=phi_access,
+            risk_tier=risk_tier,
+            baa_executed=baa_executed == "on",
+        )
+        return RedirectResponse("/vendors?flash=Vendor+added", status_code=303)
+
+    @app.post("/vendors/update")
+    def vendors_update(
+        vendor_id: str = Form(...),
+        name: str = Form(...),
+        phi_access: str = Form(...),
+        risk_tier: str = Form(...),
+        baa_executed: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        update_vendor(
+            vpath,
+            vendor_id,
+            name=name,
+            phi_access=phi_access,
+            risk_tier=risk_tier,
+            baa_executed=baa_executed == "on",
+        )
+        return RedirectResponse("/vendors?flash=Vendor+updated", status_code=303)
+
+    @app.post("/vendors/delete")
+    def vendors_delete(vendor_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        if delete_vendor(vpath, vendor_id):
+            return RedirectResponse("/vendors?flash=Vendor+removed", status_code=303)
+        return RedirectResponse("/vendors?flash=Vendor+not+found", status_code=303)
+
+    @app.get("/baas", response_class=HTMLResponse)
+    def baas_page(request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        bpath = repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml")
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        ctx = base_ctx("baas")
+        ctx["baas"] = load_baas(bpath).get("baas", [])
+        ctx["vendors"] = load_vendors(vpath).get("vendors", [])
+        ctx["flash"] = request.query_params.get("flash", "")
+        return _render("baas.html", **ctx)
+
+    @app.post("/baas/add")
+    def baas_add(
+        vendor_id: str = Form(...),
+        vendor_name: str = Form(...),
+        effective_date: str = Form(...),
+        expiry_date: str = Form(...),
+        document_path: str = Form(""),
+        signed_by: str = Form(""),
+        notes: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        bpath = repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml")
+        add_baa(
+            bpath,
+            vendor_id=vendor_id,
+            vendor_name=vendor_name,
+            effective_date=effective_date,
+            expiry_date=expiry_date,
+            document_path=document_path,
+            signed_by=signed_by,
+            notes=notes,
+        )
+        return RedirectResponse("/baas?flash=BAA+added", status_code=303)
+
+    @app.post("/baas/update")
+    def baas_update(
+        baa_id: str = Form(...),
+        expiry_date: str = Form(...),
+        status: str = Form("active"),
+        document_path: str = Form(""),
+        notes: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        bpath = repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml")
+        if update_baa(
+            bpath,
+            baa_id,
+            expiry_date=expiry_date,
+            status=status,
+            document_path=document_path,
+            notes=notes,
+        ):
+            return RedirectResponse("/baas?flash=BAA+updated", status_code=303)
+        return RedirectResponse("/baas?flash=BAA+not+found", status_code=303)
+
+    @app.post("/baas/delete")
+    def baas_delete(baa_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        bpath = repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml")
+        if delete_baa(bpath, baa_id):
+            return RedirectResponse("/baas?flash=BAA+removed", status_code=303)
+        return RedirectResponse("/baas?flash=BAA+not+found", status_code=303)
+
+    @app.get("/saas", response_class=HTMLResponse)
+    def saas_page(request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        ipath = repo_path / config.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        ctx = base_ctx("saas")
+        inv = load_inventory(ipath)
+        ctx["apps"] = inv.get("apps", [])
+        ctx["discovered_at"] = inv.get("discovered_at")
+        ctx["vendors"] = load_vendors(vpath).get("vendors", [])
+        ctx["flash"] = request.query_params.get("flash", "")
+        ctx["flash_error"] = request.query_params.get("flash_error", "")
+        return _render("saas.html", **ctx)
+
+    @app.post("/saas/discover")
+    def saas_discover() -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        ipath = repo_path / config.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+        try:
+            discovered, source = discover_from_config(config)
+            if not discovered:
+                return RedirectResponse(
+                    "/saas?flash_error=Enable+Okta+or+Google+and+add+credentials",
+                    status_code=303,
+                )
+            merge_discovered(ipath, discovered, source=source)
+            return RedirectResponse(f"/saas?flash=Discovered+{len(discovered)}+apps", status_code=303)
+        except Exception as exc:  # noqa: BLE001
+            return RedirectResponse(f"/saas?flash_error={str(exc)[:80]}", status_code=303)
+
+    @app.post("/saas/link")
+    def saas_link(
+        app_id: str = Form(...),
+        vendor_id: str = Form(...),
+        phi_risk: str = Form("unknown"),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        ipath = repo_path / config.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+        if link_app(ipath, app_id, vendor_id, phi_risk=phi_risk):
+            return RedirectResponse("/saas?flash=App+linked", status_code=303)
+        return RedirectResponse("/saas?flash_error=App+not+found", status_code=303)
 
     def _access_review_path(config: dict[str, Any]) -> Path:
         return repo_path / config.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
@@ -341,6 +570,37 @@ def create_app(repo_path: Path) -> FastAPI:
         ctx["policies"] = policies
         return _render("policies.html", **ctx)
 
+    @app.get("/policies/edit/{policy_name}", response_class=HTMLResponse)
+    def policies_edit(policy_name: str, request: Request) -> HTMLResponse:
+        if ".." in policy_name or "/" in policy_name or not policy_name.endswith(".md"):
+            return RedirectResponse("/policies", status_code=302)
+        config = load_workspace_config(repo_path)
+        pdir = repo_path / config.get("policy_dir", "policies")
+        path = pdir / policy_name
+        if not path.is_file():
+            return RedirectResponse("/policies", status_code=302)
+        ctx = base_ctx("policies")
+        ctx.update(
+            {
+                "policy_name": policy_name,
+                "content": path.read_text(),
+                "flash": request.query_params.get("flash", ""),
+            }
+        )
+        return _render("policy_edit.html", **ctx)
+
+    @app.post("/policies/edit/{policy_name}")
+    def policies_save(policy_name: str, content: str = Form(...)) -> RedirectResponse:
+        if ".." in policy_name or "/" in policy_name or not policy_name.endswith(".md"):
+            return RedirectResponse("/policies", status_code=302)
+        config = load_workspace_config(repo_path)
+        pdir = repo_path / config.get("policy_dir", "policies")
+        path = pdir / policy_name
+        if not path.is_file():
+            return RedirectResponse("/policies", status_code=302)
+        path.write_text(content)
+        return RedirectResponse(f"/policies/edit/{policy_name}?flash=Saved", status_code=303)
+
     @app.get("/audits", response_class=HTMLResponse)
     def audits_page(flash: str = "") -> HTMLResponse:
         config = load_workspace_config(repo_path)
@@ -390,21 +650,24 @@ def create_app(repo_path: Path) -> FastAPI:
         return _render("settings.html", **ctx)
 
     @app.post("/settings")
-    def settings_save(
-        org_name: str = Form(""),
-        github_repo: str = Form(""),
-        okta_domain: str = Form(""),
-        soc2: str = Form(""),
-        iso27001: str = Form(""),
-        schedule_hours: int = Form(0),
-    ) -> RedirectResponse:
+    async def settings_save(request: Request) -> RedirectResponse:
+        form = await request.form()
         config = load_workspace_config(repo_path)
-        config["org_name"] = org_name
-        config.setdefault("github", {})["repo"] = github_repo
-        config.setdefault("identity", {}).setdefault("okta", {})["domain"] = okta_domain
-        config.setdefault("frameworks", {})["soc2"] = soc2 == "on"
-        config.setdefault("frameworks", {})["iso27001"] = iso27001 == "on"
-        config.setdefault("workspace", {})["schedule_hours"] = max(0, min(168, schedule_hours))
+        config["org_name"] = str(form.get("org_name", ""))
+        config.setdefault("github", {})["repo"] = str(form.get("github_repo", ""))
+        config.setdefault("identity", {}).setdefault("okta", {})["domain"] = str(form.get("okta_domain", ""))
+        config.setdefault("frameworks", {})["soc2"] = form.get("soc2") == "on"
+        config.setdefault("frameworks", {})["iso27001"] = form.get("iso27001") == "on"
+        config.setdefault("workspace", {})["schedule_hours"] = max(
+            0, min(168, int(form.get("schedule_hours", 0) or 0))
+        )
+        slack = config.setdefault("notifications", {}).setdefault("slack", {})
+        slack["enabled"] = form.get("slack_enabled") == "on"
+        slack["notify_on_fail"] = form.get("slack_notify_fail") == "on"
+        slack["min_score_drop"] = float(form.get("slack_min_drop", 5) or 5)
+        webhook = str(form.get("slack_webhook", "")).strip()
+        if webhook:
+            merge_secrets(secrets_path(repo_path, config), {"slack_webhook_url": webhook})
         save_workspace_config(repo_path, config)
         return RedirectResponse("/settings?flash=saved", status_code=303)
 

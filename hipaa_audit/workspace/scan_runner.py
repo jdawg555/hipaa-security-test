@@ -14,6 +14,7 @@ from hipaa_audit.report import write_reports
 from hipaa_audit.tasks import sync_from_report
 from hipaa_audit.trust_center import publish_trust_center
 from hipaa_audit.workspace.config_store import load_workspace_config
+from hipaa_audit.workspace.secrets import apply_workspace_secrets
 
 
 @dataclass
@@ -51,6 +52,7 @@ def run_scan_job(repo_path: Path, *, publish_portals: bool = True) -> dict[str, 
     try:
         repo_path = repo_path.resolve()
         config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
         config.setdefault("org_name", repo_path.name)
         output = repo_path / "evidence" / "latest"
         report = run_audit(repo_path, config=config, evidence_dir=output)

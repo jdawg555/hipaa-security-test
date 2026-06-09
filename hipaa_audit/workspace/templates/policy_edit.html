@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit policy</h1>
+<p class="subtitle">{{ policy_name }} — saved to <code>policies/</code> in your repo.</p>
+<form method="post" action="/policies/edit/{{ policy_name }}">
+  <textarea name="content" rows="24" style="width:100%;font-family:ui-monospace,monospace;font-size:.85rem;padding:1rem;border:1px solid #cbd5e1;border-radius:8px">{{ content }}</textarea>
+  <p style="margin-top:1rem">
+    <button class="btn" type="submit">Save policy</button>
+    <a class="btn secondary" href="/policies" style="margin-left:.5rem">Back</a>
+  </p>
+</form>
+{% endblock %}

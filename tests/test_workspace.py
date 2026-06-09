@@ -84,6 +84,78 @@ def test_integration_connection_test(tmp_path):
     assert "personnel" in cfg["workspace"]["connection_tests"]
 
 
+def test_vendor_crud(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    r = client.post(
+        "/vendors/add",
+        data={"name": "Acme SaaS", "phi_access": "partial", "risk_tier": "high", "baa_executed": "on"},
+    )
+    assert r.status_code == 303
+    import yaml
+
+    vendors = yaml.safe_load((tmp_path / "compliance" / "vendors.yaml").read_text())["vendors"]
+    assert vendors[-1]["name"] == "Acme SaaS"
+    vid = vendors[-1]["id"]
+    client.post(
+        "/vendors/update",
+        data={
+            "vendor_id": vid,
+            "name": "Acme Updated",
+            "phi_access": "full",
+            "risk_tier": "high",
+            "baa_executed": "on",
+        },
+    )
+    vendors = yaml.safe_load((tmp_path / "compliance" / "vendors.yaml").read_text())["vendors"]
+    assert any(v["name"] == "Acme Updated" for v in vendors)
+
+
+def test_baas_page(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    r = client.post(
+        "/baas/add",
+        data={
+            "vendor_id": "VND-001",
+            "vendor_name": "AWS",
+            "effective_date": "2026-01-01",
+            "expiry_date": "2028-01-01",
+        },
+    )
+    assert r.status_code == 303
+    r = client.get("/baas", follow_redirects=True)
+    assert "BAA-001" in r.text or "AWS" in r.text
+
+
+def test_policy_editor(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    policy = tmp_path / "policies" / "test-policy.md"
+    policy.write_text("# Old")
+    r = client.post("/policies/edit/test-policy.md", data={"content": "# New content"})
+    assert r.status_code == 303
+    assert "New content" in policy.read_text()
+
+
+def test_connect_wizard_saves_secrets(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    r = client.post(
+        "/integrations/connect/github",
+        data={"github_token": "ghp_test_token_12345"},
+    )
+    assert r.status_code == 303
+    import yaml
+
+    secrets = yaml.safe_load((tmp_path / "compliance" / ".workspace-secrets.yaml").read_text())
+    assert secrets.get("github_token") == "ghp_test_token_12345"
+
+
 def test_access_review_campaign_builder(tmp_path):
     app = create_app(tmp_path)
     client = TestClient(app, follow_redirects=False)

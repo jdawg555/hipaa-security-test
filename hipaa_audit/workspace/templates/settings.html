@@ -1,21 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Settings</h1>
-<p class="subtitle">Workspace configuration — saved to <code>hipaa-audit.yaml</code>.</p>
-<form method="post" action="/settings">
-  <label>Organization name</label>
-  <input type="text" name="org_name" value="{{ config.get('org_name', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
-  <label style="display:block;margin-top:1rem">GitHub repo (org/name)</label>
-  <input type="text" name="github_repo" value="{{ config.get('github', {}).get('repo', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
-  <label style="display:block;margin-top:1rem">Okta domain</label>
-  <input type="text" name="okta_domain" value="{{ config.get('identity', {}).get('okta', {}).get('domain', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
-  <fieldset style="margin-top:1rem;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+<p class="subtitle">Workspace configuration — saved to <code>hipaa-audit.yaml</code>. Secrets go to gitignored <code>compliance/.workspace-secrets.yaml</code>.</p>
+<form method="post" action="/settings" class="form-grid" style="max-width:640px">
+  <label class="full">Organization name
+    <input type="text" name="org_name" value="{{ config.get('org_name', '') }}">
+  </label>
+  <label class="full">GitHub repo (org/name)
+    <input type="text" name="github_repo" value="{{ config.get('github', {}).get('repo', '') }}">
+  </label>
+  <label class="full">Okta domain
+    <input type="text" name="okta_domain" value="{{ config.get('identity', {}).get('okta', {}).get('domain', '') }}">
+  </label>
+  <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
     <legend>Frameworks</legend>
     <label><input type="checkbox" name="soc2" {% if config.get('frameworks', {}).get('soc2') %}checked{% endif %}> SOC 2 TSC</label><br>
     <label><input type="checkbox" name="iso27001" {% if config.get('frameworks', {}).get('iso27001') %}checked{% endif %}> ISO 27001</label>
   </fieldset>
-  <label style="display:block;margin-top:1rem">Auto-scan interval (hours, 0 = manual only)</label>
-  <input type="number" name="schedule_hours" value="{{ schedule_hours }}" min="0" max="168" style="width:120px;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
-  <p style="margin-top:1.25rem"><button class="btn" type="submit">Save settings</button></p>
+  <label>Auto-scan interval (hours, 0 = manual)
+    <input type="number" name="schedule_hours" value="{{ schedule_hours }}" min="0" max="168">
+  </label>
+  <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+    <legend>Slack notifications</legend>
+    <label><input type="checkbox" name="slack_enabled" {% if config.get('notifications', {}).get('slack', {}).get('enabled') %}checked{% endif %}> Enable Slack alerts</label><br>
+    <label><input type="checkbox" name="slack_notify_fail" {% if config.get('notifications', {}).get('slack', {}).get('notify_on_fail', True) %}checked{% endif %}> Notify on failures</label><br>
+    <label style="margin-top:.5rem">Min score drop to alert
+      <input type="number" name="slack_min_drop" value="{{ config.get('notifications', {}).get('slack', {}).get('min_score_drop', 5) }}" min="1" max="50" step="0.5">
+    </label>
+    <label style="margin-top:.5rem">Webhook URL <small style="font-weight:400;color:var(--muted)">saved to secrets file</small>
+      <input type="password" name="slack_webhook" placeholder="https://hooks.slack.com/..." autocomplete="off">
+    </label>
+  </fieldset>
+  <div class="full"><button class="btn" type="submit">Save settings</button></div>
 </form>
 {% endblock %}

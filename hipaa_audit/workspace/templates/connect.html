@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Connect {{ integration_name }}</h1>
+<p class="subtitle">Credentials are saved to <code>compliance/.workspace-secrets.yaml</code> (gitignored).</p>
+
+<form method="post" action="/integrations/connect/{{ integration_id }}" class="form-grid" style="max-width:560px">
+  {% for field in fields %}
+  {% if field.type == 'info' %}
+  <p class="full" style="color:var(--muted);font-size:.88rem;margin:0">{{ field.hint }}</p>
+  {% else %}
+  <label class="full">{{ field.label }}
+    {% if field.type == 'password' %}
+    <input type="password" name="{{ field.key }}" autocomplete="off">
+    {% else %}
+    <input type="text" name="{{ field.key }}">
+    {% endif %}
+    {% if field.hint %}<small style="font-weight:400;color:var(--muted)">{{ field.hint }}</small>{% endif %}
+  </label>
+  {% endif %}
+  {% endfor %}
+  <div class="full" style="display:flex;gap:.5rem">
+    <button class="btn" type="submit">Save &amp; test connection</button>
+    <a class="btn secondary" href="/integrations">Cancel</a>
+  </div>
+</form>
+{% endblock %}

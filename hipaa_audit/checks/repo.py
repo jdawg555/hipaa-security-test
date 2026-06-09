@@ -237,12 +237,25 @@ def _risk_register_present(check, *, repo_path, config, evidence_dir) -> CheckRe
 
 
 def _baa_register_present(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    structured = repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml")
+    if structured.exists():
+        import yaml
+
+        data = yaml.safe_load(structured.read_text()) or {}
+        count = len(data.get("baas", []))
+        if count:
+            return CheckResult(
+                check_id=check["id"],
+                title=check.get("title", check["id"]),
+                status=CheckStatus.PASS,
+                message=f"Structured BAA register with {count} agreement(s)",
+            )
     paths = ["templates/baa-register.md", "compliance/baa-registry.md", config.get("baa_register_path", "")]
     paths = [p for p in paths if p]
     result = _file_exists({**check, "paths": paths}, repo_path=repo_path, config=config, evidence_dir=evidence_dir)
     if result.status == CheckStatus.FAIL:
         result.status = CheckStatus.MANUAL
-        result.message = "BAA register not found — document all PHI subprocessors"
+        result.message = "BAA register not found — add compliance/baas.yaml or templates/baa-register.md"
     return result
 
 

@@ -55,6 +55,41 @@ def add_vendor(
     return vendor
 
 
+def update_vendor(path: Path, vendor_id: str, **fields: Any) -> bool:
+    data = load_vendors(path)
+    allowed = {
+        "name",
+        "phi_access",
+        "risk_tier",
+        "baa_executed",
+        "baa_date",
+        "last_review",
+        "review_interval_days",
+    }
+    for vendor in data.get("vendors", []):
+        if vendor.get("id") != vendor_id:
+            continue
+        for key, value in fields.items():
+            if key in allowed and value is not None:
+                if key == "baa_executed":
+                    vendor[key] = str(value).lower() in ("true", "1", "yes", "on")
+                else:
+                    vendor[key] = value
+        save_vendors(path, data)
+        return True
+    return False
+
+
+def delete_vendor(path: Path, vendor_id: str) -> bool:
+    data = load_vendors(path)
+    before = len(data.get("vendors", []))
+    data["vendors"] = [v for v in data.get("vendors", []) if v.get("id") != vendor_id]
+    if len(data["vendors"]) == before:
+        return False
+    save_vendors(path, data)
+    return True
+
+
 def review_vendor(
     path: Path,
     vendor_id: str,

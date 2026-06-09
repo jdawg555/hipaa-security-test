@@ -117,6 +117,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def load_history_points(repo_path: Path, *, limit: int = 12) -> list[dict[str, Any]]:
+    history_file = repo_path / "evidence" / "history" / "posture.jsonl"
+    if not history_file.exists():
+        return []
+    points: list[dict[str, Any]] = []
+    for line in history_file.read_text().strip().splitlines()[-limit:]:
+        try:
+            row = json.loads(line)
+            points.append(
+                {
+                    "date": (row.get("generated_at") or "")[:10],
+                    "score": float(row.get("score", 0)),
+                }
+            )
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+    return points
+
+
 def _load_history(repo_path: Path) -> str:
     history_file = repo_path / "evidence" / "history" / "posture.jsonl"
     if not history_file.exists():

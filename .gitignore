@@ -21,6 +21,8 @@ compliance/auditor-portal/
 compliance/vendor-portals/
 compliance/devices.yaml
 compliance/vendor-questionnaires.yaml
+compliance/baas.yaml
+compliance/.workspace-secrets.yaml
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store
