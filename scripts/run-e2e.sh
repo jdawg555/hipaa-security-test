@@ -1,29 +1,37 @@
 #!/usr/bin/env bash
-# End-to-end HIPAA compliance workflow (v1.4)
+# End-to-end HIPAA compliance workflow (v1.6)
 set -euo pipefail
 
 ROOT="${1:-.}"
 cd "$ROOT"
 
-echo "==> 1/6 Collect external scanner evidence (optional tools)"
+echo "==> 1/8 Collect external scanner evidence (optional tools)"
 bash scripts/collect-external-evidence.sh .
 
-echo "==> 2/6 Run hipaa-audit scan + posture history + task sync"
+echo "==> 2/8 Vendor + access review registers (examples for smoke)"
+cp -n compliance/vendors.example.yaml compliance/vendors.yaml 2>/dev/null || true
+cp -n compliance/access-reviews.example.yaml compliance/access-reviews.yaml 2>/dev/null || true
+hipaa-audit vendor list . || true
+hipaa-audit access-review list . || true
+
+echo "==> 3/8 Run hipaa-audit scan + posture history + task sync"
 hipaa-audit scan . -o evidence/latest
 
-echo "==> 3/6 List open remediation tasks"
+echo "==> 4/8 List open remediation tasks"
 hipaa-audit tasks list .
 
-echo "==> 4/6 Export for Probo GRC platform"
+echo "==> 5/8 Export for Probo GRC platform"
 hipaa-audit export probo -o evidence/latest/probo-import.json
 
-echo "==> 5/6 Posture snapshot"
+echo "==> 6/8 Posture snapshot"
 cat evidence/history/posture-latest.json 2>/dev/null | head -20 || true
 
-echo "==> 6/7 Probo catalog coverage"
+echo "==> 7/8 Probo catalog coverage"
 hipaa-audit catalog coverage
 
-echo "==> 7/7 Done"
+echo "==> 8/8 Done"
 echo "    Dashboard: evidence/latest/dashboard.html"
 echo "    Probo:     evidence/latest/probo-import.json"
 echo "    Tasks:     compliance/tasks.yaml"
+echo "    Vendors:   compliance/vendors.yaml"
+echo "    Access:    compliance/access-reviews.yaml"

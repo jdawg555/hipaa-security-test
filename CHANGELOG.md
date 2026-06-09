@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0] — 2026-05-28
+
+### Added
+
+- **Vendor module** — `compliance/vendors.yaml` SIG-lite questionnaire register
+- **`hipaa-audit vendor`** — `init|add|list|review` for PHI vendor risk tracking
+- **Access review campaigns** — `compliance/access-reviews.yaml` quarterly SaaS/IAM reviews
+- **`hipaa-audit access-review`** — `start|list|decide|complete` campaign workflow
+- **Controls** — `vendor-register-current` (§164.308(b)(1)), `access-review-campaign` (§164.308(a)(4))
+- **Template** — `templates/vendor-questionnaire.md`
+- **Docs** — `docs/vendor-access-reviews.md`
+
+### Changed
+
+- `hipaa-audit init` copies vendor and access-review example registers
+- E2E script includes vendor + access-review CLI smoke steps
+
 ## [1.5.0] — 2026-05-28
 
 ### Added

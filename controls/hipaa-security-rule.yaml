@@ -2,7 +2,7 @@
 # Maps 45 CFR Part 164 Subpart C to automated + manual checks.
 # Cross-walk: NIST CSF 2.0, SOC 2 TSC (informative, not exhaustive).
 
-version: "1.5"
+version: "1.6"
 framework: HIPAA Security Rule
 citations:
   - "45 CFR §164.308 — Administrative safeguards"
@@ -86,6 +86,11 @@ controls:
         type: manual
         title: Role-based access matrix documented
         instructions: Map roles to PHI access in SRA section 4.
+      - id: access-review-campaign
+        module: access_reviews
+        handler: access_review_campaign
+        title: Quarterly access review campaign tracked
+        remediation: "hipaa-audit access-review start 'Q2 review' security@example.com"
 
   - id: HIPAA-164.308-a5
     title: Security awareness and training
@@ -162,6 +167,11 @@ controls:
         type: manual
         title: BAAs executed with all PHI vendors
         instructions: File countersigned BAAs; track expiry in templates/baa-register.md.
+      - id: vendor-register-current
+        module: vendors
+        handler: vendor_register_current
+        title: Vendor risk register and SIG-lite questionnaire current
+        remediation: "hipaa-audit vendor init && hipaa-audit vendor add <name>"
 
   # ── Physical Safeguards (§164.310) ───────────────────────────────────────
 

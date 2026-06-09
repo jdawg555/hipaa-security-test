@@ -7,8 +7,15 @@ from rich.console import Console
 from rich.table import Table
 
 from hipaa_audit import __version__
+from hipaa_audit.access_reviews import (
+    complete_campaign,
+    load_campaigns,
+    record_decision,
+    start_campaign,
+)
 from hipaa_audit.catalog import coverage_report
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
+from hipaa_audit.vendors import SIG_LITE_KEYS, add_vendor, load_vendors, review_vendor
 from hipaa_audit.engine import run_audit
 from hipaa_audit.notify import maybe_notify_slack
 from hipaa_audit.personnel import import_training_template
@@ -26,8 +33,12 @@ app = typer.Typer(
 console = Console()
 tasks_app = typer.Typer(help="Remediation task tracker (Drata-style).")
 export_app = typer.Typer(help="Export audit evidence for GRC platforms.")
+vendor_app = typer.Typer(help="Vendor risk register and SIG-lite questionnaires.")
+access_review_app = typer.Typer(help="Quarterly access review campaigns.")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(export_app, name="export")
+app.add_typer(vendor_app, name="vendor")
+app.add_typer(access_review_app, name="access-review")
 
 
 @app.command()
@@ -128,6 +139,8 @@ def init(
         (src / "scripts" / "run-e2e.sh", path / "scripts" / "run-e2e.sh"),
         (src / "compliance" / "tasks.example.yaml", path / "compliance" / "tasks.yaml"),
         (src / "compliance" / "acknowledgments.example.yaml", path / "compliance" / "acknowledgments.yaml"),
+        (src / "compliance" / "vendors.example.yaml", path / "compliance" / "vendors.yaml"),
+        (src / "compliance" / "access-reviews.example.yaml", path / "compliance" / "access-reviews.yaml"),
         (src / "hipaa-audit.example.yaml", path / "hipaa-audit.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", path / ".github" / "workflows" / "compliance-audit.yml"),
     ]
@@ -273,6 +286,200 @@ def export_probo(
     write_probo_export(report, out)
     console.print(f"[green]Probo export[/green] → {out}")
     console.print("Import via Probo MCP or prb measure create — see docs/stacks/probo-hipaa-audit.md")
+
+
+@vendor_app.command("init")
+def vendor_init(
+    path: Path = typer.Argument(Path.cwd(), help="Project root"),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Create an empty vendor register from the example template."""
+    import shutil
+
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    dest = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    if dest.exists():
+        console.print(f"[yellow]exists[/yellow] {dest}")
+        return
+    src = PACKAGE_ROOT / "compliance" / "vendors.example.yaml"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dest)
+    console.print(f"[green]created[/green] {dest}")
+
+
+@vendor_app.command("add")
+def vendor_add_cmd(
+    name: str = typer.Argument(..., help="Vendor name"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    phi_access: str = typer.Option("none", help="none|partial|full"),
+    risk_tier: str = typer.Option("medium", help="low|medium|high"),
+    baa: bool = typer.Option(False, "--baa/--no-baa", help="BAA executed"),
+) -> None:
+    """Add a vendor to the register."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    vendor = add_vendor(register, name=name, phi_access=phi_access, risk_tier=risk_tier, baa_executed=baa)
+    console.print(f"[green]Added[/green] {vendor['id']} — {name}")
+
+
+@vendor_app.command("list")
+def vendor_list_cmd(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """List vendors in the register."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    data = load_vendors(register)
+    vendors = data.get("vendors", [])
+    if not vendors:
+        console.print("[yellow]No vendors — run hipaa-audit vendor init[/yellow]")
+        return
+    table = Table(title="Vendor register")
+    table.add_column("ID")
+    table.add_column("Name")
+    table.add_column("PHI")
+    table.add_column("Tier")
+    table.add_column("BAA")
+    table.add_column("Last review")
+    for v in vendors:
+        table.add_row(
+            v.get("id", ""),
+            v.get("name", ""),
+            v.get("phi_access", ""),
+            v.get("risk_tier", ""),
+            "Y" if v.get("baa_executed") else "N",
+            v.get("last_review") or "—",
+        )
+    console.print(table)
+
+
+@vendor_app.command("review")
+def vendor_review_cmd(
+    vendor_id: str = typer.Argument(..., help="Vendor ID e.g. VND-001"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    reviewer: str = typer.Option("", "--reviewer", "-r"),
+    complete: bool = typer.Option(
+        False,
+        "--complete",
+        help="Mark all SIG-lite questionnaire items as satisfied",
+    ),
+) -> None:
+    """Record a vendor security questionnaire review."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    questionnaire = {k: True for k in SIG_LITE_KEYS} if complete else {}
+    if not questionnaire:
+        console.print("[red]Pass --complete or extend CLI with per-field flags[/red]")
+        raise typer.Exit(1)
+    if review_vendor(register, vendor_id, questionnaire, reviewer=reviewer):
+        console.print(f"[green]Reviewed[/green] {vendor_id}")
+    else:
+        console.print(f"[red]Vendor not found: {vendor_id}[/red]")
+        raise typer.Exit(1)
+
+
+@access_review_app.command("start")
+def access_review_start(
+    name: str = typer.Argument(..., help="Campaign name"),
+    owner: str = typer.Argument(..., help="Campaign owner email"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    systems: str = typer.Option(
+        "github,aws-iam,okta",
+        "--systems",
+        "-s",
+        help="Comma-separated system ids (id:name pairs optional, use id only)",
+    ),
+    due_days: int = typer.Option(30, help="Days until campaign due"),
+) -> None:
+    """Start a quarterly access review campaign."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
+    system_list = []
+    for raw in systems.split(","):
+        raw = raw.strip()
+        if not raw:
+            continue
+        if ":" in raw:
+            sid, sname = raw.split(":", 1)
+            system_list.append({"id": sid.strip(), "name": sname.strip(), "owner": owner})
+        else:
+            system_list.append({"id": raw, "name": raw.replace("-", " ").title(), "owner": owner})
+    campaign = start_campaign(register, name=name, owner=owner, systems=system_list, due_days=due_days)
+    console.print(f"[green]Started[/green] {campaign['id']} — due {campaign['due_date']}")
+
+
+@access_review_app.command("list")
+def access_review_list(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """List access review campaigns."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
+    data = load_campaigns(register)
+    campaigns = data.get("campaigns", [])
+    if not campaigns:
+        console.print("[yellow]No campaigns — run hipaa-audit access-review start[/yellow]")
+        return
+    table = Table(title="Access review campaigns")
+    table.add_column("ID")
+    table.add_column("Name")
+    table.add_column("Status")
+    table.add_column("Due")
+    table.add_column("Decisions")
+    for c in campaigns:
+        decisions = len([d for d in data.get("decisions", []) if d.get("campaign_id") == c["id"]])
+        table.add_row(c.get("id", ""), c.get("name", ""), c.get("status", ""), c.get("due_date", ""), str(decisions))
+    console.print(table)
+
+
+@access_review_app.command("decide")
+def access_review_decide(
+    campaign_id: str = typer.Argument(...),
+    system_id: str = typer.Argument(...),
+    principal: str = typer.Argument(..., help="User or role reviewed"),
+    decision: str = typer.Argument(..., help="retain|revoke|modify"),
+    reviewer: str = typer.Argument(...),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    notes: str = typer.Option("", "--notes", "-n"),
+) -> None:
+    """Record an access review decision."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
+    if record_decision(
+        register,
+        campaign_id=campaign_id,
+        system_id=system_id,
+        principal=principal,
+        decision=decision,
+        reviewer=reviewer,
+        notes=notes,
+    ):
+        console.print(f"[green]Recorded[/green] {decision} for {principal} on {system_id}")
+    else:
+        console.print(f"[red]Campaign not found: {campaign_id}[/red]")
+        raise typer.Exit(1)
+
+
+@access_review_app.command("complete")
+def access_review_complete(
+    campaign_id: str = typer.Argument(...),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Mark an access review campaign complete."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
+    if complete_campaign(register, campaign_id):
+        console.print(f"[green]Completed[/green] {campaign_id}")
+    else:
+        console.print(f"[red]Campaign not found: {campaign_id}[/red]")
+        raise typer.Exit(1)
 
 
 @app.command("import-training")

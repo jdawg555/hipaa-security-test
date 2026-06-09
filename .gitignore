@@ -12,6 +12,8 @@ hipaa-audit.yaml
 compliance/tasks.yaml
 compliance/acknowledgments.yaml
 compliance/training-log.csv
+compliance/vendors.yaml
+compliance/access-reviews.yaml
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store

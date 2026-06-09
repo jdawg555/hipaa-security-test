@@ -83,6 +83,17 @@ personnel:
   initial_training_days: 30
   annual_training_days: 365
 
+# Vendor risk + SIG-lite questionnaire (Vanta vendor module)
+vendors:
+  enabled: false
+  register_path: compliance/vendors.yaml
+
+# Quarterly access review campaigns (Vanta access reviews)
+access_reviews:
+  enabled: false
+  register_path: compliance/access-reviews.yaml
+  max_campaign_age_days: 120
+
 # Slack alerts on posture drop or failures
 notifications:
   slack:

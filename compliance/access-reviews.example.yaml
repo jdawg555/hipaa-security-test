@@ -1,0 +1,42 @@
+# Access review campaigns — copy to compliance/access-reviews.yaml
+
+campaigns:
+  - id: AR-2026-Q2-01
+    name: Q2 2026 quarterly access review
+    owner: security@example.com
+    started_at: "2026-04-01"
+    due_date: "2026-04-30"
+    status: completed
+    completed_at: "2026-04-28"
+    systems:
+      - id: github
+        name: GitHub organization
+        owner: eng-lead@example.com
+      - id: aws-iam
+        name: AWS IAM users and roles
+        owner: infra@example.com
+      - id: okta
+        name: Okta workforce identities
+        owner: security@example.com
+
+decisions:
+  - campaign_id: AR-2026-Q2-01
+    system_id: github
+    principal: eng@example.com
+    decision: retain
+    reviewer: eng-lead@example.com
+    reviewed_at: "2026-04-15"
+    notes: Member of platform team — appropriate access
+  - campaign_id: AR-2026-Q2-01
+    system_id: aws-iam
+    principal: deploy-role-prod
+    decision: retain
+    reviewer: infra@example.com
+    reviewed_at: "2026-04-18"
+  - campaign_id: AR-2026-Q2-01
+    system_id: okta
+    principal: contractor@example.com
+    decision: revoke
+    reviewer: security@example.com
+    reviewed_at: "2026-04-20"
+    notes: Offboarded — access removed

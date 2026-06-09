@@ -1,0 +1,39 @@
+# Vendor register + SIG-lite questionnaire — copy to compliance/vendors.yaml
+
+vendors:
+  - id: VND-001
+    name: Amazon Web Services
+    phi_access: partial
+    risk_tier: high
+    baa_executed: true
+    baa_date: "2025-06-01"
+    last_review: "2026-01-15"
+    review_interval_days: 365
+    reviewed_by: security@example.com
+    questionnaire:
+      soc2_or_iso: true
+      encryption_at_rest: true
+      encryption_in_transit: true
+      mfa_enforced: true
+      access_logging: true
+      incident_notification: true
+      subprocessors_disclosed: true
+      data_retention_defined: true
+
+  - id: VND-002
+    name: Example EHR SaaS
+    phi_access: full
+    risk_tier: high
+    baa_executed: true
+    baa_date: "2025-03-01"
+    last_review: "2025-09-01"
+    review_interval_days: 365
+    questionnaire:
+      soc2_or_iso: true
+      encryption_at_rest: true
+      encryption_in_transit: true
+      mfa_enforced: false
+      access_logging: true
+      incident_notification: true
+      subprocessors_disclosed: false
+      data_retention_defined: true
