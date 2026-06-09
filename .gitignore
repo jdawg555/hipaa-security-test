@@ -14,6 +14,9 @@ compliance/acknowledgments.yaml
 compliance/training-log.csv
 compliance/vendors.yaml
 compliance/access-reviews.yaml
+compliance/saas-inventory.yaml
+compliance/certifications.yaml
+compliance/trust-center/
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store

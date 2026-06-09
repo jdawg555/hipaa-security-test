@@ -5,6 +5,7 @@ from typing import Any
 
 from hipaa_audit.checks import (
     access_reviews,
+    apps,
     aws,
     github,
     identity,
@@ -26,6 +27,7 @@ RUNNERS = {
     "integrations": integrations,
     "vendors": vendors,
     "access_reviews": access_reviews,
+    "apps": apps,
 }
 
 

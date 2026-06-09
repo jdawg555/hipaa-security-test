@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.7.0] — 2026-05-28
+
+### Added
+
+- **Trust center** — `hipaa-audit trust publish` → `compliance/trust-center/index.html`
+- **Auditor bundle** — `hipaa-audit export auditor` ZIP for NDA evidence sharing
+- **SaaS inventory** — Okta app discovery via `hipaa-audit apps discover|list|link`
+- **Control** — `saas-inventory-tracked` (§164.308(a)(4))
+- **Examples** — `certifications.example.yaml`, `saas-inventory.example.yaml`
+- **Docs** — `docs/trust-center.md`
+
+### Changed
+
+- `hipaa-audit init` copies certifications and SaaS inventory templates
+- E2E script publishes trust center and auditor bundle
+
 ## [1.6.0] — 2026-05-28
 
 ### Added

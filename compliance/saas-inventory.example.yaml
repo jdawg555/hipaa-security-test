@@ -1,0 +1,30 @@
+# SaaS / IdP app inventory — copy to compliance/saas-inventory.yaml
+# Refresh: hipaa-audit apps discover (requires Okta API token)
+
+discovered_at: "2026-05-28"
+source: example
+
+apps:
+  - id: okta-0oa1slack
+    name: Slack
+    provider: okta
+    status: active
+    sso: true
+    vendor_id: null
+    phi_risk: low
+
+  - id: okta-0oa2github
+    name: GitHub Enterprise
+    provider: okta
+    status: active
+    sso: true
+    vendor_id: null
+    phi_risk: low
+
+  - id: okta-0oa3ehr
+    name: Example EHR SaaS
+    provider: okta
+    status: active
+    sso: true
+    vendor_id: VND-002
+    phi_risk: high

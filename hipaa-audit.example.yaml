@@ -94,6 +94,19 @@ access_reviews:
   register_path: compliance/access-reviews.yaml
   max_campaign_age_days: 120
 
+# SaaS app discovery (Okta) — shadow IT + vendor linkage
+saas_inventory:
+  enabled: false
+  register_path: compliance/saas-inventory.yaml
+  max_discovery_age_days: 90
+
+# Public trust center (Vanta/Probo compliance page)
+trust_center:
+  output_dir: compliance/trust-center
+  contact_email: security@your-org.com
+  certifications_path: compliance/certifications.yaml
+  request_access_note: "Request auditor evidence bundle under NDA via contact email."
+
 # Slack alerts on posture drop or failures
 notifications:
   slack:

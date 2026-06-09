@@ -13,8 +13,17 @@ from hipaa_audit.access_reviews import (
     record_decision,
     start_campaign,
 )
+from hipaa_audit.apps import (
+    discover_okta_apps,
+    link_app,
+    load_inventory,
+    merge_discovered,
+    okta_config_from_identity,
+)
 from hipaa_audit.catalog import coverage_report
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
+from hipaa_audit.export_auditor import build_auditor_bundle
+from hipaa_audit.trust_center import publish_trust_center
 from hipaa_audit.vendors import SIG_LITE_KEYS, add_vendor, load_vendors, review_vendor
 from hipaa_audit.engine import run_audit
 from hipaa_audit.notify import maybe_notify_slack
@@ -35,10 +44,14 @@ tasks_app = typer.Typer(help="Remediation task tracker (Drata-style).")
 export_app = typer.Typer(help="Export audit evidence for GRC platforms.")
 vendor_app = typer.Typer(help="Vendor risk register and SIG-lite questionnaires.")
 access_review_app = typer.Typer(help="Quarterly access review campaigns.")
+apps_app = typer.Typer(help="SaaS / IdP application inventory.")
+trust_app = typer.Typer(help="Public trust center (compliance page).")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(export_app, name="export")
 app.add_typer(vendor_app, name="vendor")
 app.add_typer(access_review_app, name="access-review")
+app.add_typer(apps_app, name="apps")
+app.add_typer(trust_app, name="trust")
 
 
 @app.command()
@@ -141,6 +154,8 @@ def init(
         (src / "compliance" / "acknowledgments.example.yaml", path / "compliance" / "acknowledgments.yaml"),
         (src / "compliance" / "vendors.example.yaml", path / "compliance" / "vendors.yaml"),
         (src / "compliance" / "access-reviews.example.yaml", path / "compliance" / "access-reviews.yaml"),
+        (src / "compliance" / "saas-inventory.example.yaml", path / "compliance" / "saas-inventory.yaml"),
+        (src / "compliance" / "certifications.example.yaml", path / "compliance" / "certifications.yaml"),
         (src / "hipaa-audit.example.yaml", path / "hipaa-audit.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", path / ".github" / "workflows" / "compliance-audit.yml"),
     ]
@@ -244,6 +259,19 @@ def tasks_done(
     else:
         console.print(f"[red]Task not found: {task_id}[/red]")
         raise typer.Exit(1)
+
+
+@export_app.command("auditor")
+def export_auditor(
+    path: Path = typer.Argument(Path.cwd()),
+    output: Path = typer.Option(Path("evidence/latest/auditor-bundle.zip"), "--output", "-o"),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Zip audit reports, policies, and compliance registers for auditors."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    out = path / output if not output.is_absolute() else output
+    build_auditor_bundle(path, out, config=cfg)
+    console.print(f"[green]Auditor bundle[/green] → {out}")
 
 
 @export_app.command("probo")
@@ -480,6 +508,90 @@ def access_review_complete(
     else:
         console.print(f"[red]Campaign not found: {campaign_id}[/red]")
         raise typer.Exit(1)
+
+
+@apps_app.command("discover")
+def apps_discover(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Discover SaaS apps from Okta and merge into inventory."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+    okta = okta_config_from_identity(cfg)
+    if not okta:
+        console.print("[red]Enable identity.okta and set OKTA_API_TOKEN[/red]")
+        raise typer.Exit(1)
+    domain, token = okta
+    discovered = discover_okta_apps(domain, token)
+    data = merge_discovered(register, discovered, source="okta")
+    console.print(f"[green]Discovered[/green] {len(discovered)} Okta app(s) → {register}")
+    console.print(f"[dim]Total inventory: {len(data.get('apps', []))}[/dim]")
+
+
+@apps_app.command("list")
+def apps_list(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """List SaaS apps in inventory."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+    data = load_inventory(register)
+    apps = data.get("apps", [])
+    if not apps:
+        console.print("[yellow]No apps — run hipaa-audit apps discover[/yellow]")
+        return
+    table = Table(title=f"SaaS inventory ({data.get('discovered_at', 'unknown')})")
+    table.add_column("ID")
+    table.add_column("Name")
+    table.add_column("Provider")
+    table.add_column("Vendor")
+    table.add_column("PHI risk")
+    for app in apps:
+        table.add_row(
+            app.get("id", ""),
+            app.get("name", ""),
+            app.get("provider", ""),
+            app.get("vendor_id") or "—",
+            app.get("phi_risk", "unknown"),
+        )
+    console.print(table)
+
+
+@apps_app.command("link")
+def apps_link(
+    app_id: str = typer.Argument(..., help="App ID from inventory"),
+    vendor_id: str = typer.Argument(..., help="Vendor ID e.g. VND-001"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    phi_risk: str = typer.Option("", help="low|medium|high"),
+) -> None:
+    """Link a SaaS app to a vendor register entry."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+    if link_app(register, app_id, vendor_id, phi_risk=phi_risk):
+        console.print(f"[green]Linked[/green] {app_id} → {vendor_id}")
+    else:
+        console.print(f"[red]App not found: {app_id}[/red]")
+        raise typer.Exit(1)
+
+
+@trust_app.command("publish")
+def trust_publish(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    report_json: Path = typer.Option(Path("evidence/latest/audit-report.json"), "--report", "-r"),
+) -> None:
+    """Generate public trust center HTML from latest audit report."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = path / report_json if not report_json.is_absolute() else report_json
+    if not report.exists():
+        console.print("[red]Run hipaa-audit scan first[/red]")
+        raise typer.Exit(1)
+    out = publish_trust_center(repo_path=path, config=cfg, report_json=report)
+    console.print(f"[green]Trust center[/green] → {out}")
+    console.print("Host at compliance/trust-center/ or sync to your public site.")
 
 
 @app.command("import-training")
