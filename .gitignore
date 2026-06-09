@@ -17,6 +17,8 @@ compliance/access-reviews.yaml
 compliance/saas-inventory.yaml
 compliance/certifications.yaml
 compliance/trust-center/
+compliance/auditor-portal/
+compliance/vendor-portals/
 compliance/devices.yaml
 compliance/vendor-questionnaires.yaml
 templates/sra-imported.md

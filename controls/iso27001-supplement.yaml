@@ -1,0 +1,157 @@
+# ISO/IEC 27001:2022 Annex A supplement (shared hipaa-audit checks)
+# Enable: frameworks.iso27001: true in hipaa-audit.yaml
+
+version: "1.9"
+framework: ISO 27001
+citations:
+  - "ISO/IEC 27001:2022 Annex A"
+
+controls:
+  - id: ISO27001-A.5.1
+    title: Policies for information security
+    category: governance
+    citation: A.5.1
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-policy-library
+        module: policies
+        handler: policy_library_complete
+        title: Information security policy library maintained
+
+  - id: ISO27001-A.5.15
+    title: Access control
+    category: access
+    citation: A.5.15
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-access-policy
+        module: repo
+        handler: file_exists
+        paths: [policies/access-control-policy.md]
+        title: Access control policy documented
+      - id: iso-access-reviews
+        module: access_reviews
+        handler: access_review_campaign
+        title: Periodic access reviews performed
+
+  - id: ISO27001-A.5.23
+    title: Information security for use of cloud services
+    category: vendors
+    citation: A.5.23
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-vendor-register
+        module: vendors
+        handler: vendor_register_current
+        title: Cloud supplier risk assessments current
+      - id: iso-saas-inventory
+        module: apps
+        handler: saas_inventory_tracked
+        title: Cloud/SaaS services inventoried
+
+  - id: ISO27001-A.5.29
+    title: Information security during disruption
+    category: continuity
+    citation: A.5.29
+    type: manual
+    severity: required
+    checks:
+      - id: iso-bcdr
+        type: manual
+        title: Business continuity and IR plans documented
+        instructions: Document BCDR in policies and incident-response-plan.md.
+
+  - id: ISO27001-A.8.1
+    title: User endpoint devices
+    category: technical
+    citation: A.8.1
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-device-inventory
+        module: devices
+        handler: device_inventory_compliant
+        title: Endpoint encryption and screen lock via MDM
+
+  - id: ISO27001-A.8.2
+    title: Privileged access rights
+    category: access
+    citation: A.8.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-iam-root-mfa
+        module: aws
+        handler: iam_root_mfa
+        title: Root/cloud admin MFA enforced
+      - id: iso-github-protection
+        module: github
+        handler: branch_protection
+        title: Production changes require review
+
+  - id: ISO27001-A.8.5
+    title: Secure authentication
+    category: technical
+    citation: A.8.5
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-okta-mfa
+        module: identity
+        handler: okta_mfa_policy
+        title: Workforce MFA enrollment policies
+      - id: iso-google-2sv
+        module: identity
+        handler: google_2sv_enforced
+        title: Google Workspace 2SV enforced
+
+  - id: ISO27001-A.8.9
+    title: Configuration management
+    category: operations
+    citation: A.8.9
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-iac-checkov
+        module: integrations
+        handler: checkov_findings
+        title: Infrastructure configuration scanned (Checkov)
+      - id: iso-ci-monitoring
+        module: repo
+        handler: precommit_or_ci_security
+        title: Security checks in CI pipeline
+
+  - id: ISO27001-A.8.15
+    title: Logging
+    category: monitoring
+    citation: A.8.15
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-cloudtrail
+        module: aws
+        handler: cloudtrail_enabled
+        title: Audit logging enabled (CloudTrail)
+      - id: iso-evidence-fresh
+        module: integrations
+        handler: evidence_freshness
+        title: Security monitoring evidence current
+
+  - id: ISO27001-A.8.24
+    title: Use of cryptography
+    category: technical
+    citation: A.8.24
+    type: hybrid
+    severity: required
+    checks:
+      - id: iso-encryption-docs
+        module: repo
+        handler: encryption_docs_present
+        title: Cryptography policy documented
+      - id: iso-s3-encryption
+        module: aws
+        handler: s3_default_encryption
+        title: Data at rest encryption (S3 default)

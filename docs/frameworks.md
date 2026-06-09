@@ -1,6 +1,6 @@
-# Multi-framework support (SOC 2)
+# Multi-framework support (SOC 2 + ISO 27001)
 
-v1.8 adds an optional **SOC 2 TSC supplement** alongside the HIPAA catalog.
+v1.8+ adds optional **SOC 2** and **ISO 27001** supplements alongside HIPAA.
 
 ## Enable SOC 2
 
@@ -27,6 +27,42 @@ SOC 2 controls reuse the same check modules (AWS, GitHub, vendors, devices, acce
 | SOC2-CC7.2 | Monitoring | CloudTrail, scanner evidence freshness |
 
 Catalog: `controls/soc2-tsc-supplement.yaml`
+
+## ISO 27001 Annex A
+
+```yaml
+frameworks:
+  iso27001: true
+```
+
+```bash
+hipaa-audit framework iso27001
+hipaa-audit scan .
+```
+
+10 Annex A controls (A.5.1, A.5.15, A.5.23, A.5.29, A.8.1, A.8.2, A.8.5, A.8.9, A.8.15, A.8.24) reuse shared checks.
+
+Catalog: `controls/iso27001-supplement.yaml`
+
+## Auditor portal
+
+```bash
+export AUDITOR_PORTAL_PASSPHRASE='your-nda-passphrase'
+hipaa-audit scan .
+hipaa-audit auditor publish
+open compliance/auditor-portal/index.html
+```
+
+Read-only portal with optional client-side passphrase gate. Pair with `hipaa-audit export auditor` for ZIP evidence.
+
+## Vendor questionnaire portal
+
+```bash
+hipaa-audit vendor send VND-002 security-vendor@example.com
+hipaa-audit vendor portal QNR-001
+# vendor completes form → downloads QNR-001-response.yaml
+hipaa-audit vendor import-response QNR-001 QNR-001-response.yaml
+```
 
 ## MDM devices
 

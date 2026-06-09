@@ -7,6 +7,7 @@ org_name: "Your Organization Name"
 frameworks:
   hipaa: true
   soc2: false
+  iso27001: false
 
 policy_dir: policies
 templates_dir: templates
@@ -93,6 +94,7 @@ vendors:
   enabled: false
   register_path: compliance/vendors.yaml
   questionnaires_path: compliance/vendor-questionnaires.yaml
+  portal_dir: compliance/vendor-portals
 
 # MDM / endpoint inventory (Jamf, Intune CSV export)
 devices:
@@ -118,6 +120,11 @@ trust_center:
   contact_email: security@your-org.com
   certifications_path: compliance/certifications.yaml
   request_access_note: "Request auditor evidence bundle under NDA via contact email."
+
+# Auditor portal (read-only, optional passphrase gate)
+auditor_portal:
+  output_dir: compliance/auditor-portal
+  access_passphrase_env: AUDITOR_PORTAL_PASSPHRASE
 
 # Slack alerts on posture drop or failures
 notifications:

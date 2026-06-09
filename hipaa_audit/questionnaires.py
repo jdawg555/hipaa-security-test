@@ -97,6 +97,35 @@ def assess_questionnaires(q_path: Path, config: dict[str, Any]) -> tuple[str, st
     return "fail", f"{len(issues)} questionnaire gap(s)", issues
 
 
+def import_response(
+    q_path: Path,
+    vendors_path: Path,
+    questionnaire_id: str,
+    response_path: Path,
+) -> bool:
+    data = parse_response_yaml(response_path)
+    if data.get("questionnaire_id") and data["questionnaire_id"] != questionnaire_id:
+        return False
+    responses = data.get("responses") or {}
+    reviewer = data.get("reviewer", "")
+    return respond_questionnaire(
+        q_path,
+        vendors_path,
+        questionnaire_id,
+        responses,
+        reviewer=reviewer,
+    )
+
+
+def parse_response_yaml(path: Path) -> dict[str, Any]:
+    return yaml.safe_load(path.read_text()) or {}
+
+
+def find_questionnaire(q_path: Path, questionnaire_id: str) -> dict[str, Any] | None:
+    data = load_questionnaires(q_path)
+    return next((q for q in data.get("questionnaires", []) if q.get("id") == questionnaire_id), None)
+
+
 def _parse_date(value: str):
     if not value:
         return None

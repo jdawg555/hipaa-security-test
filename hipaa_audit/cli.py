@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import typer
@@ -24,12 +25,16 @@ from hipaa_audit.apps import (
     okta_config_from_identity,
 )
 from hipaa_audit.devices import device_csv_template, import_devices_csv, load_devices
-from hipaa_audit.frameworks import soc2_report
+from hipaa_audit.auditor_portal import publish_auditor_portal
+from hipaa_audit.frameworks import iso27001_report, soc2_report
 from hipaa_audit.questionnaires import (
+    find_questionnaire,
+    import_response,
     load_questionnaires,
     respond_questionnaire,
     send_questionnaire,
 )
+from hipaa_audit.vendor_portal import publish_vendor_portal
 from hipaa_audit.catalog import coverage_report
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
 from hipaa_audit.export_auditor import build_auditor_bundle
@@ -58,6 +63,7 @@ apps_app = typer.Typer(help="SaaS / IdP application inventory.")
 trust_app = typer.Typer(help="Public trust center (compliance page).")
 devices_app = typer.Typer(help="MDM endpoint inventory (Jamf, Intune).")
 framework_app = typer.Typer(help="Multi-framework control catalogs.")
+auditor_app = typer.Typer(help="Auditor evidence portal (NDA read-only).")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(export_app, name="export")
 app.add_typer(vendor_app, name="vendor")
@@ -66,6 +72,7 @@ app.add_typer(apps_app, name="apps")
 app.add_typer(trust_app, name="trust")
 app.add_typer(devices_app, name="devices")
 app.add_typer(framework_app, name="framework")
+app.add_typer(auditor_app, name="auditor")
 
 
 @app.command()
@@ -498,6 +505,42 @@ def vendor_questionnaires(
     console.print(table)
 
 
+@vendor_app.command("portal")
+def vendor_portal(
+    questionnaire_id: str = typer.Argument(..., help="Questionnaire ID e.g. QNR-001"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Generate in-browser vendor questionnaire HTML form."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    q_path = path / cfg.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+    entry = find_questionnaire(q_path, questionnaire_id)
+    if not entry:
+        console.print(f"[red]Questionnaire not found: {questionnaire_id}[/red]")
+        raise typer.Exit(1)
+    out = publish_vendor_portal(repo_path=path, config=cfg, questionnaire=entry)
+    console.print(f"[green]Vendor portal[/green] → {out}")
+    console.print("Send this link/file to the vendor contact to collect SIG-lite responses.")
+
+
+@vendor_app.command("import-response")
+def vendor_import_response(
+    questionnaire_id: str = typer.Argument(...),
+    response_file: Path = typer.Argument(..., help="YAML downloaded from vendor portal"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Import vendor questionnaire YAML response from vendor portal."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    vendors_path = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    q_path = path / cfg.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+    if import_response(q_path, vendors_path, questionnaire_id, response_file):
+        console.print(f"[green]Imported[/green] responses for {questionnaire_id}")
+    else:
+        console.print("[red]Import failed — check questionnaire ID and YAML file[/red]")
+        raise typer.Exit(1)
+
+
 @access_review_app.command("start")
 def access_review_start(
     name: str = typer.Argument(..., help="Campaign name"),
@@ -777,6 +820,33 @@ def devices_list(
     console.print(table)
 
 
+@auditor_app.command("publish")
+def auditor_publish(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    report_json: Path = typer.Option(Path("evidence/latest/audit-report.json"), "--report", "-r"),
+) -> None:
+    """Publish read-only auditor portal with optional passphrase gate."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = path / report_json if not report_json.is_absolute() else report_json
+    if not report.exists():
+        console.print("[red]Run hipaa-audit scan first[/red]")
+        raise typer.Exit(1)
+    portal_cfg = cfg.get("auditor_portal", {})
+    passphrase = os.environ.get(portal_cfg.get("access_passphrase_env", "AUDITOR_PORTAL_PASSPHRASE"), "")
+    out = publish_auditor_portal(
+        repo_path=path,
+        config=cfg,
+        report_json=report,
+        access_passphrase=passphrase,
+    )
+    console.print(f"[green]Auditor portal[/green] → {out}")
+    if passphrase:
+        console.print("[dim]Passphrase gate enabled via env[/dim]")
+    else:
+        console.print("[yellow]No passphrase set — portal is open. Set AUDITOR_PORTAL_PASSPHRASE for NDA gate.[/yellow]")
+
+
 @framework_app.command("soc2")
 def framework_soc2(
     config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
@@ -795,6 +865,26 @@ def framework_soc2(
     console.print(table)
     if not report["enabled"]:
         console.print("[dim]Run scan with frameworks.soc2: true to include SOC2-* controls[/dim]")
+
+
+@framework_app.command("iso27001")
+def framework_iso27001(
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Show ISO 27001 Annex A supplement status."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = iso27001_report(cfg)
+    table = Table(title="ISO 27001 Annex A supplement")
+    table.add_column("Metric")
+    table.add_column("Value")
+    table.add_row("ISO 27001 enabled", "yes" if report["enabled"] else "no (set frameworks.iso27001: true)")
+    table.add_row("ISO 27001 controls", str(report["iso27001_controls"]))
+    table.add_row("HIPAA controls", str(report["hipaa_controls"]))
+    table.add_row("Total when enabled", str(report["total_controls"]))
+    table.add_row("Annex A controls mapped", str(report["annex_a_count"]))
+    console.print(table)
+    if not report["enabled"]:
+        console.print("[dim]Run scan with frameworks.iso27001: true to include ISO27001-* controls[/dim]")
 
 
 @app.command("import-training")

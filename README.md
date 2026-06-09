@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.8](https://img.shields.io/badge/Version-1.8-blue.svg)](CHANGELOG.md)
+[![Version: 1.9](https://img.shields.io/badge/Version-1.9-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -22,7 +22,9 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 | **Trust center** | Public compliance page (`hipaa-audit trust publish`) |
 | **Auditor bundle** | `hipaa-audit export auditor` ZIP for NDA sharing |
 | **SaaS inventory** | Okta + Google app discovery (`hipaa-audit apps discover`) |
-| **SOC 2 TSC** | Optional supplement (`frameworks.soc2: true`) |
+| **SOC 2 + ISO 27001** | Optional supplements (`frameworks.soc2` / `iso27001`) |
+| **Auditor portal** | NDA-gated read-only portal (`hipaa-audit auditor publish`) |
+| **Vendor portal** | In-browser SIG-lite form (`hipaa-audit vendor portal`) |
 | **MDM devices** | Jamf/Intune CSV import (`hipaa-audit devices import`) |
 | **Vendor questionnaires** | Send/respond workflow (`hipaa-audit vendor send`) |
 | **Personnel** | Policy acks + training CSV (Vanta workforce module) |

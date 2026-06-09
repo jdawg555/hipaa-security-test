@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.0] — 2026-05-28
+
+### Added
+
+- **ISO 27001 supplement** — 10 Annex A controls via `frameworks.iso27001: true`
+- **Auditor portal** — `hipaa-audit auditor publish` with optional passphrase gate
+- **Vendor questionnaire portal** — `hipaa-audit vendor portal` + `import-response`
+- **CLI** — `hipaa-audit framework iso27001`
+
+### Changed
+
+- Framework reports exclude supplemental controls from HIPAA count
+- Docs updated for auditor and vendor portals
+
 ## [1.8.0] — 2026-05-28
 
 ### Added

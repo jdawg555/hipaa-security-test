@@ -38,6 +38,8 @@ def _catalog_globs(config: dict[str, Any] | None) -> list[str]:
     patterns = ["hipaa-*.yaml"]
     if frameworks.get("soc2", False):
         patterns.append("soc2-*.yaml")
+    if frameworks.get("iso27001", False):
+        patterns.append("iso27001-*.yaml")
     return patterns
 
 

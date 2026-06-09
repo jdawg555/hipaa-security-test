@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end HIPAA compliance workflow (v1.8)
+# End-to-end HIPAA compliance workflow (v1.9)
 set -euo pipefail
 
 ROOT="${1:-.}"
@@ -20,6 +20,7 @@ hipaa-audit access-review list . || true
 hipaa-audit apps list . || true
 hipaa-audit devices list . || true
 hipaa-audit framework soc2 || true
+hipaa-audit framework iso27001 || true
 
 echo "==> 3/10 Run hipaa-audit scan + posture history + task sync"
 hipaa-audit scan . -o evidence/latest
@@ -34,8 +35,10 @@ echo "==> 6/10 Auditor evidence bundle"
 cp -n compliance/certifications.example.yaml compliance/certifications.yaml 2>/dev/null || true
 hipaa-audit export auditor -o evidence/latest/auditor-bundle.zip
 
-echo "==> 7/10 Trust center"
+echo "==> 7/10 Trust center + auditor portal"
 hipaa-audit trust publish .
+hipaa-audit auditor publish . || true
+hipaa-audit vendor portal QNR-001 . 2>/dev/null || true
 
 echo "==> 8/10 Posture snapshot"
 cat evidence/history/posture-latest.json 2>/dev/null | head -20 || true
