@@ -44,6 +44,15 @@ else
   echo "    skip — osv-scanner not installed"
 fi
 
+echo "==> ComplianceKit (HIPAA evidence pack)"
+if command -v compliancekit &>/dev/null; then
+  PERIOD="$(date +%Y)-Q$(( (10#$(date +%m) - 1) / 3 + 1 ))"
+  compliancekit evidence --output "evidence/compliancekit/${PERIOD}" 2>/dev/null || \
+    echo "    skip — run compliancekit scan first or check cloud credentials"
+else
+  echo "    skip — compliancekit not installed (see github.com/darpanzope/compliancekit)"
+fi
+
 echo "==> hipaa-audit"
 if command -v hipaa-audit &>/dev/null; then
   hipaa-audit scan . -o evidence/latest

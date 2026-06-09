@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import csv
 import json
 from datetime import UTC, datetime
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,8 @@ def run(
         "trivy_vulnerabilities": _trivy_vulnerabilities,
         "osv_vulnerabilities": _osv_vulnerabilities,
         "checkov_findings": _checkov_findings,
+        "compliancekit_mapping": _compliancekit_mapping,
+        "sra_json_imported": _sra_json_imported,
         "evidence_freshness": _evidence_freshness,
         "ai_risk_register": _ai_risk_register,
         "state_law_overlay": _state_law_overlay,
@@ -283,6 +287,132 @@ def _parse_checkov_json(data: Any, source: str) -> list[str]:
             resource = item.get("resource") or item.get("file_path") or ""
             failures.append(f"{check_id} ({resource}) in {source}")
     return failures
+
+
+def _compliancekit_mapping(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    ck_cfg = config.get("compliancekit", {})
+    if not ck_cfg.get("enabled", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.SKIP,
+            message="ComplianceKit integration disabled",
+        )
+    pattern = ck_cfg.get("evidence_glob", "evidence/compliancekit/**/control-mapping.csv")
+    files = _glob_files(repo_path, pattern)
+    if not files:
+        # Also search one-level evidence packs: evidence/*/control-mapping.csv
+        files = sorted(repo_path.glob("evidence/*/control-mapping.csv"))
+    if not files:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=(
+                "No ComplianceKit control-mapping.csv found. "
+                "Run: compliancekit evidence --output evidence/compliancekit/<period>"
+            ),
+            remediation=check.get("remediation"),
+        )
+
+    fail_statuses = {s.lower() for s in ck_cfg.get("fail_statuses", ["fail", "error"])}
+    hipaa_rows = 0
+    failures: list[str] = []
+    waived = 0
+    for path in files:
+        text = path.read_text()
+        reader = csv.DictReader(StringIO(text))
+        for row in reader:
+            fw = (row.get("framework_id") or "").lower()
+            if "hipaa" not in fw:
+                continue
+            hipaa_rows += 1
+            if (row.get("waiver_active") or "").lower() == "true":
+                waived += 1
+                continue
+            status = (row.get("status") or "").lower()
+            if status in fail_statuses:
+                ctrl = row.get("control_id") or "?"
+                chk = row.get("check_id") or "?"
+                failures.append(f"{ctrl}/{chk} ({row.get('severity', '')})")
+
+    out = evidence_dir / "integration-compliancekit-summary.json"
+    out.write_text(
+        json.dumps(
+            {
+                "hipaa_rows": hipaa_rows,
+                "failures": failures[:50],
+                "waived": waived,
+                "files": [str(f) for f in files],
+            },
+            indent=2,
+        )
+    )
+
+    if hipaa_rows == 0:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message="ComplianceKit CSV found but no HIPAA framework rows",
+            evidence_path=str(out),
+        )
+    if failures:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.FAIL,
+            message=f"ComplianceKit HIPAA: {len(failures)} open finding(s)",
+            evidence_path=str(out),
+            remediation="Remediate cloud findings or document waivers in ComplianceKit",
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.PASS,
+        message=f"ComplianceKit HIPAA mapping clean ({hipaa_rows} rows, {waived} waived)",
+        evidence_path=str(out),
+    )
+
+
+def _sra_json_imported(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    sra_cfg = config.get("sra_import", {})
+    globs = sra_cfg.get(
+        "evidence_globs",
+        [
+            "templates/sra-imported.md",
+            "docs/security/sra-imported.md",
+            "evidence/sra-import-summary.json",
+        ],
+    )
+    found_md = False
+    for pat in globs:
+        paths = _glob_files(repo_path, pat) if "*" in pat else [repo_path / pat]
+        for p in paths:
+            if not p.exists():
+                continue
+            if p.suffix == ".md":
+                found_md = True
+    if found_md:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.MANUAL,
+            message="SRA JSON imported — review templates/sra-imported.md and sign section 8",
+        )
+    if sra_cfg.get("require_import", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.MANUAL,
+            message="Run: hipaa-audit import-sra <browser-export.json>",
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.SKIP,
+        message="SRA JSON import not required (optional: hipaa-audit import-sra)",
+    )
 
 
 def _osv_vulnerabilities(check, *, repo_path, config, evidence_dir) -> CheckResult:

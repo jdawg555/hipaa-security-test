@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "meta": {
+    "orgName": "Regional Clinic",
+    "assessDate": "2026-05-01",
+    "assessor": "CISO",
+    "scope": "EHR + patient portal",
+    "score": "78%",
+    "riskLevel": "Moderate",
+    "exec": "Dr. Smith",
+    "signDate": "2026-05-02"
+  },
+  "responses": {
+    "risk-analysis": 2,
+    "audit-controls": 1,
+    "encryption": 0
+  },
+  "notes": {
+    "encryption": "Legacy DB column encryption in progress"
+  }
+}

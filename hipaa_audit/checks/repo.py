@@ -215,7 +215,9 @@ def _policy_path(repo_path: Path, config: dict[str, Any], name: str) -> Path | N
 
 def _sra_template_present(check, *, repo_path, config, evidence_dir) -> CheckResult:
     paths = [
+        "templates/sra-imported.md",
         "templates/sra-template.md",
+        "docs/security/sra-imported.md",
         "docs/security/sra.md",
         "compliance/sra.md",
         config.get("sra_path", ""),

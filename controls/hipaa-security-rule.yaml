@@ -34,6 +34,11 @@ controls:
         handler: risk_register_present
         title: Risk register exists
         remediation: Copy templates/risk-register.md and maintain quarterly.
+      - id: sra-json-import
+        module: integrations
+        handler: sra_json_imported
+        title: Browser SRA JSON merged (optional)
+        remediation: "hipaa-audit import-sra <export.json> from l0lsec/hipaa-sra or SaberGuard tool"
 
   - id: HIPAA-164.308-a2
     title: Assigned security responsibility
@@ -392,6 +397,11 @@ controls:
         handler: checkov_findings
         title: Checkov IaC findings (no FAIL)
         remediation: "checkov -d . --framework terraform -o json --output-file-path evidence/checkov"
+      - id: compliancekit-mapping
+        module: integrations
+        handler: compliancekit_mapping
+        title: ComplianceKit HIPAA control-mapping (no open findings)
+        remediation: "compliancekit evidence --framework hipaa --output evidence/compliancekit/$(date +%Y-Q%q)"
       - id: evidence-freshness
         module: integrations
         handler: evidence_freshness

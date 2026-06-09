@@ -11,9 +11,11 @@ Run `hipaa-audit sources` for the curated catalog (`integrations/oss-catalog.yam
 |-------|------|---------|-------------------------|
 | Controls + dashboard | **hipaa-audit** | MIT | — |
 | AWS HIPAA mode | [Prowler](https://github.com/prowler-cloud/prowler) | Apache-2.0 | `integrations.prowler` |
+| Multi-cloud HIPAA CSV | [ComplianceKit](https://github.com/darpanzope/compliancekit) | Apache-2.0 | `integrations.compliancekit` |
 | IaC HIPAA checks | [Checkov](https://github.com/bridgecrewio/checkov) | Apache-2.0 | `integrations.checkov` |
 | CVE scan | [Trivy](https://github.com/aquasecurity/trivy) | Apache-2.0 | `integrations.trivy` |
 | Dependency CVEs | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | `integrations.osv` |
+| Browser SRA JSON | l0lsec / SaberGuard tools | MIT | `hipaa-audit import-sra` |
 | SQL cloud inventory | [Steampipe](https://github.com/turbot/steampipe) | AGPL | Manual export |
 | IR plan starter | [Counteractive template](https://github.com/counteractive/incident-response-template) | MIT | Copy into `policies/` |
 

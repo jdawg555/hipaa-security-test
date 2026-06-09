@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0] — 2026-05-28
+
+### Added
+
+- **`hipaa-audit import-sra`** — merge l0lsec/hipaa-sra or SaberGuard browser JSON into `templates/sra-imported.md`
+- **ComplianceKit ingest** — `integrations.compliancekit` reads `control-mapping.csv` HIPAA rows
+- **Controls:** `compliancekit-mapping`, `sra-json-import` on SRA / INT groups
+- **Fixtures + tests** for SRA import and ComplianceKit CSV parsing
+
+### Changed
+
+- `sra-documented` check accepts `templates/sra-imported.md`
+- OSS catalog marks ComplianceKit as integrated
+
 ## [1.2.0] — 2026-05-28
 
 ### Added

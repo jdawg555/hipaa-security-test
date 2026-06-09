@@ -1,0 +1,3 @@
+framework_id,control_id,control_name,check_id,check_title,resource_id,resource_name,resource_type,account_id,region,status,severity,evidence_path,framework_name,control_family,control_tags,tailored,tailoring_justification,finding_source,finding_tool,waiver_active,waiver_reason,waiver_approver,waiver_expires
+hipaa,164_312_e_1,Transmission Security,aws-s3-encrypt,,prod-bucket,phi-archive,s3,123456789012,us-east-1,pass,high,hipaa/164_312_e_1/findings.json,HIPAA Security Rule,164.312,required,false,,native,,false,,,
+hipaa,164_308_a_1_ii_b,Risk Management,aws-root-mfa,,account,root,account,123456789012,,fail,critical,hipaa/164_308_a_1_ii_b/findings.json,HIPAA Security Rule,164.308,required,false,,native,,false,,,

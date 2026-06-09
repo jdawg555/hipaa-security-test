@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.2](https://img.shields.io/badge/Version-1.2-blue.svg)](CHANGELOG.md)
+[![Version: 1.3](https://img.shields.io/badge/Version-1.3-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -22,12 +22,15 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 | **Registers** | SRA, risk, BAA, vendor risk, **AI risk**, **state law overlay** |
 | **Integrations** | Ingest **Prowler**, **Checkov**, **Trivy**, **OSV-Scanner** evidence |
 | **OSS catalog** | `hipaa-audit sources` — curated GitHub ecosystem |
+| **SRA import** | `hipaa-audit import-sra` — browser JSON → Markdown gaps |
+| **ComplianceKit** | Ingest `control-mapping.csv` HIPAA findings |
 | **HTML dashboard** | Pass/fail dashboard for auditors and security reviews |
 | **GitHub Actions** | Weekly compliance workflow |
 
 ```bash
 pip install git+https://github.com/jdawg555/hipaa-security-test.git
 hipaa-audit init && hipaa-audit scan .
+hipaa-audit import-sra ~/Downloads/hipaa-sra-export.json
 open evidence/latest/dashboard.html
 ```
 

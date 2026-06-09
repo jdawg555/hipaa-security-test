@@ -10,6 +10,7 @@ from hipaa_audit import __version__
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
 from hipaa_audit.engine import run_audit
 from hipaa_audit.report import write_reports
+from hipaa_audit.sra_import import load_sra_json, write_import_artifacts
 
 app = typer.Typer(
     name="hipaa-audit",
@@ -120,6 +121,45 @@ def controls(
     for c in load_controls(controls_path):
         table.add_row(c.id, c.title[:50], c.category, c.citation)
     console.print(table)
+
+
+@app.command("import-sra")
+def import_sra(
+    json_file: Path = typer.Argument(..., help="Browser SRA export (.json)"),
+    path: Path = typer.Argument(Path.cwd(), help="Project root"),
+    output: Path = typer.Option(
+        Path("templates/sra-imported.md"),
+        "--output",
+        "-o",
+        help="Merged SRA Markdown output",
+    ),
+    template: Path = typer.Option(
+        Path("templates/sra-template.md"),
+        "--template",
+        "-t",
+        help="Base SRA template to prepend (if present)",
+    ),
+    evidence: Path = typer.Option(
+        Path("evidence/sra"),
+        "--evidence",
+        help="Directory for import summary JSON",
+    ),
+) -> None:
+    """Import l0lsec/hipaa-sra or SaberGuard browser JSON into Markdown SRA."""
+    data = load_sra_json(json_file)
+    base = template if template.exists() else PACKAGE_ROOT / "templates" / "sra-template.md"
+    base = base if base.exists() else None
+    out_path = path / output if not output.is_absolute() else output
+    ev_dir = path / evidence if not evidence.is_absolute() else evidence
+    paths = write_import_artifacts(
+        data,
+        output_md=out_path,
+        evidence_dir=ev_dir,
+        base_template=base,
+    )
+    console.print(f"[green]Imported SRA[/green] → {paths['markdown']}")
+    console.print(f"[green]Summary[/green] → {paths['summary']}")
+    console.print("Next: review gaps in section 6, complete sign-off, run hipaa-audit scan")
 
 
 @app.command()

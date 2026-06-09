@@ -34,6 +34,15 @@ integrations:
       - examples/terraform-minimal
       - terraform
       - infra
+  compliancekit:
+    enabled: false
+    evidence_glob: evidence/compliancekit/**/control-mapping.csv
+    fail_statuses: [fail, error]
+  sra_import:
+    require_import: false
+    evidence_globs:
+      - templates/sra-imported.md
+      - evidence/sra/sra-import-summary.json
   # Set true if LLMs/clinical AI touch PHI
   require_ai_register: false
   # US state codes where patients/consumers reside (triggers state-law overlay)

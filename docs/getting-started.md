@@ -85,6 +85,29 @@ hipaa-audit sources
 
 See [oss-ecosystem.md](oss-ecosystem.md) for Prowler, Checkov, ComplianceKit, SRA tools, and more.
 
+## Import browser SRA JSON
+
+If you used [l0lsec/hipaa-sra](https://github.com/l0lsec/hipaa-sra) or
+[SaberGuard HIPAA-SRA-Tool](https://github.com/SaberGuard-LLC/HIPAA-SRA-Tool), export JSON locally and merge:
+
+```bash
+hipaa-audit import-sra ~/Downloads/hipaa-sra-2026-05-28.json
+# → templates/sra-imported.md + evidence/sra/sra-import-summary.json
+hipaa-audit scan .
+```
+
+## ComplianceKit evidence
+
+```bash
+# After installing compliancekit (see github.com/darpanzope/compliancekit)
+compliancekit scan --framework hipaa
+compliancekit evidence --output evidence/compliancekit/2026-Q2
+
+# Enable in hipaa-audit.yaml:
+# integrations.compliancekit.enabled: true
+hipaa-audit scan .
+```
+
 ## Annual HIPAA workflow
 
 1. **Q1:** Complete SRA (`templates/sra-template.md`)

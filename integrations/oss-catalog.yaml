@@ -63,9 +63,9 @@ sources:
     name: ComplianceKit
     repo: https://github.com/darpanzope/compliancekit
     license: Apache-2.0
-    role: Multi-framework scanner with HIPAA control mapping CSV export
-    integrated: false
-    note: Future evidence ingest candidate
+    role: Multi-framework scanner with HIPAA control-mapping.csv ingest
+    hipaa_command: compliancekit scan --framework hipaa && compliancekit evidence --output evidence/compliancekit/$(date +%Y-Q%q)
+    integrated: true
 
   - id: counteractive-ir
     name: Incident Response Template

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "exportedAt": "2026-05-28T12:00:00.000Z",
+  "metadata": {
+    "orgName": "Example Health Co",
+    "assessDate": "2026-05-28",
+    "assessor": "Security Officer",
+    "orgType": "Covered Entity"
+  },
+  "responses": {
+    "ADM-01": 2,
+    "ADM-02": 1,
+    "TEC-05": 0
+  },
+  "notes": {
+    "ADM-02": "Risk plan draft — Q3 deadline",
+    "TEC-05": "MFA not enforced on legacy VPN"
+  },
+  "risk": { "likelihood": 3, "impact": 4 },
+  "attestation": { "name": "Jane Doe", "date": "2026-05-28" }
+}
