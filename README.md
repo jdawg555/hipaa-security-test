@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.3](https://img.shields.io/badge/Version-1.3-blue.svg)](CHANGELOG.md)
+[![Version: 1.4](https://img.shields.io/badge/Version-1.4-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -16,7 +16,10 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 
 | Component | Description |
 |-----------|-------------|
-| **`hipaa-audit` CLI** | Scan repo + optional cloud for 30+ mapped controls |
+| **`hipaa-audit` CLI** | Scan repo + AWS + Okta/Google for 29 controls / 55+ checks |
+| **Posture score** | Weighted compliance % + history trend |
+| **Remediation tasks** | Auto-sync failures → `compliance/tasks.yaml` |
+| **Probo export** | `hipaa-audit export probo` for full GRC stack |
 | **Control catalog** | `controls/hipaa-security-rule.yaml` with CFR citations |
 | **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors… |
 | **Registers** | SRA, risk, BAA, vendor risk, **AI risk**, **state law overlay** |
@@ -46,7 +49,7 @@ pip install -e ".[dev]"
 
 hipaa-audit scan .                 # audit this repo
 hipaa-audit init                   # bootstrap your app repo
-bash scripts/collect-external-evidence.sh /path/to/your-app
+bash scripts/run-e2e.sh .
 ```
 
 Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml` and set `org_name`.

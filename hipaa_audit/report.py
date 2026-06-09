@@ -6,6 +6,8 @@ from pathlib import Path
 from jinja2 import Template
 
 from hipaa_audit.models import AuditReport, CheckStatus
+from hipaa_audit.posture import compute_posture
+from hipaa_audit.tasks import list_open_tasks
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -13,20 +15,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <meta charset="utf-8">
   <title>HIPAA Compliance Dashboard — {{ org_name }}</title>
   <style>
-    :root { --pass:#0d7a4a; --fail:#b42318; --warn:#b54708; --manual:#475467; --bg:#f8fafc; }
+    :root { --pass:#0d7a4a; --fail:#b42318; --warn:#b54708; --manual:#475467; --bg:#f8fafc; --accent:#0c6e7c; }
     body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); color: #101828; }
-    header { background: #0c6e7c; color: white; padding: 1.5rem 2rem; }
+    header { background: var(--accent); color: white; padding: 1.5rem 2rem; }
     header h1 { margin: 0; font-size: 1.5rem; }
     .meta { opacity: .9; font-size: .9rem; margin-top: .5rem; }
     .summary { display: flex; gap: 1rem; padding: 1.5rem 2rem; flex-wrap: wrap; }
     .card { background: white; border-radius: 8px; padding: 1rem 1.25rem; min-width: 120px;
             box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .card strong { font-size: 1.75rem; display: block; }
+    .posture strong { font-size: 2.25rem; color: var(--accent); }
     .pass strong { color: var(--pass); }
     .fail strong { color: var(--fail); }
     .warn strong { color: var(--warn); }
     .manual strong { color: var(--manual); }
     main { padding: 0 2rem 2rem; }
+    section { margin-bottom: 1.5rem; }
+    h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px;
              overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     th, td { text-align: left; padding: .75rem 1rem; border-bottom: 1px solid #eaecf0; }
@@ -39,6 +44,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     .badge.manual { background: #f2f4f7; color: var(--manual); }
     .badge.skip { background: #f9fafb; color: #98a2b3; }
     .citation { font-size: .8rem; color: #667085; }
+    .history { font-size: .85rem; color: #475467; }
     footer { padding: 1rem 2rem; font-size: .8rem; color: #667085; }
   </style>
 </head>
@@ -48,51 +54,101 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div class="meta">{{ org_name }} · {{ generated_at }} · {{ repo_path }}</div>
   </header>
   <div class="summary">
+    <div class="card posture"><strong>{{ posture_score }}%</strong>Posture score</div>
     <div class="card pass"><strong>{{ summary.pass }}</strong>Pass</div>
     <div class="card fail"><strong>{{ summary.fail }}</strong>Fail</div>
     <div class="card warn"><strong>{{ summary.warn }}</strong>Warn</div>
     <div class="card manual"><strong>{{ summary.manual }}</strong>Manual</div>
-    <div class="card"><strong>{{ total }}</strong>Total controls</div>
-    <div class="card"><strong>{{ score }}%</strong>Automated pass rate</div>
+    <div class="card"><strong>{{ total }}</strong>Controls</div>
+    <div class="card"><strong>{{ open_tasks }}</strong>Open tasks</div>
   </div>
   <main>
-    <table>
-      <thead>
-        <tr><th>Control</th><th>Category</th><th>Citation</th><th>Status</th><th>Details</th></tr>
-      </thead>
-      <tbody>
-        {% for row in rows %}
-        <tr>
-          <td><strong>{{ row.id }}</strong><br>{{ row.title }}</td>
-          <td>{{ row.category }}</td>
-          <td class="citation">{{ row.citation }}</td>
-          <td><span class="badge {{ row.status }}">{{ row.status }}</span></td>
-          <td>{{ row.message }}</td>
-        </tr>
+    {% if history %}
+    <section>
+      <h2>Posture trend</h2>
+      <p class="history">{{ history }}</p>
+    </section>
+    {% endif %}
+    {% if tasks %}
+    <section>
+      <h2>Open remediation tasks</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Control</th><th>Title</th><th>Owner</th><th>Due</th></tr></thead>
+        <tbody>
+        {% for t in tasks %}
+          <tr>
+            <td>{{ t.id }}</td>
+            <td>{{ t.control_id }}</td>
+            <td>{{ t.title }}</td>
+            <td>{{ t.owner }}</td>
+            <td>{{ t.due_date }}</td>
+          </tr>
         {% endfor %}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+    <section>
+      <h2>Controls</h2>
+      <table>
+        <thead>
+          <tr><th>Control</th><th>Category</th><th>Citation</th><th>Status</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td><strong>{{ row.id }}</strong><br>{{ row.title }}</td>
+            <td>{{ row.category }}</td>
+            <td class="citation">{{ row.citation }}</td>
+            <td><span class="badge {{ row.status }}">{{ row.status }}</span></td>
+            <td>{{ row.message }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
   </main>
   <footer>
-    Generated by <a href="https://github.com/jdawg555/hipaa-security-test">hipaa-audit</a> (open source).
-    Not legal advice. Pair automated checks with annual SRA and counsel review.
+    Generated by <a href="https://github.com/jdawg555/hipaa-security-test">hipaa-audit</a> v{{ version }}.
+    Export to Probo: <code>hipaa-audit export probo</code>
   </footer>
 </body>
 </html>
 """
 
 
+def _load_history(repo_path: Path) -> str:
+    history_file = repo_path / "evidence" / "history" / "posture.jsonl"
+    if not history_file.exists():
+        return ""
+    lines = history_file.read_text().strip().splitlines()[-8:]
+    parts = []
+    for line in lines:
+        try:
+            row = json.loads(line)
+            parts.append(f"{row.get('generated_at', '')[:10]}: {row.get('score')}%")
+        except json.JSONDecodeError:
+            continue
+    return " → ".join(parts)
+
+
 def write_reports(report: AuditReport, output_dir: Path) -> dict[str, Path]:
+    from hipaa_audit import __version__
+
     output_dir.mkdir(parents=True, exist_ok=True)
     paths: dict[str, Path] = {}
+    posture = compute_posture(report)
+    repo_path = Path(report.repo_path)
+    tasks_path = repo_path / report.config.get("tasks_path", "compliance/tasks.yaml")
+    open_tasks = list_open_tasks(tasks_path) if tasks_path.exists() else []
 
-    # JSON
     json_path = output_dir / "audit-report.json"
     payload = {
         "org_name": report.org_name,
         "generated_at": report.generated_at,
         "repo_path": report.repo_path,
         "summary": report.summary,
+        "posture": posture,
         "controls": [
             {
                 "id": cr.control.id,
@@ -118,11 +174,11 @@ def write_reports(report: AuditReport, output_dir: Path) -> dict[str, Path]:
     json_path.write_text(json.dumps(payload, indent=2))
     paths["json"] = json_path
 
-    # Markdown
     md_path = output_dir / "audit-report.md"
     lines = [
         f"# HIPAA Audit Report — {report.org_name}",
         f"Generated: {report.generated_at}",
+        f"**Posture score:** {posture['score']}%",
         "",
         "## Summary",
         "",
@@ -143,10 +199,6 @@ def write_reports(report: AuditReport, output_dir: Path) -> dict[str, Path]:
     md_path.write_text("\n".join(lines))
     paths["markdown"] = md_path
 
-    # HTML dashboard
-    auto = [cr for cr in report.controls if cr.control.control_type.value != "manual"]
-    auto_pass = sum(1 for cr in auto if cr.status == CheckStatus.PASS)
-    score = int(100 * auto_pass / len(auto)) if auto else 0
     rows = []
     for cr in report.controls:
         msg = "; ".join(r.message for r in cr.results[:2])
@@ -166,11 +218,19 @@ def write_reports(report: AuditReport, output_dir: Path) -> dict[str, Path]:
         repo_path=report.repo_path,
         summary=report.summary,
         total=len(report.controls),
-        score=score,
+        posture_score=posture["score"],
+        open_tasks=len(open_tasks),
+        tasks=open_tasks[:10],
+        history=_load_history(repo_path),
         rows=rows,
+        version=__version__,
     )
     html_path = output_dir / "dashboard.html"
     html_path.write_text(html)
     paths["html"] = html_path
+
+    posture_path = output_dir / "posture.json"
+    posture_path.write_text(json.dumps(posture, indent=2))
+    paths["posture"] = posture_path
 
     return paths

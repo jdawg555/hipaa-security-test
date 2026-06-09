@@ -59,7 +59,8 @@ jobs:
           integrations.setdefault("checkov", {})["enabled"] = True
           Path("hipaa-audit.yaml").write_text(yaml.dump(cfg))
           PY
-          hipaa-audit scan . -o evidence/ci-${{ github.run_id }}
+          hipaa-audit scan . -o evidence/ci-${{ github.run_id }} --no-sync-tasks
+          hipaa-audit export probo -o evidence/ci-${{ github.run_id }}/probo-import.json --report evidence/ci-${{ github.run_id }}/audit-report.json
 
       - name: Upload evidence
         uses: actions/upload-artifact@v4

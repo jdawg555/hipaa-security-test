@@ -11,7 +11,7 @@ def test_self_audit_runs(tmp_path):
     cfg = load_config(ROOT / "hipaa-audit.example.yaml")
     cfg["org_name"] = "hipaa-security-test"
     report = run_audit(ROOT, config=cfg, evidence_dir=tmp_path)
-    assert len(report.controls) >= 20
+    assert len(report.controls) >= 28
     paths = write_reports(report, tmp_path)
     assert paths["json"].exists()
     assert paths["html"].exists()

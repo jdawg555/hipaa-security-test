@@ -56,3 +56,21 @@ github:
   enabled: false
   repo: your-org/your-repo
   default_branch: main
+
+# Identity providers (set env: OKTA_API_TOKEN, GOOGLE_APPLICATION_CREDENTIALS)
+identity:
+  okta:
+    enabled: false
+    domain: your-org.okta.com
+    token_env: OKTA_API_TOKEN
+    inactive_days: 90
+  google:
+    enabled: false
+    admin_email: admin@your-org.com
+    credentials_env: GOOGLE_APPLICATION_CREDENTIALS
+
+# Remediation tasks (auto-created on scan failures)
+tasks_path: compliance/tasks.yaml
+tasks:
+  default_owner: security@your-org.com
+  due_days: 14

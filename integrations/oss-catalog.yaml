@@ -16,6 +16,16 @@ categories:
     description: Full GRC platforms (reference — not bundled)
 
 sources:
+  - id: probo
+    name: Probo
+    repo: https://github.com/getprobo/probo
+    license: ISC
+    stars_note: "1k+"
+    role: Self-hosted GRC platform — trust center, vendors, access reviews, MCP API
+    integrated: true
+    docs: docs/stacks/probo-hipaa-audit.md
+    note: Import via hipaa-audit export probo
+
   - id: prowler
     name: Prowler
     repo: https://github.com/prowler-cloud/prowler

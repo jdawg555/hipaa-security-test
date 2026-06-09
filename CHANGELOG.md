@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.4.0] — 2026-05-28
+
+### Added
+
+- **14 new AWS checks** — IAM root MFA, password policy, VPC flow logs, S3 encryption, RDS backup, Security Hub, Config, CloudTrail validation, EBS default encryption
+- **Identity module** — Okta MFA policies, inactive users; Google Workspace 2SV (optional `[identity]` extra)
+- **Posture engine** — weighted score, `evidence/history/posture.jsonl` trend, dashboard display
+- **Remediation tasks** — `compliance/tasks.yaml`, `hipaa-audit tasks list|sync|done`, auto-sync on scan
+- **Probo export** — `hipaa-audit export probo` for getprobo/probo GRC import
+- **E2E script** — `scripts/run-e2e.sh` full workflow
+- **Docs** — `docs/stacks/probo-hipaa-audit.md`
+- **Controls** — `HIPAA-AWS-002`, `HIPAA-AWS-003`, `HIPAA-IDP-001` (29 controls total)
+
+### Changed
+
+- Dashboard shows posture score, open tasks, history trend
+- `hipaa-audit init` copies tasks template and e2e script
+
 ## [1.3.0] — 2026-05-28
 
 ### Added

@@ -2,7 +2,7 @@
 # Maps 45 CFR Part 164 Subpart C to automated + manual checks.
 # Cross-walk: NIST CSF 2.0, SOC 2 TSC (informative, not exhaustive).
 
-version: "1.0"
+version: "1.4"
 framework: HIPAA Security Rule
 citations:
   - "45 CFR §164.308 — Administrative safeguards"
@@ -260,10 +260,18 @@ controls:
     type: manual
     severity: required
     checks:
-      - id: mfa-enforced
+      - id: okta-mfa-policy
+        module: identity
+        handler: okta_mfa_policy
+        title: Okta MFA enrollment policy active
+      - id: google-2sv
+        module: identity
+        handler: google_2sv_enforced
+        title: Google Workspace 2-Step Verification
+      - id: mfa-attestation
         type: manual
-        title: MFA enforced for PHI system access
-        instructions: Document IdP MFA policy; no password-only admin access.
+        title: MFA attestation for all PHI systems
+        instructions: Document IdP MFA for apps without automated checks (EHR, VPN, etc.).
 
   - id: HIPAA-164.312-e1
     title: Transmission security
@@ -367,10 +375,78 @@ controls:
         module: aws
         handler: s3_public_access_blocked
         title: S3 public access blocked
+      - id: s3-encryption
+        module: aws
+        handler: s3_default_encryption
+        title: S3 default encryption
       - id: guardduty
         module: aws
         handler: guardduty_enabled
         title: GuardDuty threat detection
+      - id: security-hub
+        module: aws
+        handler: security_hub_enabled
+        title: AWS Security Hub enabled
+      - id: config-recorder
+        module: aws
+        handler: config_recorder_enabled
+        title: AWS Config recorder active
+
+  - id: HIPAA-AWS-002
+    title: AWS IAM and network audit
+    category: technical
+    citation: "§164.312(b) — audit controls"
+    type: automated
+    severity: required
+    checks:
+      - id: iam-root-mfa
+        module: aws
+        handler: iam_root_mfa
+        title: Root account MFA and no root keys
+      - id: iam-password-policy
+        module: aws
+        handler: iam_password_policy
+        title: IAM password policy baseline
+      - id: vpc-flow-logs
+        module: aws
+        handler: vpc_flow_logs
+        title: VPC flow logging
+      - id: cloudtrail-validation
+        module: aws
+        handler: cloudtrail_log_validation
+        title: CloudTrail log file validation
+
+  - id: HIPAA-AWS-003
+    title: AWS data protection
+    category: technical
+    citation: "§164.312(a)(2)(iv) — encryption"
+    type: automated
+    severity: required
+    checks:
+      - id: rds-backup
+        module: aws
+        handler: rds_backup_enabled
+        title: RDS automated backups
+      - id: ebs-encryption-default
+        module: aws
+        handler: ebs_encryption_by_default
+        title: EBS encryption by default
+
+  - id: HIPAA-IDP-001
+    title: Identity provider hardening
+    category: technical
+    citation: "§164.312(d) — authentication"
+    type: hybrid
+    severity: required
+    checks:
+      - id: okta-inactive
+        module: identity
+        handler: okta_inactive_users
+        title: Okta inactive accounts reviewed
+      - id: google-sharing
+        module: identity
+        handler: google_external_sharing
+        title: Google Drive external sharing restricted
 
   # ── External scanner evidence (Prowler, Trivy, OSV) ───────────────────────
 

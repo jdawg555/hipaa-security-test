@@ -9,4 +9,7 @@ evidence/*/
 !evidence/.gitkeep
 !evidence/README.md
 hipaa-audit.yaml
+compliance/tasks.yaml
+templates/sra-imported.md
+docs/security/sra-imported.md
 .DS_Store
