@@ -68,6 +68,16 @@ def list_open_tasks(tasks_path: Path) -> list[dict[str, Any]]:
     return [t for t in load_tasks(tasks_path).get("tasks", []) if t.get("status") == "open"]
 
 
+def assign_task(tasks_path: Path, task_id: str, owner: str) -> bool:
+    data = load_tasks(tasks_path)
+    for task in data.get("tasks", []):
+        if task.get("id") == task_id:
+            task["owner"] = owner.strip()
+            save_tasks(tasks_path, data)
+            return True
+    return False
+
+
 def complete_task(tasks_path: Path, task_id: str) -> bool:
     data = load_tasks(tasks_path)
     for task in data.get("tasks", []):

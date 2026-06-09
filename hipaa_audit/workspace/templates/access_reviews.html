@@ -2,20 +2,100 @@
 {% block content %}
 <h1>Access reviews</h1>
 <p class="subtitle">Quarterly campaigns for SaaS, IAM, and IdP access — Vanta-style access review tracker.</p>
+
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">Start campaign</h2>
+  <form method="post" action="/access-reviews/start" class="form-grid">
+    <label>Campaign name
+      <input type="text" name="name" placeholder="Q3 2026 quarterly access review" required>
+    </label>
+    <label>Campaign owner
+      <input type="email" name="owner" placeholder="security@your-org.com" required>
+    </label>
+    <label>Due in (days)
+      <input type="number" name="due_days" value="30" min="7" max="120">
+    </label>
+    <label class="full">Systems <small style="color:var(--muted)">one per line: id|name|owner</small>
+      <textarea name="systems_text" rows="4" placeholder="github|GitHub organization|eng-lead@example.com&#10;aws-iam|AWS IAM|infra@example.com"></textarea>
+    </label>
+    <div class="full"><button class="btn" type="submit">Start campaign</button></div>
+  </form>
+</div>
+
 {% if campaigns %}
 <table>
-  <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Due</th><th>Decisions</th></tr></thead>
+  <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Due</th><th>Systems</th><th>Decisions</th><th></th></tr></thead>
   <tbody>
     {% for c in campaigns %}
     <tr>
       <td>{{ c.id }}</td><td>{{ c.name }}</td><td>{{ c.status }}</td>
-      <td>{{ c.due_date }}</td><td>{{ c.decisions }}</td>
+      <td>{{ c.due_date }}</td>
+      <td>{{ c.systems|length }}</td>
+      <td>{{ c.decisions }}</td>
+      <td>
+        {% if c.status == 'in_progress' %}
+        <form method="post" action="/access-reviews/complete" style="display:inline">
+          <input type="hidden" name="campaign_id" value="{{ c.id }}">
+          <button class="btn secondary btn-sm" type="submit">Complete</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
+{% for c in campaigns %}
+  {% if c.status == 'in_progress' %}
+  <div class="card" style="margin-top:1.25rem">
+    <h2 style="font-size:1rem;margin:0 0 .75rem">Record decision — {{ c.name }}</h2>
+    <form method="post" action="/access-reviews/decide" class="form-grid">
+      <input type="hidden" name="campaign_id" value="{{ c.id }}">
+      <label>System
+        <select name="system_id" required>
+          {% for s in c.systems %}
+          <option value="{{ s.id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Principal (user/role)
+        <input type="text" name="principal" placeholder="user@example.com" required>
+      </label>
+      <label>Decision
+        <select name="decision" required>
+          <option value="retain">Retain</option>
+          <option value="revoke">Revoke</option>
+          <option value="modify">Modify</option>
+        </select>
+      </label>
+      <label>Reviewer
+        <input type="email" name="reviewer" placeholder="reviewer@example.com" required>
+      </label>
+      <label class="full">Notes
+        <input type="text" name="notes" placeholder="Optional context">
+      </label>
+      <div class="full"><button class="btn secondary" type="submit">Record decision</button></div>
+    </form>
+    {% if c.decision_rows %}
+    <h3 style="font-size:.9rem;margin:1rem 0 .5rem">Recorded</h3>
+    <table>
+      <thead><tr><th>System</th><th>Principal</th><th>Decision</th><th>Reviewer</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for d in c.decision_rows %}
+        <tr>
+          <td>{{ d.system_id }}</td><td>{{ d.principal }}</td><td>{{ d.decision }}</td>
+          <td>{{ d.reviewer }}</td><td>{{ d.reviewed_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+  {% endif %}
+{% endfor %}
+
 {% else %}
-<p>No campaigns. Start one: <code>hipaa-audit access-review start "Q2 review" security@your-org.com</code></p>
+<p>No campaigns yet — use the form above to start your first quarterly review.</p>
 {% endif %}
 <p style="margin-top:1rem"><a class="btn secondary" href="/integrations">Enable access reviews</a></p>
 {% endblock %}

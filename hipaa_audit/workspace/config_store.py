@@ -31,6 +31,17 @@ def ensure_bootstrapped(repo_path: Path) -> bool:
     return (repo_path / "hipaa-audit.yaml").exists() and (repo_path / "policies").is_dir()
 
 
+def _connection_badge(config: dict[str, Any], integration_id: str) -> dict[str, Any] | None:
+    test = config.get("workspace", {}).get("connection_tests", {}).get(integration_id)
+    if not test:
+        return None
+    return {
+        "ok": test.get("ok", False),
+        "message": test.get("message", ""),
+        "tested_at": test.get("tested_at", ""),
+    }
+
+
 def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
     cards = [
         {
@@ -38,62 +49,81 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "name": "Amazon Web Services",
             "enabled": config.get("aws", {}).get("enabled", False),
             "hint": "Uses AWS credentials from environment or ~/.aws",
+            "testable": True,
         },
         {
             "id": "github",
             "name": "GitHub",
             "enabled": config.get("github", {}).get("enabled", False),
             "hint": "Set GITHUB_TOKEN and repo slug in settings",
+            "testable": True,
         },
         {
             "id": "okta",
             "name": "Okta",
             "enabled": config.get("identity", {}).get("okta", {}).get("enabled", False),
             "hint": "Set OKTA_API_TOKEN and Okta domain",
+            "testable": True,
         },
         {
             "id": "google",
             "name": "Google Workspace",
             "enabled": config.get("identity", {}).get("google", {}).get("enabled", False),
             "hint": "Service account + GOOGLE_APPLICATION_CREDENTIALS",
+            "testable": True,
         },
         {
             "id": "prowler",
             "name": "Prowler",
             "enabled": config.get("integrations", {}).get("prowler", {}).get("enabled", False),
             "hint": "Run collect-external-evidence.sh or prowler manually",
+            "testable": True,
         },
         {
             "id": "personnel",
             "name": "Personnel",
             "enabled": config.get("personnel", {}).get("enabled", False),
             "hint": "Policy acks + training CSV",
+            "testable": True,
         },
         {
             "id": "vendors",
             "name": "Vendor risk",
             "enabled": config.get("vendors", {}).get("enabled", False),
             "hint": "Vendor register + questionnaires",
+            "testable": True,
         },
         {
             "id": "access_reviews",
             "name": "Access reviews",
             "enabled": config.get("access_reviews", {}).get("enabled", False),
             "hint": "Quarterly IAM/SaaS campaigns",
+            "testable": True,
         },
         {
             "id": "devices",
             "name": "MDM devices",
             "enabled": config.get("devices", {}).get("enabled", False),
-            "hint": "Jamf/Intune CSV import",
+            "hint": "Jamf/Intune CSV import or Jamf API",
+            "testable": True,
+        },
+        {
+            "id": "jamf",
+            "name": "Jamf Pro",
+            "enabled": config.get("devices", {}).get("enabled", False),
+            "hint": "Set JAMF_URL, JAMF_USER, JAMF_PASSWORD",
+            "testable": True,
         },
         {
             "id": "saas_inventory",
             "name": "SaaS inventory",
             "enabled": config.get("saas_inventory", {}).get("enabled", False),
             "hint": "Okta/Google app discovery",
+            "testable": True,
         },
     ]
+    for card in cards:
+        card["connection"] = _connection_badge(config, card["id"])
     return cards
 
 

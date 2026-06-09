@@ -37,7 +37,7 @@ capabilities:
     vanta: full
     drata: full
     surfaces: [workspace.integrations]
-    gaps: [oauth_connect, connection_test_button, status_badges]
+    gaps: [oauth_connect]
     modules: [platform.adapters]
 
   - id: P-04
@@ -79,10 +79,10 @@ capabilities:
   - id: P-08
     name: Remediation tasks and owners
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [workspace_tasks_page, assign_owner_ui]
+    surfaces: [workspace.tasks]
     modules: [tasks]
 
   - id: P-09
@@ -127,7 +127,8 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [workspace_campaign_builder, idp_user_picker]
+    gaps: [idp_user_picker]
+    surfaces: [workspace.access_reviews]
     modules: [access_reviews]
 
   - id: P-14

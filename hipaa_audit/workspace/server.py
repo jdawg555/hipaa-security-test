@@ -13,13 +13,19 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from hipaa_audit import __version__
-from hipaa_audit.access_reviews import load_campaigns
+from hipaa_audit.access_reviews import (
+    complete_campaign,
+    load_campaigns,
+    record_decision,
+    start_campaign,
+)
 from hipaa_audit.controls import PACKAGE_ROOT
 from hipaa_audit.devices import load_devices
 from hipaa_audit.export_auditor import build_auditor_bundle
 from hipaa_audit.questionnaires import load_questionnaires
 from hipaa_audit.report import _load_history
-from hipaa_audit.tasks import list_open_tasks
+from hipaa_audit.platform.adapters.registry import record_connection_test, test_integration_connection
+from hipaa_audit.tasks import assign_task, complete_task, list_open_tasks, load_tasks
 from hipaa_audit.vendors import load_vendors
 from hipaa_audit.workspace.config_store import (
     apply_integration_toggle,
@@ -157,20 +163,74 @@ def create_app(repo_path: Path) -> FastAPI:
         return _render("monitoring.html", **ctx)
 
     @app.get("/integrations", response_class=HTMLResponse)
-    def integrations() -> HTMLResponse:
+    def integrations(request: Request) -> HTMLResponse:
         if not ensure_bootstrapped(repo_path):
             return RedirectResponse("/onboarding", status_code=302)
         config = load_workspace_config(repo_path)
         ctx = base_ctx("integrations")
         ctx["integrations"] = integration_status(config)
+        test = request.query_params.get("test", "")
+        msg = request.query_params.get("msg", "").replace("+", " ")
+        if test == "ok":
+            ctx["flash"] = f"Connection OK: {msg}"
+        elif test == "fail":
+            ctx["flash_error"] = f"Connection failed: {msg}"
         return _render("integrations.html", **ctx)
 
     @app.post("/integrations/toggle")
     def integrations_toggle(integration_id: str = Form(...), enabled: str = Form(...)) -> RedirectResponse:
         config = load_workspace_config(repo_path)
-        config = apply_integration_toggle(config, integration_id, enabled.lower() == "true")
+        if integration_id == "jamf":
+            config.setdefault("devices", {})["enabled"] = enabled.lower() == "true"
+        else:
+            config = apply_integration_toggle(config, integration_id, enabled.lower() == "true")
         save_workspace_config(repo_path, config)
         return RedirectResponse("/integrations", status_code=303)
+
+    @app.post("/integrations/test")
+    def integrations_test(integration_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        result = test_integration_connection(integration_id, config, repo_path=repo_path)
+        config = record_connection_test(config, integration_id, result)
+        save_workspace_config(repo_path, config)
+        status = "ok" if result.ok else "fail"
+        msg = result.message.replace(" ", "+")[:100]
+        return RedirectResponse(f"/integrations?test={status}&msg={msg}", status_code=303)
+
+    @app.get("/tasks", response_class=HTMLResponse)
+    def tasks_page(request: Request) -> HTMLResponse:
+        if not ensure_bootstrapped(repo_path):
+            return RedirectResponse("/onboarding", status_code=302)
+        config = load_workspace_config(repo_path)
+        tasks_path = repo_path / config.get("tasks_path", "compliance/tasks.yaml")
+        all_tasks = load_tasks(tasks_path).get("tasks", [])
+        open_tasks = [t for t in all_tasks if t.get("status") == "open"]
+        done_tasks = [t for t in all_tasks if t.get("status") != "open"]
+        ctx = base_ctx("tasks")
+        ctx.update(
+            {
+                "open_tasks": open_tasks,
+                "done_tasks": done_tasks,
+                "flash": request.query_params.get("flash", ""),
+            }
+        )
+        return _render("tasks.html", **ctx)
+
+    @app.post("/tasks/done")
+    def tasks_done(task_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        tasks_path = repo_path / config.get("tasks_path", "compliance/tasks.yaml")
+        if complete_task(tasks_path, task_id):
+            return RedirectResponse("/tasks?flash=Task+marked+done", status_code=303)
+        return RedirectResponse("/tasks?flash=Task+not+found", status_code=303)
+
+    @app.post("/tasks/assign")
+    def tasks_assign(task_id: str = Form(...), owner: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        tasks_path = repo_path / config.get("tasks_path", "compliance/tasks.yaml")
+        if assign_task(tasks_path, task_id, owner):
+            return RedirectResponse("/tasks?flash=Owner+updated", status_code=303)
+        return RedirectResponse("/tasks?flash=Task+not+found", status_code=303)
 
     @app.get("/personnel", response_class=HTMLResponse)
     def personnel() -> HTMLResponse:
@@ -186,18 +246,83 @@ def create_app(repo_path: Path) -> FastAPI:
         ctx["questionnaires"] = load_questionnaires(qpath).get("questionnaires", [])
         return _render("vendors.html", **ctx)
 
-    @app.get("/access-reviews", response_class=HTMLResponse)
-    def access_reviews_page() -> HTMLResponse:
-        config = load_workspace_config(repo_path)
-        path = repo_path / config.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
-        data = load_campaigns(path)
+    def _access_review_path(config: dict[str, Any]) -> Path:
+        return repo_path / config.get("access_reviews", {}).get("register_path", "compliance/access-reviews.yaml")
+
+    def _campaign_rows(data: dict[str, Any]) -> list[dict[str, Any]]:
         campaigns = []
         for c in data.get("campaigns", []):
-            decisions = len([d for d in data.get("decisions", []) if d.get("campaign_id") == c["id"]])
-            campaigns.append({**c, "decisions": decisions})
+            related = [d for d in data.get("decisions", []) if d.get("campaign_id") == c["id"]]
+            campaigns.append({**c, "decisions": len(related), "decision_rows": related})
+        return campaigns
+
+    @app.get("/access-reviews", response_class=HTMLResponse)
+    def access_reviews_page(request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        data = load_campaigns(_access_review_path(config))
         ctx = base_ctx("access_reviews")
-        ctx["campaigns"] = campaigns
+        ctx["campaigns"] = _campaign_rows(data)
+        ctx["flash"] = request.query_params.get("flash", "")
         return _render("access_reviews.html", **ctx)
+
+    @app.post("/access-reviews/start")
+    def access_reviews_start(
+        name: str = Form(...),
+        owner: str = Form(...),
+        due_days: int = Form(30),
+        systems_text: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        path = _access_review_path(config)
+        systems: list[dict[str, str]] = []
+        for line in systems_text.strip().splitlines():
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) >= 2:
+                systems.append(
+                    {
+                        "id": parts[0],
+                        "name": parts[1],
+                        "owner": parts[2] if len(parts) > 2 else owner,
+                    }
+                )
+        if not systems:
+            systems = [
+                {"id": "github", "name": "GitHub organization", "owner": owner},
+                {"id": "aws-iam", "name": "AWS IAM users and roles", "owner": owner},
+            ]
+        start_campaign(path, name=name, owner=owner, systems=systems, due_days=due_days)
+        return RedirectResponse("/access-reviews?flash=Campaign+started", status_code=303)
+
+    @app.post("/access-reviews/decide")
+    def access_reviews_decide(
+        campaign_id: str = Form(...),
+        system_id: str = Form(...),
+        principal: str = Form(...),
+        decision: str = Form(...),
+        reviewer: str = Form(...),
+        notes: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        path = _access_review_path(config)
+        if record_decision(
+            path,
+            campaign_id=campaign_id,
+            system_id=system_id,
+            principal=principal,
+            decision=decision,
+            reviewer=reviewer,
+            notes=notes,
+        ):
+            return RedirectResponse("/access-reviews?flash=Decision+recorded", status_code=303)
+        return RedirectResponse("/access-reviews?flash=Campaign+not+found", status_code=303)
+
+    @app.post("/access-reviews/complete")
+    def access_reviews_complete(campaign_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        path = _access_review_path(config)
+        if complete_campaign(path, campaign_id):
+            return RedirectResponse("/access-reviews?flash=Campaign+completed", status_code=303)
+        return RedirectResponse("/access-reviews?flash=Campaign+not+found", status_code=303)
 
     @app.get("/devices", response_class=HTMLResponse)
     def devices_page() -> HTMLResponse:

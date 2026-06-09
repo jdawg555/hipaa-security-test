@@ -132,7 +132,10 @@ integrations:
     category: endpoints
     auth: env_vars
     env_vars: [JAMF_URL, JAMF_USER, JAMF_PASSWORD]
-    status: planned
+    config_key: devices.enabled
+    connection_test: jamf.api_auth
+    workspace_toggle: true
+    status: shipped
     parity_id: P-12
     phase: 4
 

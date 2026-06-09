@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from hipaa_audit.platform.parity import load_capabilities, load_integrations, parity_report
 from hipaa_audit.platform.scaffold import scaffold_integration, scaffold_module
 
@@ -46,3 +48,44 @@ def test_scaffold_integration(tmp_path):
     created = scaffold_integration(tmp_path, "jamf")
     assert (tmp_path / "platform" / "scaffold-jamf.yaml").exists()
     assert (PACKAGE_ROOT / "hipaa_audit" / "platform" / "adapters" / "jamf.py").exists()
+
+
+def test_jamf_adapter_missing_env():
+    from hipaa_audit.platform.adapters.jamf import JamfAdapter
+
+    result = JamfAdapter().test_connection({})
+    assert not result.ok
+    assert "Missing env" in result.message
+
+
+def test_jamf_adapter_pro_api(monkeypatch):
+    pytest.importorskip("httpx")
+    from hipaa_audit.platform.adapters.jamf import JamfAdapter
+
+    monkeypatch.setenv("JAMF_URL", "https://jamf.example.com")
+    monkeypatch.setenv("JAMF_USER", "api")
+    monkeypatch.setenv("JAMF_PASSWORD", "secret")
+
+    class FakeResponse:
+        status_code = 200
+
+    def fake_post(url, **kwargs):
+        assert url.endswith("/api/v1/auth")
+        return FakeResponse()
+
+    import httpx
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    result = JamfAdapter().test_connection({})
+    assert result.ok
+    assert "Jamf Pro API" in result.message
+
+
+def test_registry_personnel_register(tmp_path):
+    from hipaa_audit.platform.adapters.registry import test_integration_connection
+
+    (tmp_path / "compliance").mkdir()
+    (tmp_path / "compliance" / "acknowledgments.yaml").write_text("items: []\n")
+    config = {"personnel": {"enabled": True, "register_path": "compliance/acknowledgments.yaml"}}
+    result = test_integration_connection("personnel", config, repo_path=tmp_path)
+    assert result.ok

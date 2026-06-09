@@ -1,23 +1,43 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Integrations</h1>
-<p class="subtitle">Connect your stack — toggle modules on, then add credentials via environment variables or CI secrets.</p>
+<p class="subtitle">Connect your stack — toggle modules on, test connections, then add credentials via environment variables.</p>
 
 <div class="card" style="padding:0">
   {% for item in integrations %}
   <div class="integration">
-    <div>
-      <strong>{{ item.name }}</strong><br>
-      <span style="color:var(--muted);font-size:.82rem">{{ item.hint }}</span>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <strong>{{ item.name }}</strong>
+        {% if item.connection %}
+          <span class="badge {{ 'pass' if item.connection.ok else 'fail' }}">
+            {{ 'connected' if item.connection.ok else 'failed' }}
+          </span>
+        {% elif item.enabled %}
+          <span class="badge manual">untested</span>
+        {% endif %}
+      </div>
+      <span style="color:var(--muted);font-size:.82rem;display:block;margin-top:.2rem">{{ item.hint }}</span>
+      {% if item.connection %}
+      <span style="color:var(--muted);font-size:.75rem">{{ item.connection.message }}</span>
+      {% endif %}
     </div>
-    <form method="post" action="/integrations/toggle">
-      <input type="hidden" name="integration_id" value="{{ item.id }}">
-      <input type="hidden" name="enabled" value="{{ 'false' if item.enabled else 'true' }}">
-      <label class="toggle">
-        <input type="checkbox" {% if item.enabled %}checked{% endif %} onchange="this.form.submit()">
-        <span class="slider"></span>
-      </label>
-    </form>
+    <div class="integration-actions">
+      {% if item.testable and item.enabled %}
+      <form method="post" action="/integrations/test">
+        <input type="hidden" name="integration_id" value="{{ item.id }}">
+        <button class="btn secondary btn-sm" type="submit">Test</button>
+      </form>
+      {% endif %}
+      <form method="post" action="/integrations/toggle">
+        <input type="hidden" name="integration_id" value="{{ item.id }}">
+        <input type="hidden" name="enabled" value="{{ 'false' if item.enabled else 'true' }}">
+        <label class="toggle">
+          <input type="checkbox" {% if item.enabled %}checked{% endif %} onchange="this.form.submit()">
+          <span class="slider"></span>
+        </label>
+      </form>
+    </div>
   </div>
   {% endfor %}
 </div>
@@ -28,6 +48,7 @@
   <li><code>GITHUB_TOKEN</code> — repo scope for branch protection checks</li>
   <li><code>OKTA_API_TOKEN</code> + Okta domain in Settings</li>
   <li><code>GOOGLE_APPLICATION_CREDENTIALS</code> — Workspace admin service account</li>
+  <li><code>JAMF_URL</code>, <code>JAMF_USER</code>, <code>JAMF_PASSWORD</code> — Jamf Pro API</li>
 </ul>
 <p><a class="btn secondary" href="/settings">Edit connection settings</a></p>
 {% endblock %}

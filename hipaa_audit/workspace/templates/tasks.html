@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Remediation tasks</h1>
+<p class="subtitle">Failed controls become assigned tasks — Vanta/Drata-style remediation workflow.</p>
+
+{% if open_tasks %}
+<h2 style="font-size:1rem;margin-bottom:.5rem">Open ({{ open_tasks|length }})</h2>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Control</th><th>Title</th><th>Owner</th><th>Due</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in open_tasks %}
+    <tr>
+      <td>{{ t.id }}</td>
+      <td>{{ t.control_id }}</td>
+      <td>
+        <strong>{{ t.title }}</strong>
+        {% if t.message %}<div style="color:var(--muted);font-size:.8rem">{{ t.message[:120] }}</div>{% endif %}
+      </td>
+      <td>
+        <form method="post" action="/tasks/assign" class="inline-form">
+          <input type="hidden" name="task_id" value="{{ t.id }}">
+          <input type="email" name="owner" value="{{ t.owner }}" class="input-sm" required>
+          <button class="btn secondary btn-sm" type="submit">Save</button>
+        </form>
+      </td>
+      <td>{{ t.due_date or '—' }}</td>
+      <td>
+        <form method="post" action="/tasks/done" style="display:inline">
+          <input type="hidden" name="task_id" value="{{ t.id }}">
+          <button class="btn btn-sm" type="submit">Mark done</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No open tasks. Run a <a href="/monitoring">monitoring scan</a> to sync tasks from failed controls.</p>
+{% endif %}
+
+{% if done_tasks %}
+<h2 style="font-size:1rem;margin:2rem 0 .5rem">Completed ({{ done_tasks|length }})</h2>
+<table>
+  <thead><tr><th>ID</th><th>Control</th><th>Title</th><th>Owner</th><th>Completed</th></tr></thead>
+  <tbody>
+    {% for t in done_tasks %}
+    <tr>
+      <td>{{ t.id }}</td><td>{{ t.control_id }}</td><td>{{ t.title }}</td>
+      <td>{{ t.owner }}</td><td>{{ (t.completed_at or '')[:10] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

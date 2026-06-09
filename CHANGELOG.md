@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.2.0] — 2026-05-28
+
+### Added
+
+- **Integration connection tests** — Test button on Integrations page with connected/failed badges (AWS, GitHub, Okta, Google, Jamf, register-based modules)
+- **Tasks workspace page** — `/tasks` with owner assignment and mark-done workflow
+- **Access review campaign builder** — start campaigns, record decisions, and complete from the UI
+- **Jamf Pro adapter** — `test_connection()` via Jamf Pro API or Classic API fallback
+- **Adapter registry** — `hipaa_audit/platform/adapters/registry.py` dispatches connection tests
+
 ## [2.1.0] — 2026-05-28
 
 ### Added

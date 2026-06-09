@@ -28,17 +28,17 @@ Run live status: `hipaa-audit parity`
 |----|------------|-------------|----------|--------|---------------|-------|
 | P-01 | Web compliance workspace | SaaS app | **shipped** v2 `serve` | full | `workspace/server.py` | 1 |
 | P-02 | Onboarding wizard | Guided setup | **shipped** | full | `/onboarding` + bootstrap | 1 |
-| P-03 | Integration toggles | Connect UI | **partial** toggles only | OAuth + test connection | `platform/integrations_registry.yaml` → wizard | 2 |
+| P-03 | Integration toggles | Connect UI | **partial** toggles + test button | OAuth connect flow | `platform/adapters/` + Integrations page | 2 |
 | P-04 | Continuous monitoring | Hourly cloud tests | **partial** manual + scheduler |默认 24h + CI | `scan_runner` + `workspace.schedule_hours` | 2 |
 | P-05 | Control library + CFR | Pre-built | **shipped** 77+ HIPAA | + HITRUST slice | `controls/hipaa-*.yaml` | 1 |
 | P-06 | Multi-framework crosswalk | Test once, map many | **partial** SOC2+ISO supplements | shared check refs | `controls/soc2-*` `iso27001-*` | 2 |
 | P-07 | Posture score + history | Dashboard KPI | **shipped** | trend charts in UI | `posture.py` + workspace charts | 3 |
-| P-08 | Remediation tasks + owners | Assigned tasks | **partial** YAML tasks | UI assign + Slack | `tasks.py` + workspace tasks page | 3 |
+| P-08 | Remediation tasks + owners | Assigned tasks | **shipped** v2.2 `/tasks` UI | Slack notify | `tasks.py` + workspace tasks page | 3 |
 | P-09 | Policy library | In-app editor | **partial** git markdown | web editor + version | `policies/` + new editor module | 4 |
 | P-10 | Personnel training | LMS integration | **partial** CSV | HRIS adapter (Bamboo, Rippling) | `personnel/` + HRIS registry | 4 |
 | P-11 | Policy acknowledgments | In-app ack | **partial** YAML | employee portal link | extend personnel module | 4 |
 | P-12 | MDM / endpoints | Agent (Jamf/Kandji) | **partial** CSV import | Jamf Pro API + Intune Graph | `devices.py` + API adapters | 4 |
-| P-13 | Access reviews | In-app campaigns | **partial** YAML + CLI | UI campaign builder | `access_reviews.py` + workspace forms | 3 |
+| P-13 | Access reviews | In-app campaigns | **partial** UI builder (v2.2) | IdP user picker | `access_reviews.py` + workspace forms | 3 |
 | P-14 | SaaS inventory | Auto-discover apps | **partial** Okta/Google | + Azure AD, GitHub apps | `apps.py` adapters | 3 |
 | P-15 | Vendor register | VRM | **shipped** YAML | UI CRUD | vendors workspace forms | 3 |
 | P-16 | Vendor questionnaires | Portal + email | **partial** static HTML | send email + track opens | `vendor_portal.py` + notify | 4 |
