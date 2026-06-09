@@ -77,6 +77,14 @@ hipaa-audit scan .
 Controls `HIPAA-INT-001`, `HIPAA-AI-001`, and `HIPAA-STATE-001` ingest scanner output,
 check evidence freshness, and prompt for AI/state-law registers when configured.
 
+Browse the wider OSS landscape:
+
+```bash
+hipaa-audit sources
+```
+
+See [oss-ecosystem.md](oss-ecosystem.md) for Prowler, Checkov, ComplianceKit, SRA tools, and more.
+
 ## Annual HIPAA workflow
 
 1. **Q1:** Complete SRA (`templates/sra-template.md`)

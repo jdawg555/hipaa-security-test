@@ -1,0 +1,14 @@
+{
+  "check_type": "terraform",
+  "results": {
+    "passed_checks": [],
+    "failed_checks": [
+      {
+        "check_id": "CKV_AWS_18",
+        "check_name": "S3 access logging",
+        "resource": "aws_s3_bucket.demo"
+      }
+    ],
+    "skipped_checks": []
+  }
+}

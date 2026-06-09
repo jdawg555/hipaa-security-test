@@ -27,21 +27,36 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install hipaa-audit
-        run: pip install -e ".[aws,github]"
+      - name: Install hipaa-audit + scanners
+        run: |
+          pip install -e ".[aws,github]"
+          pip install checkov
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          go install github.com/google/osv-scanner/cmd/osv-scanner@v1
+
+      - name: Collect OSS scanner evidence
+        run: |
+          mkdir -p evidence/trivy evidence/osv evidence/checkov
+          trivy fs --format json --output evidence/trivy/report.json --skip-dirs .venv . || true
+          /home/runner/go/bin/osv-scanner --format json --output evidence/osv/report.json -r . || true
+          checkov -d examples/terraform-minimal --config-file examples/terraform-minimal/.checkov.yaml \
+            --framework terraform -o json --output-file-path evidence/checkov || true
 
       - name: Run compliance scan
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python3 - <<'PY'
-          import shutil
           from pathlib import Path
           import yaml
           src = Path("hipaa-audit.example.yaml")
           cfg = yaml.safe_load(src.read_text())
           cfg["org_name"] = "CI Audit"
           cfg.setdefault("github", {})["enabled"] = True
+          integrations = cfg.setdefault("integrations", {})
+          integrations.setdefault("trivy", {})["enabled"] = True
+          integrations.setdefault("osv", {})["enabled"] = True
+          integrations.setdefault("checkov", {})["enabled"] = True
           Path("hipaa-audit.yaml").write_text(yaml.dump(cfg))
           PY
           hipaa-audit scan . -o evidence/ci-${{ github.run_id }}

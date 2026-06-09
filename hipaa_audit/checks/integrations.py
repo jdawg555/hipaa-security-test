@@ -31,6 +31,7 @@ def run(
         "prowler_findings": _prowler_findings,
         "trivy_vulnerabilities": _trivy_vulnerabilities,
         "osv_vulnerabilities": _osv_vulnerabilities,
+        "checkov_findings": _checkov_findings,
         "evidence_freshness": _evidence_freshness,
         "ai_risk_register": _ai_risk_register,
         "state_law_overlay": _state_law_overlay,
@@ -212,6 +213,76 @@ def _trivy_vulnerabilities(check, *, repo_path, config, evidence_dir) -> CheckRe
         message="No critical/high Trivy findings in evidence",
         evidence_path=str(out),
     )
+
+
+def _checkov_findings(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    checkov_cfg = config.get("checkov", {})
+    if not checkov_cfg.get("enabled", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.SKIP,
+            message="Checkov integration disabled",
+        )
+    pattern = checkov_cfg.get("evidence_glob", "evidence/checkov/*.json")
+    files = _glob_files(repo_path, pattern)
+    if not files:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=(
+                f"No Checkov evidence at {pattern}. "
+                "Run: checkov -d . --framework terraform -o json --output-file-path evidence/checkov"
+            ),
+            remediation=check.get("remediation"),
+        )
+
+    failures: list[str] = []
+    for path in files:
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            failures.append(f"invalid JSON: {path.name}")
+            continue
+        failures.extend(_parse_checkov_json(data, path.name))
+
+    out = evidence_dir / "integration-checkov-summary.json"
+    out.write_text(json.dumps({"failures": failures[:50], "files": [str(f) for f in files]}, indent=2))
+
+    if failures:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.FAIL,
+            message=f"Checkov: {len(failures)} failed IaC check(s). See {out.name}",
+            evidence_path=str(out),
+            remediation="Fix Terraform/K8s misconfigurations or document exceptions in .checkov.yaml",
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.PASS,
+        message=f"Checkov evidence clean ({len(files)} file(s))",
+        evidence_path=str(out),
+    )
+
+
+def _parse_checkov_json(data: Any, source: str) -> list[str]:
+    """Parse Checkov JSON (single file or list of scan results)."""
+    failures: list[str] = []
+    payloads = data if isinstance(data, list) else [data]
+    for payload in payloads:
+        if not isinstance(payload, dict):
+            continue
+        results = payload.get("results") or {}
+        for item in results.get("failed_checks") or []:
+            if not isinstance(item, dict):
+                continue
+            check_id = item.get("check_id") or item.get("check_name") or "unknown"
+            resource = item.get("resource") or item.get("file_path") or ""
+            failures.append(f"{check_id} ({resource}) in {source}")
+    return failures
 
 
 def _osv_vulnerabilities(check, *, repo_path, config, evidence_dir) -> CheckResult:

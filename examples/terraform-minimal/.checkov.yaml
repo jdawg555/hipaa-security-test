@@ -1,0 +1,7 @@
+# Minimal example — skip checks that need multi-bucket or multi-region setup.
+skip-check:
+  - CKV_AWS_18    # access logging needs dedicated log bucket
+  - CKV2_AWS_61   # lifecycle — org-specific retention
+  - CKV2_AWS_62   # event notifications — optional
+  - CKV_AWS_144   # cross-region replication — optional
+  - CKV_AWS_145   # KMS default — AES256 used in example

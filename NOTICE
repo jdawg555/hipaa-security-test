@@ -19,6 +19,7 @@ When you integrate external scanners, their licenses apply separately:
 | [Prowler](https://github.com/prowler-cloud/prowler) | Apache 2.0 | AWS evidence |
 | [Trivy](https://github.com/aquasecurity/trivy) | Apache 2.0 | Vulnerability scan |
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache 2.0 | Dependency CVEs |
+| [Checkov](https://github.com/bridgecrewio/checkov) | Apache 2.0 | IaC HIPAA checks |
 
 ## Policy template lineage
 

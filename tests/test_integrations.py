@@ -44,6 +44,22 @@ def test_trivy_critical_fails(tmp_path):
     assert result.status.value == "fail"
 
 
+def test_checkov_failures(tmp_path):
+    checkov_dir = tmp_path / "evidence" / "checkov"
+    checkov_dir.mkdir(parents=True)
+    fixture = Path(__file__).parent / "fixtures" / "checkov-fail.json"
+    (checkov_dir / "results.json").write_text(fixture.read_text())
+    evidence = tmp_path / "out"
+    evidence.mkdir()
+    result = integrations.run(
+        _check("checkov_findings"),
+        repo_path=tmp_path,
+        config={"integrations": {"checkov": {"enabled": True}}},
+        evidence_dir=evidence,
+    )
+    assert result.status.value == "fail"
+
+
 def test_ai_register_skip_by_default(tmp_path):
     evidence = tmp_path / "out"
     evidence.mkdir()

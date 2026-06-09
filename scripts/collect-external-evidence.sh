@@ -8,11 +8,26 @@ ROOT="${1:-.}"
 cd "$ROOT"
 mkdir -p evidence/prowler evidence/trivy evidence/osv evidence/latest
 
-echo "==> Prowler (AWS)"
+echo "==> Prowler (AWS HIPAA mode)"
 if command -v prowler &>/dev/null; then
-  prowler aws -M json -o evidence/prowler/ --output-formats json-ocsf || true
+  prowler aws --compliance hipaa_aws -M json -o evidence/prowler/ --output-formats json-ocsf || true
 else
   echo "    skip — prowler not installed (pip install prowler-cloud)"
+fi
+
+echo "==> Checkov (IaC)"
+if command -v checkov &>/dev/null; then
+  mkdir -p evidence/checkov
+  SCAN_DIR="."
+  for candidate in examples/terraform-minimal terraform infra; do
+    if [[ -d "$candidate" ]]; then
+      SCAN_DIR="$candidate"
+      break
+    fi
+  done
+  checkov -d "$SCAN_DIR" --framework terraform -o json --output-file-path evidence/checkov || true
+else
+  echo "    skip — checkov not installed (pip install checkov)"
 fi
 
 echo "==> Trivy (filesystem)"

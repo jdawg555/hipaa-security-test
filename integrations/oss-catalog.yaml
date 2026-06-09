@@ -1,0 +1,112 @@
+# Curated open-source tools for HIPAA evidence collection.
+# MIT project — third-party licenses apply to each tool separately (see NOTICE).
+
+version: "1.0"
+
+categories:
+  cloud_posture:
+    description: Runtime cloud configuration and compliance scans
+  iac:
+    description: Infrastructure-as-code policy checks before deploy
+  vulnerabilities:
+    description: Dependency and filesystem CVE scanning
+  policies_sra:
+    description: Policy templates and security risk assessment helpers
+  grc_platforms:
+    description: Full GRC platforms (reference — not bundled)
+
+sources:
+  - id: prowler
+    name: Prowler
+    repo: https://github.com/prowler-cloud/prowler
+    license: Apache-2.0
+    stars_note: "14k+"
+    role: AWS/Azure/GCP HIPAA compliance mode
+    hipaa_command: prowler aws --compliance hipaa_aws -M json -o evidence/prowler/
+    integrated: true
+    docs: https://hub.prowler.com/compliance/hipaa_aws
+
+  - id: checkov
+    name: Checkov
+    repo: https://github.com/bridgecrewio/checkov
+    license: Apache-2.0
+    role: Terraform/K8s/CloudFormation IaC HIPAA checks
+    hipaa_command: checkov -d . --framework terraform -o json --output-file-path evidence/checkov
+    integrated: true
+    docs: https://www.checkov.io/
+
+  - id: trivy
+    name: Trivy
+    repo: https://github.com/aquasecurity/trivy
+    license: Apache-2.0
+    role: Container and filesystem vulnerability scan
+    hipaa_command: trivy fs --format json --output evidence/trivy/report.json .
+    integrated: true
+
+  - id: osv-scanner
+    name: OSV-Scanner
+    repo: https://github.com/google/osv-scanner
+    license: Apache-2.0
+    role: Open source dependency CVE matching
+    hipaa_command: osv-scanner --format json --output evidence/osv/report.json -r .
+    integrated: true
+
+  - id: steampipe
+    name: Steampipe
+    repo: https://github.com/turbot/steampipe
+    license: AGPL-3.0
+    role: SQL queries over cloud APIs for evidence exports
+    integrated: false
+    note: Tooling-only; AGPL — do not embed in MIT runtime package
+
+  - id: compliancekit
+    name: ComplianceKit
+    repo: https://github.com/darpanzope/compliancekit
+    license: Apache-2.0
+    role: Multi-framework scanner with HIPAA control mapping CSV export
+    integrated: false
+    note: Future evidence ingest candidate
+
+  - id: counteractive-ir
+    name: Incident Response Template
+    repo: https://github.com/counteractive/incident-response-template
+    license: MIT
+    role: IR plan starter aligned with policies/incident-response-plan.md
+    integrated: false
+
+  - id: jupiterone-policies
+    name: JupiterOne Policy Templates
+    repo: https://github.com/JupiterOne/security-policy-templates
+    license: CC-BY-SA-4.0
+    role: Extended policy library reference
+    integrated: false
+    note: Attribute if adapting wording; our policies/ are MIT originals
+
+  - id: hipaa-sra-tool
+    name: HIPAA SRA Tool (browser)
+    repo: https://github.com/SaberGuard-LLC/HIPAA-SRA-Tool
+    license: MIT
+    role: Client-side SRA questionnaire; export JSON for records
+    integrated: false
+    note: Complements templates/sra-template.md
+
+  - id: l0lsec-hipaa-sra
+    name: hipaa-sra
+    repo: https://github.com/l0lsec/hipaa-sra
+    license: MIT
+    role: Self-hosted SRA + policy library (33 controls)
+    integrated: false
+
+  - id: onc-sra-tool
+    name: HHS ONC SRA Tool
+    repo: https://www.healthit.gov/privacy-security/security-risk-assessment-tool
+    license: Government (desktop app)
+    role: Official OCR-aligned SRA wizard (Windows)
+    integrated: false
+
+  - id: nist-800-66
+    name: NIST SP 800-66 Rev. 2
+    repo: https://csrc.nist.gov/publications/detail/sp/800-66/rev-2/final
+    license: Public domain
+    role: HIPAA Security Rule implementation guide
+    integrated: false

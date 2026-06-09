@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.1](https://img.shields.io/badge/Version-1.1-blue.svg)](CHANGELOG.md)
+[![Version: 1.2](https://img.shields.io/badge/Version-1.2-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -20,7 +20,8 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 | **Control catalog** | `controls/hipaa-security-rule.yaml` with CFR citations |
 | **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors… |
 | **Registers** | SRA, risk, BAA, vendor risk, **AI risk**, **state law overlay** |
-| **Integrations** | Ingest **Prowler**, **Trivy**, **OSV-Scanner** JSON evidence |
+| **Integrations** | Ingest **Prowler**, **Checkov**, **Trivy**, **OSV-Scanner** evidence |
+| **OSS catalog** | `hipaa-audit sources` — curated GitHub ecosystem |
 | **HTML dashboard** | Pass/fail dashboard for auditors and security reviews |
 | **GitHub Actions** | Weekly compliance workflow |
 
@@ -47,7 +48,7 @@ bash scripts/collect-external-evidence.sh /path/to/your-app
 
 Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml` and set `org_name`.
 
-Full guide: [docs/getting-started.md](docs/getting-started.md)
+Full guide: [docs/getting-started.md](docs/getting-started.md) · OSS stack: [docs/oss-ecosystem.md](docs/oss-ecosystem.md)
 
 ---
 

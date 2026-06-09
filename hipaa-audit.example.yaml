@@ -27,6 +27,13 @@ integrations:
   osv:
     enabled: false
     evidence_glob: evidence/osv/*.json
+  checkov:
+    enabled: false
+    evidence_glob: evidence/checkov/*.json
+    scan_paths:
+      - examples/terraform-minimal
+      - terraform
+      - infra
   # Set true if LLMs/clinical AI touch PHI
   require_ai_register: false
   # US state codes where patients/consumers reside (triggers state-law overlay)

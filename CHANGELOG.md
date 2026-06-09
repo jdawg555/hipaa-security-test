@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0] — 2026-05-28
+
+### Added
+
+- **Checkov integration** — ingest IaC scan JSON (`integrations.checkov`)
+- **`hipaa-audit sources`** — curated OSS catalog (`integrations/oss-catalog.yaml`)
+- **Docs:** `docs/oss-ecosystem.md`, `docs/crosswalks/prowler-hipaa-aws.md`
+- **Examples:** `examples/terraform-minimal/` for Checkov demos
+- **Scripts:** `install-optional-scanners.sh`; Prowler `--compliance hipaa_aws` in collector
+- **CI:** Trivy + OSV-Scanner + Checkov evidence steps in GitHub Actions
+- **`.checkov.example.yaml`** — HIPAA-oriented IaC check list
+
+### Changed
+
+- Wheel build bundles `controls/`, `policies/`, `templates/`, `integrations/` for pip installs
+
 ## [1.1.0] — 2026-05-28
 
 ### Added

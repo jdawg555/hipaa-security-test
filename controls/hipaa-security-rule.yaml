@@ -387,6 +387,11 @@ controls:
         handler: trivy_vulnerabilities
         title: Trivy critical/high vulnerabilities
         remediation: "trivy fs --format json -o evidence/trivy/report.json ."
+      - id: checkov-evidence
+        module: integrations
+        handler: checkov_findings
+        title: Checkov IaC findings (no FAIL)
+        remediation: "checkov -d . --framework terraform -o json --output-file-path evidence/checkov"
       - id: evidence-freshness
         module: integrations
         handler: evidence_freshness

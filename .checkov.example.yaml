@@ -1,0 +1,28 @@
+# Example Checkov config for HIPAA-oriented IaC scans.
+# Copy to .checkov.yaml in your infra repo root.
+# https://www.checkov.io/2.Basics/Suppressing%20and%20Skipping%20Policies.html
+
+quiet: false
+compact: true
+framework:
+  - terraform
+  - cloudformation
+  - kubernetes
+
+# High-value checks for PHI workloads (extend for your environment)
+check:
+  - CKV_AWS_18   # S3 access logging
+  - CKV_AWS_19   # S3 encryption at rest
+  - CKV_AWS_21   # S3 versioning
+  - CKV_AWS_41   # No hardcoded AWS keys in provider
+  - CKV_AWS_53   # S3 block public ACLs
+  - CKV_AWS_56   # S3 restrict public buckets
+  - CKV_AWS_145  # S3 KMS default encryption
+  - CKV_AWS_7    # KMS key rotation
+  - CKV_AWS_130  # RDS deletion protection
+  - CKV_AWS_161  # RDS IAM auth
+  - CKV_AWS_66   # CloudTrail multi-region
+
+skip-check:
+  # Example: skip replication if single-region by design
+  # - CKV_AWS_144

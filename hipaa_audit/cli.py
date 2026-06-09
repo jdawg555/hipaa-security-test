@@ -123,6 +123,35 @@ def controls(
 
 
 @app.command()
+def sources() -> None:
+    """List curated open-source tools for HIPAA evidence (see docs/oss-ecosystem.md)."""
+    import yaml
+
+    catalog_path = PACKAGE_ROOT / "integrations" / "oss-catalog.yaml"
+    if not catalog_path.exists():
+        console.print("[red]oss-catalog.yaml not found[/red]")
+        raise typer.Exit(1)
+    raw = yaml.safe_load(catalog_path.read_text())
+    table = Table(title="OSS HIPAA Compliance Ecosystem")
+    table.add_column("ID")
+    table.add_column("Tool")
+    table.add_column("License")
+    table.add_column("Integrated")
+    table.add_column("Role")
+    for item in raw.get("sources", []):
+        integrated = "[green]yes[/green]" if item.get("integrated") else "ref"
+        table.add_row(
+            item.get("id", ""),
+            item.get("name", ""),
+            item.get("license", ""),
+            integrated,
+            (item.get("role", "") or "")[:45],
+        )
+    console.print(table)
+    console.print("\nDetails: [link]docs/oss-ecosystem.md[/link]")
+
+
+@app.command()
 def version() -> None:
     """Print version."""
     console.print(f"hipaa-audit {__version__}")
