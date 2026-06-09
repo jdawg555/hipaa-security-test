@@ -1,0 +1,153 @@
+# Integration adapter registry — how external systems connect
+# Each entry drives: workspace Integrations page, config keys, scaffold template
+
+version: "1.0"
+
+auth_types:
+  env_vars: Credentials via environment variables
+  file_path: Path to key file (e.g. GCP service account JSON)
+  oauth: OAuth2 connect flow (planned — Phase 2)
+  ingest_only: No live API; ingest scanner output files
+
+integrations:
+  - id: aws
+    name: Amazon Web Services
+    category: cloud
+    auth: env_vars
+    env_vars: [AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION]
+    config_key: aws.enabled
+    check_module: aws
+    workspace_toggle: true
+    connection_test: aws.sts_get_caller_identity
+    parity_id: P-21
+    phase: 2
+
+  - id: github
+    name: GitHub
+    category: code
+    auth: env_vars
+    env_vars: [GITHUB_TOKEN]
+    config_keys: [github.enabled, github.repo]
+    check_module: github
+    workspace_toggle: true
+    connection_test: github.repo_metadata
+    parity_id: P-23
+    phase: 2
+
+  - id: okta
+    name: Okta
+    category: identity
+    auth: env_vars
+    env_vars: [OKTA_API_TOKEN]
+    config_keys: [identity.okta.enabled, identity.okta.domain]
+    check_module: identity
+    workspace_toggle: true
+    connection_test: okta.list_users
+    also_powers: [apps.discover]
+    parity_id: P-24
+    phase: 2
+
+  - id: google
+    name: Google Workspace
+    category: identity
+    auth: file_path
+    env_vars: [GOOGLE_APPLICATION_CREDENTIALS]
+    config_keys: [identity.google.enabled, identity.google.admin_email]
+    check_module: identity
+    workspace_toggle: true
+    also_powers: [apps.discover]
+    parity_id: P-24
+    phase: 2
+
+  - id: prowler
+    name: Prowler
+    category: cloud_posture
+    auth: ingest_only
+    evidence_glob: evidence/prowler/*.json
+    config_key: integrations.prowler.enabled
+    check_module: integrations
+    workspace_toggle: true
+    parity_id: P-21
+    phase: 2
+
+  - id: personnel
+    name: Personnel
+    category: workforce
+    auth: none
+    register_path: compliance/acknowledgments.yaml
+    config_key: personnel.enabled
+    check_module: personnel
+    workspace_toggle: true
+    parity_id: P-10
+    phase: 4
+
+  - id: vendors
+    name: Vendor risk
+    category: vendors
+    auth: none
+    register_path: compliance/vendors.yaml
+    config_key: vendors.enabled
+    check_module: vendors
+    workspace_toggle: true
+    parity_id: P-15
+    phase: 3
+
+  - id: access_reviews
+    name: Access reviews
+    category: access
+    auth: none
+    register_path: compliance/access-reviews.yaml
+    config_key: access_reviews.enabled
+    check_module: access_reviews
+    workspace_toggle: true
+    parity_id: P-13
+    phase: 3
+
+  - id: devices
+    name: MDM devices
+    category: endpoints
+    auth: none
+    register_path: compliance/devices.yaml
+    config_key: devices.enabled
+    check_module: devices
+    workspace_toggle: true
+    planned_adapters: [jamf, intune]
+    parity_id: P-12
+    phase: 4
+
+  - id: saas_inventory
+    name: SaaS inventory
+    category: access
+    auth: none
+    register_path: compliance/saas-inventory.yaml
+    config_key: saas_inventory.enabled
+    check_module: apps
+    workspace_toggle: true
+    parity_id: P-14
+    phase: 3
+
+  # Planned adapters (scaffold targets)
+  - id: jamf
+    name: Jamf Pro
+    category: endpoints
+    auth: env_vars
+    env_vars: [JAMF_URL, JAMF_USER, JAMF_PASSWORD]
+    status: planned
+    parity_id: P-12
+    phase: 4
+
+  - id: intune
+    name: Microsoft Intune
+    category: endpoints
+    auth: oauth
+    status: planned
+    parity_id: P-12
+    phase: 4
+
+  - id: rippling
+    name: Rippling HRIS
+    category: workforce
+    auth: env_vars
+    status: planned
+    parity_id: P-10
+    phase: 4

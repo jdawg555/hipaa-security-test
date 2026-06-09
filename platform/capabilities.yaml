@@ -1,0 +1,226 @@
+# Machine-readable Vanta/Drata parity matrix
+# Source of truth for: hipaa-audit parity
+# Human narrative: docs/roadmap/PARITY.md
+
+version: "1.0"
+
+phases:
+  1: Product shell (workspace, docker, onboarding)
+  2: Connection layer (integration wizard, cloud depth, auto-scan)
+  3: Workflow UI (tasks, access reviews, vendor CRUD in UI)
+  4: HR + endpoints + policy editor
+  5: Audit operations (auditor requests, PBC queue)
+  6: Enterprise optional (RBAC proxy, AI assist)
+
+capabilities:
+  - id: P-01
+    name: Web compliance workspace
+    phase: 1
+    status: shipped
+    vanta: full
+    drata: full
+    surfaces: [workspace]
+    modules: [workspace]
+
+  - id: P-02
+    name: Onboarding wizard
+    phase: 1
+    status: shipped
+    vanta: full
+    drata: full
+    surfaces: [workspace.onboarding]
+
+  - id: P-03
+    name: Integration connection UX
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    surfaces: [workspace.integrations]
+    gaps: [oauth_connect, connection_test_button, status_badges]
+    modules: [platform.adapters]
+
+  - id: P-04
+    name: Continuous monitoring
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    surfaces: [workspace.dashboard, workspace.monitoring]
+    gaps: [default_hourly_schedule, integration_health_dashboard]
+    modules: [scan_runner]
+
+  - id: P-05
+    name: HIPAA control catalog
+    phase: 1
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [controls]
+
+  - id: P-06
+    name: Multi-framework crosswalk
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    modules: [controls.soc2, controls.iso27001]
+    gaps: [hitrust, pci_slice]
+
+  - id: P-07
+    name: Posture score and history
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [workspace_charts]
+    modules: [posture]
+
+  - id: P-08
+    name: Remediation tasks and owners
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [workspace_tasks_page, assign_owner_ui]
+    modules: [tasks]
+
+  - id: P-09
+    name: Policy management
+    phase: 4
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [in_app_editor, version_history]
+    modules: [policies]
+
+  - id: P-10
+    name: Personnel training
+    phase: 4
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [hris_integration]
+    modules: [personnel]
+
+  - id: P-11
+    name: Policy acknowledgments
+    phase: 4
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [employee_ack_portal]
+    modules: [personnel]
+
+  - id: P-12
+    name: MDM endpoint compliance
+    phase: 4
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [jamf_api, intune_graph]
+    modules: [devices]
+
+  - id: P-13
+    name: Access review campaigns
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [workspace_campaign_builder, idp_user_picker]
+    modules: [access_reviews]
+
+  - id: P-14
+    name: SaaS application inventory
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [azure_ad_apps, auto_link_vendors]
+    modules: [apps]
+
+  - id: P-15
+    name: Vendor risk register
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [workspace_vendor_crud]
+    modules: [vendors]
+
+  - id: P-16
+    name: Vendor questionnaires
+    phase: 4
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [email_delivery, response_tracking]
+    modules: [questionnaires, vendor_portal]
+
+  - id: P-17
+    name: BAA tracking
+    phase: 3
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [structured_baa_register, expiry_alerts]
+    modules: [repo.baa_register]
+
+  - id: P-18
+    name: Trust center
+    phase: 2
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [trust_center]
+
+  - id: P-19
+    name: Auditor portal and PBC
+    phase: 5
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [auditor_requests, evidence_threads, auditor_login]
+    modules: [auditor_portal, export_auditor]
+
+  - id: P-20
+    name: Auditor evidence export
+    phase: 2
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [export_auditor]
+
+  - id: P-21
+    name: AWS cloud monitoring
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [prowler_full_crosswalk, multi_region]
+    modules: [aws, integrations.prowler]
+
+  - id: P-24
+    name: Identity provider checks
+    phase: 2
+    status: partial
+    vanta: full
+    drata: full
+    gaps: [connection_wizard]
+    modules: [identity]
+
+  - id: P-28
+    name: Multi-user RBAC
+    phase: 6
+    status: wont
+    vanta: full
+    drata: full
+    note: Document SSO reverse-proxy pattern instead
+
+  - id: P-30
+    name: 300+ SaaS integrations
+    phase: 6
+    status: wont
+    vanta: full
+    drata: full
+    note: Adapter SDK + curated registry; ingest for the rest

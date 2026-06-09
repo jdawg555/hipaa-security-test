@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hipaa-audit"
-version = "2.0.0"
+version = "2.1.0"
 description = "Self-hosted HIPAA compliance workspace — Vanta/Drata-style monitoring without the subscription."
 readme = "README.md"
 license = "MIT"
@@ -58,6 +58,7 @@ packages = ["hipaa_audit"]
 "scripts" = "scripts"
 "hipaa_audit/workspace/static" = "hipaa_audit/workspace/static"
 "hipaa_audit/workspace/templates" = "hipaa_audit/workspace/templates"
+"platform" = "platform"
 
 [tool.ruff]
 line-length = 100

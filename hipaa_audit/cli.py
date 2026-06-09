@@ -64,6 +64,7 @@ trust_app = typer.Typer(help="Public trust center (compliance page).")
 devices_app = typer.Typer(help="MDM endpoint inventory (Jamf, Intune).")
 framework_app = typer.Typer(help="Multi-framework control catalogs.")
 auditor_app = typer.Typer(help="Auditor evidence portal (NDA read-only).")
+scaffold_app = typer.Typer(help="Scaffold modules and integrations (parity build kit).")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(export_app, name="export")
 app.add_typer(vendor_app, name="vendor")
@@ -73,6 +74,67 @@ app.add_typer(trust_app, name="trust")
 app.add_typer(devices_app, name="devices")
 app.add_typer(framework_app, name="framework")
 app.add_typer(auditor_app, name="auditor")
+app.add_typer(scaffold_app, name="scaffold")
+
+
+@app.command()
+def parity(
+    phase: int | None = typer.Option(None, "--phase", "-p", help="Filter by build phase (1-6)"),
+) -> None:
+    """Vanta/Drata parity matrix — gaps, status, and build phases."""
+    from hipaa_audit.platform import parity_report
+
+    report = parity_report(phase=phase)
+    table = Table(title="Vanta / Drata parity" + (f" — phase {phase}" if phase else ""))
+    table.add_column("ID")
+    table.add_column("Capability")
+    table.add_column("Status")
+    table.add_column("Phase")
+    table.add_column("Gaps")
+    for cap in report["capabilities"]:
+        gaps = ", ".join(cap.get("gaps", [])[:2]) or "—"
+        table.add_row(
+            cap.get("id", ""),
+            (cap.get("name", "") or "")[:36],
+            cap.get("status", ""),
+            str(cap.get("phase", "")),
+            gaps[:40],
+        )
+    console.print(table)
+    console.print(
+        f"\n[bold]Coverage estimate:[/bold] {report['coverage_pct']}% "
+        f"({report['by_status']})"
+    )
+    console.print("Roadmap: [link]docs/roadmap/PARITY.md[/link]")
+    console.print("Build kit: [link]docs/architecture/EXTENSION_MODEL.md[/link]")
+
+
+@scaffold_app.command("module")
+def scaffold_module_cmd(
+    name: str = typer.Argument(..., help="Module name e.g. baa_tracking"),
+    path: Path = typer.Argument(Path.cwd(), help="Workspace root for example files"),
+) -> None:
+    """Scaffold a new check module (5-layer extension model)."""
+    from hipaa_audit.platform import scaffold_module
+
+    created = scaffold_module(path, name)
+    for p in created:
+        console.print(f"[green]created[/green] {p}")
+    console.print("Next: see platform/scaffold_output.yaml and docs/architecture/EXTENSION_MODEL.md")
+
+
+@scaffold_app.command("integration")
+def scaffold_integration_cmd(
+    integration_id: str = typer.Argument(..., help="Integration id e.g. jamf"),
+    path: Path = typer.Argument(Path.cwd(), help="Workspace root"),
+) -> None:
+    """Scaffold an integration adapter stub."""
+    from hipaa_audit.platform import scaffold_integration
+
+    created = scaffold_integration(path, integration_id)
+    for p in created:
+        console.print(f"[green]created[/green] {p}")
+    console.print(f"Next: see platform/scaffold-{integration_id}.yaml")
 
 
 @app.command()

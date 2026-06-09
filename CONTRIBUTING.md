@@ -33,11 +33,34 @@ pytest -q
 hipaa-audit scan .
 ```
 
+## Closing Vanta/Drata gaps
+
+We track parity in **`docs/roadmap/PARITY.md`** (human) and **`platform/capabilities.yaml`** (machine).
+
+```bash
+hipaa-audit parity              # gap matrix + coverage %
+hipaa-audit parity --phase 3    # next workflow UI items
+hipaa-audit scaffold module baa_tracking
+hipaa-audit scaffold integration jamf
+```
+
+Every feature uses the **five-layer model** in `docs/architecture/EXTENSION_MODEL.md`:
+
+1. Workspace surface (or CLI)
+2. YAML register
+3. Check module
+4. Control mapping
+5. Integration adapter (if external API)
+
+Pick a parity ID (e.g. `P-13`), implement all layers, update `platform/capabilities.yaml` status.
+
 ## Adding a control
 
-1. Edit `controls/hipaa-security-rule.yaml` — one control, clear citation
-2. Implement handler in `hipaa_audit/checks/` (or extend existing module)
-3. Add test in `tests/`
+1. Pick or add a row in `platform/capabilities.yaml`
+2. Edit `controls/hipaa-security-rule.yaml` — one control, clear citation
+3. Implement handler in `hipaa_audit/checks/` (or `hipaa-audit scaffold module <name>`)
+4. Add workspace page if user-facing
+5. Add test in `tests/`
 4. Update `docs/getting-started.md` if config changes
 
 ## Adding a policy template

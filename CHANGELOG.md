@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0] — 2026-05-28
+
+### Added
+
+- **Parity roadmap** — `docs/roadmap/PARITY.md` gap matrix vs Vanta/Drata (30 capabilities, 6 phases)
+- **Extension model** — `docs/architecture/EXTENSION_MODEL.md` five-layer build pattern
+- **Platform registry** — `platform/capabilities.yaml`, `platform/integrations_registry.yaml`
+- **`hipaa-audit parity`** — live gap matrix and coverage estimate
+- **`hipaa-audit scaffold`** — `module` and `integration` code generators
+- **Adapter SDK** — `hipaa_audit/platform/adapters/base.py` for new connectors
+
 ## [2.0.0] — 2026-05-28
 
 ### Product: self-hosted compliance workspace

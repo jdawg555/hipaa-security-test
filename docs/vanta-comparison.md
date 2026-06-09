@@ -1,5 +1,7 @@
 # How this compares to Vanta / Drata
 
+**Build roadmap:** [roadmap/PARITY.md](roadmap/PARITY.md) · **How to implement:** [architecture/EXTENSION_MODEL.md](architecture/EXTENSION_MODEL.md) · **Live status:** `hipaa-audit parity`
+
 ## What paid GRC platforms do well
 
 - Personnel compliance (device agents, training attestations)

@@ -32,6 +32,8 @@ docker compose up
 
 **Full guide:** [docs/how-to-use-this.md](docs/how-to-use-this.md)
 
+**Closing gaps with Vanta/Drata:** [docs/roadmap/PARITY.md](docs/roadmap/PARITY.md) · `hipaa-audit parity`
+
 ---
 
 ## What you get (mapped to Vanta / Drata)

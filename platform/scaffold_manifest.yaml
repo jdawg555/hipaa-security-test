@@ -1,0 +1,24 @@
+# Reference: files touched by hipaa-audit scaffold commands
+
+module:
+  creates:
+    - hipaa_audit/checks/<module>.py
+    - hipaa_audit/<module>.py
+    - compliance/<module>.example.yaml
+    - platform/scaffold_output.yaml
+  you_must_edit:
+    - hipaa_audit/checks/base.py
+    - controls/hipaa-security-rule.yaml
+    - hipaa_audit/workspace/server.py
+    - hipaa_audit/workspace/config_store.py
+    - platform/capabilities.yaml
+    - tests/test_<module>.py
+
+integration:
+  creates:
+    - hipaa_audit/platform/adapters/<id>.py
+    - platform/scaffold-<id>.yaml
+  you_must_edit:
+    - platform/integrations_registry.yaml
+    - hipaa_audit/workspace/server.py
+    - docs/roadmap/PARITY.md
