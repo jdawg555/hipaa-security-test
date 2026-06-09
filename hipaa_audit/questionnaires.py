@@ -147,6 +147,29 @@ def record_questionnaire_open(q_path: Path, token: str) -> bool:
     return False
 
 
+def questionnaires_needing_reminder(q_path: Path, *, days_before_due: int = 7) -> list[dict[str, Any]]:
+    data = load_questionnaires(q_path)
+    now = datetime.now(UTC).date()
+    due_cutoff = now + timedelta(days=days_before_due)
+    items: list[dict[str, Any]] = []
+    for q in data.get("questionnaires", []):
+        if q.get("status") != "pending":
+            continue
+        due = _parse_date(q.get("due_date", ""))
+        if due and now <= due <= due_cutoff and not q.get("reminder_sent_at"):
+            items.append(q)
+    return items
+
+
+def mark_reminder_sent(q_path: Path, questionnaire_id: str) -> None:
+    data = load_questionnaires(q_path)
+    for q in data.get("questionnaires", []):
+        if q.get("id") == questionnaire_id:
+            q["reminder_sent_at"] = datetime.now(UTC).isoformat()
+            save_questionnaires(q_path, data)
+            return
+
+
 def mark_questionnaire_emailed(q_path: Path, questionnaire_id: str) -> None:
     data = load_questionnaires(q_path)
     for q in data.get("questionnaires", []):
@@ -156,10 +179,12 @@ def mark_questionnaire_emailed(q_path: Path, questionnaire_id: str) -> None:
             return
 
 
-def _parse_date(value: str):
+def _parse_date(value: str | Any):
     if not value:
         return None
+    if hasattr(value, "year") and hasattr(value, "month"):
+        return value
     try:
-        return datetime.strptime(value.strip(), "%Y-%m-%d").date()
+        return datetime.strptime(str(value).strip(), "%Y-%m-%d").date()
     except ValueError:
         return None

@@ -11,6 +11,7 @@ from hipaa_audit.platform.adapters.aws import AwsAdapter
 from hipaa_audit.platform.adapters.base import ConnectionResult, IntegrationAdapter
 from hipaa_audit.platform.adapters.github import GithubAdapter
 from hipaa_audit.platform.adapters.google import GoogleAdapter
+from hipaa_audit.platform.adapters.intune import IntuneAdapter
 from hipaa_audit.platform.adapters.jamf import JamfAdapter
 from hipaa_audit.platform.adapters.okta import OktaAdapter
 
@@ -22,6 +23,7 @@ _ADAPTERS: dict[str, IntegrationAdapter] = {
         OktaAdapter(),
         GoogleAdapter(),
         JamfAdapter(),
+        IntuneAdapter(),
     )
 }
 

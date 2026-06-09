@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Policy acknowledgment — {{ org_name }}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; color: #1e293b; }
+    h1 { font-size: 1.35rem; }
+    .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .btn { background: #2563eb; color: #fff; border: 0; padding: .55rem 1rem; border-radius: 6px; cursor: pointer; }
+    .flash { background: #ecfdf5; color: #065f46; padding: .75rem; border-radius: 6px; margin-bottom: 1rem; }
+    .done { background: #f0fdf4; border-color: #86efac; }
+  </style>
+</head>
+<body>
+  <h1>{{ org_name }} — policy acknowledgment</h1>
+  <p>Employee ID: <strong>{{ employee_id }}</strong></p>
+  {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+  {% if done or not pending %}
+  <div class="card done">
+    <p>All required policies are acknowledged. Thank you.</p>
+  </div>
+  {% else %}
+  <p>Please acknowledge the following policies:</p>
+  {% for p in pending %}
+  <div class="card">
+    <p><strong>{{ p.policy }}</strong> — version {{ p.version }}</p>
+    <form method="post" action="/portals/ack/{{ token }}">
+      <input type="hidden" name="policy" value="{{ p.policy }}">
+      <input type="hidden" name="version" value="{{ p.version }}">
+      <button class="btn" type="submit">I have read and acknowledge</button>
+    </form>
+  </div>
+  {% endfor %}
+  {% endif %}
+</body>
+</html>

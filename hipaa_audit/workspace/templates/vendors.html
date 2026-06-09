@@ -89,13 +89,21 @@
 {% if questionnaires %}
 <h2 style="margin-top:1.5rem">Questionnaires</h2>
 <table>
-  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Due</th><th>Opened</th><th>Portal</th></tr></thead>
+  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Due</th><th>Opened</th><th>Portal</th><th></th></tr></thead>
   <tbody>
     {% for q in questionnaires %}
     <tr>
       <td>{{ q.id }}</td><td>{{ q.vendor_name }}</td><td>{{ q.status }}</td><td>{{ q.due_date }}</td>
       <td>{{ (q.opened_at or '')[:10] or '—' }}</td>
       <td>{% if q.portal_token %}<a href="/portals/vendor/{{ q.portal_token }}" target="_blank">Open</a>{% else %}—{% endif %}</td>
+      <td>
+        {% if q.status == 'pending' %}
+        <form method="post" action="/vendors/questionnaire/remind" style="display:inline">
+          <input type="hidden" name="questionnaire_id" value="{{ q.id }}">
+          <button class="btn secondary btn-sm" type="submit">Remind</button>
+        </form>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>

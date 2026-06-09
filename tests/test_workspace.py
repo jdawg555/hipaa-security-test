@@ -203,6 +203,67 @@ def test_connect_wizard_saves_secrets(tmp_path):
     assert secrets.get("github_token") == "ghp_test_token_12345"
 
 
+def test_ack_portal(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    ack = tmp_path / "compliance" / "acknowledgments.yaml"
+    ack.write_text(
+        "policies:\n"
+        "  - policy: hipaa-security-policy.md\n"
+        "    version: '1.0'\n"
+        "workforce:\n"
+        "  - id: EMP001\n"
+        "    ack_token: testtoken123\n"
+        "acknowledgments: []\n"
+    )
+    r = client.get("/portals/ack/testtoken123", follow_redirects=True)
+    assert r.status_code == 200
+    assert "hipaa-security-policy.md" in r.text
+    r = client.post(
+        "/portals/ack/testtoken123",
+        data={"policy": "hipaa-security-policy.md", "version": "1.0"},
+    )
+    assert r.status_code == 303
+    import yaml
+
+    data = yaml.safe_load(ack.read_text())
+    assert data["acknowledgments"][0]["employee_id"] == "EMP001"
+
+
+def test_pbc_attachment_upload(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    client.post("/audits/pbc/create", data={"title": "Logs", "control_ref": "HIPAA", "due_date": "2026-09-01"})
+    from hipaa_audit.auditor_requests import list_requests
+
+    req_id = list_requests(tmp_path / "compliance" / "auditor-requests.db")[0]["id"]
+    r = client.post(
+        f"/audits/pbc/{req_id}/message",
+        data={"author": "sec@test.com", "body": "See attached"},
+        files={"file": ("proof.txt", b"evidence", "text/plain")},
+    )
+    assert r.status_code == 303
+    attach_dir = tmp_path / "compliance" / "pbc-attachments" / req_id
+    assert (attach_dir / "proof.txt").exists()
+
+
+def test_policy_diff_route(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    policy = tmp_path / "policies" / "diff-policy.md"
+    policy.write_text("# Before")
+    client.post(
+        "/policies/edit/diff-policy.md",
+        data={"content": "# After", "summary": "change", "bump_version": "on"},
+    )
+    r = client.get("/policies/diff/diff-policy.md", follow_redirects=True)
+    assert r.status_code == 200
+    assert "diff" in r.text.lower() or "After" in r.text
+
+
 def test_access_review_campaign_builder(tmp_path):
     app = create_app(tmp_path)
     client = TestClient(app, follow_redirects=False)

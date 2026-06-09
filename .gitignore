@@ -24,6 +24,7 @@ compliance/vendor-questionnaires.yaml
 compliance/baas.yaml
 compliance/.workspace-secrets.yaml
 compliance/auditor-requests.db
+compliance/pbc-attachments/
 policies/.history/
 templates/sra-imported.md
 docs/security/sra-imported.md

@@ -85,6 +85,43 @@ def list_versions(policy_dir: Path, policy_name: str) -> list[dict[str, Any]]:
     return manifest.get(policy_name, {}).get("versions", [])
 
 
+def policy_diff(policy_dir: Path, policy_name: str, left: str, right: str) -> str:
+    import difflib
+
+    left_text = read_archive(policy_dir, policy_name, left) if left.endswith(".md") else left
+    right_text = read_archive(policy_dir, policy_name, right) if right.endswith(".md") else right
+    if left == "current":
+        left_text = (policy_dir / policy_name).read_text() if (policy_dir / policy_name).exists() else ""
+    if right == "current":
+        right_text = (policy_dir / policy_name).read_text() if (policy_dir / policy_name).exists() else ""
+    lines = difflib.unified_diff(
+        left_text.splitlines(keepends=True),
+        right_text.splitlines(keepends=True),
+        fromfile=left,
+        tofile=right,
+    )
+    return "".join(lines) or "(no differences)"
+
+
+def sync_policy_version_to_acks(ack_path: Path, policy_name: str, version: str) -> None:
+    """Update acknowledgments register when policy version bumps."""
+    import yaml
+
+    if not ack_path.exists():
+        return
+    data = yaml.safe_load(ack_path.read_text()) or {}
+    policies = data.get("policies", [])
+    found = False
+    for p in policies:
+        if p.get("policy") == policy_name:
+            p["version"] = version
+            found = True
+    if not found:
+        policies.append({"policy": policy_name, "version": version})
+    data["policies"] = policies
+    ack_path.write_text(yaml.dump(data, sort_keys=False, default_flow_style=False))
+
+
 def read_archive(policy_dir: Path, policy_name: str, archive_name: str) -> str:
     if ".." in archive_name or "/" in archive_name:
         return ""

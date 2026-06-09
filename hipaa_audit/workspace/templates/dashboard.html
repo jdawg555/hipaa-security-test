@@ -16,6 +16,20 @@
   <div class="card"><strong class="stat">{{ integrations_on }}</strong>Integrations on</div>
 </div>
 
+{% if baa_alerts %}
+<div class="card" style="margin-top:1rem;border-color:var(--warn)">
+  <h2 style="font-size:1rem;margin:0 0 .5rem">BAA expiry alerts</h2>
+  <ul style="margin:0;padding-left:1.25rem;line-height:1.7">
+    {% for b in baa_alerts %}
+    <li>
+      <a href="/baas">{{ b.vendor_name }}</a> — {{ b.expiry_date }}
+      <span class="badge {{ 'fail' if b.alert == 'expired' else 'warn' }}">{{ b.alert }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 {% if history_points %}
 <div class="card" style="margin-top:1rem">
   <h2 style="font-size:1rem;margin:0 0 .75rem">Posture trend</h2>

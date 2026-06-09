@@ -59,7 +59,16 @@
         </select>
       </label>
       <label>Principal (user/role)
+        {% if idp_principals %}
+        <select name="principal" required>
+          <option value="">Select from IdP</option>
+          {% for p in idp_principals %}
+          <option value="{{ p }}">{{ p }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
         <input type="text" name="principal" placeholder="user@example.com" required>
+        {% endif %}
       </label>
       <label>Decision
         <select name="decision" required>

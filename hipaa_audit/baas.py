@@ -112,6 +112,24 @@ def assess_baas(
     return "fail", f"{len(issues)} BAA gap(s)", issues
 
 
+def expiring_baas(path: Path, *, within_days: int = 30) -> list[dict[str, Any]]:
+    data = load_baas(path)
+    now = datetime.now(UTC).date()
+    cutoff = now + timedelta(days=within_days)
+    alerts: list[dict[str, Any]] = []
+    for baa in data.get("baas", []):
+        if baa.get("status") != "active":
+            continue
+        expiry = _parse_date(baa.get("expiry_date", ""))
+        if not expiry:
+            continue
+        if expiry < now:
+            alerts.append({**baa, "alert": "expired"})
+        elif expiry <= cutoff:
+            alerts.append({**baa, "alert": "expiring"})
+    return alerts
+
+
 def _parse_date(value: str):
     if not value:
         return None

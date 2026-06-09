@@ -91,6 +91,15 @@ def merge_devices(path: Path, discovered: list[dict[str, Any]], *, source: str =
     return len(discovered)
 
 
+def sync_devices_intune(path: Path, config: dict[str, Any]) -> int:
+    from hipaa_audit.platform.adapters.intune import IntuneAdapter
+
+    discovered = IntuneAdapter().discover(config)
+    if not discovered:
+        return 0
+    return merge_devices(path, discovered, source="intune-api")
+
+
 def sync_devices_jamf(path: Path, config: dict[str, Any]) -> int:
     from hipaa_audit.platform.adapters.jamf import JamfAdapter
 

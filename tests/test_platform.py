@@ -84,6 +84,14 @@ def test_jamf_adapter_pro_api(monkeypatch):
     assert "Jamf Pro API" in result.message
 
 
+def test_intune_adapter_missing_env():
+    from hipaa_audit.platform.adapters.intune import IntuneAdapter
+
+    result = IntuneAdapter().test_connection({})
+    assert not result.ok
+    assert "Missing env" in result.message
+
+
 def test_registry_personnel_register(tmp_path):
     from hipaa_audit.platform.adapters.registry import test_integration_connection
 

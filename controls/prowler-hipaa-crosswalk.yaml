@@ -1,53 +1,461 @@
-# Machine-readable Prowler hipaa_aws check → HIPAA requirement mapping (subset)
-# Full catalog: https://github.com/prowler-cloud/prowler/blob/master/prowler/compliance/aws/hipaa_aws.json
+# Machine-readable Prowler hipaa_aws check → HIPAA requirement mapping
+# Generated from prowler/compliance/aws/hipaa_aws.json (32 requirements, 85 checks)
 
-version: "1.0"
+version: "1.1"
 
 requirements:
   - id: "164_308_a_1_ii_a"
-    title: Risk analysis
+    title: "Risk analysis"
     hipaa_refs: ["164.308(a)(1)(ii)(A)"]
     prowler_checks:
-      - guardduty_is_enabled
       - config_recorder_all_regions_enabled
-      - securityhub_enabled
+      - guardduty_is_enabled
 
   - id: "164_308_a_1_ii_b"
-    title: Risk management
+    title: "Risk Management"
     hipaa_refs: ["164.308(a)(1)(ii)(B)"]
     prowler_checks:
+      - awslambda_function_not_publicly_accessible
+      - awslambda_function_url_public
       - cloudtrail_kms_encryption_enabled
-      - rds_instance_storage_encrypted
-      - s3_bucket_default_encryption
-
-  - id: "164_312_a_2_iv"
-    title: Encryption and decryption
-    hipaa_refs: ["164.312(a)(2)(iv)"]
-    prowler_checks:
-      - s3_bucket_default_encryption
-      - ec2_ebs_volume_encryption
-      - rds_instance_storage_encrypted
-      - kms_cmk_rotation_enabled
-
-  - id: "164_312_b"
-    title: Audit controls
-    hipaa_refs: ["164.312(b)"]
-    prowler_checks:
-      - cloudtrail_multi_region_enabled
-      - cloudwatch_log_group_retention_policy_specific_days_enabled
       - cloudtrail_log_file_validation_enabled
+      - cloudwatch_log_group_kms_encryption_enabled
+      - dynamodb_tables_pitr_enabled
+      - ec2_ebs_default_encryption
+      - ec2_ebs_public_snapshot
+      - ec2_ebs_volume_encryption
+      - ec2_instance_older_than_specific_days
+      - ec2_instance_public_ip
+      - ec2_networkacl_allow_ingress_any_port
+      - ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22
+      - efs_encryption_at_rest_enabled
+      - elb_ssl_listeners
+      - elbv2_deletion_protection
+      - emr_cluster_master_nodes_no_public_ip
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_no_root_access_key
+      - opensearch_service_domains_encryption_at_rest_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_multi_az
+      - rds_instance_storage_encrypted
+      - rds_snapshots_public_access
+      - redshift_cluster_audit_logging
+      - redshift_cluster_public_access
+      - s3_account_level_public_access_blocks
+      - s3_bucket_default_encryption
+      - s3_bucket_object_versioning
+      - s3_bucket_policy_public_write_access
+      - s3_bucket_public_access
+      - s3_bucket_secure_transport_policy
+      - sagemaker_notebook_instance_encryption_enabled
+      - sagemaker_notebook_instance_without_direct_internet_access_configured
+      - sns_topics_kms_encryption_at_rest_enabled
+
+  - id: "164_308_a_1_ii_d"
+    title: "Information system activity review"
+    hipaa_refs: ["164.308(a)(1)(ii)(D)"]
+    prowler_checks:
+      - apigateway_restapi_logging_enabled
+      - cloudtrail_bedrock_logging_enabled
+      - cloudtrail_cloudwatch_logging_enabled
+      - cloudtrail_kms_encryption_enabled
+      - cloudtrail_log_file_validation_enabled
+      - cloudtrail_multi_region_enabled
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - elb_logging_enabled
+      - elbv2_logging_enabled
+      - guardduty_is_enabled
+      - redshift_cluster_audit_logging
+      - s3_bucket_server_access_logging_enabled
+      - securityhub_enabled
+      - vpc_flow_logs_enabled
+
+  - id: "164_308_a_3_i"
+    title: "Workforce security"
+    hipaa_refs: ["164.308(a)(3)(i)"]
+    prowler_checks:
+      - awslambda_function_not_publicly_accessible
+      - awslambda_function_url_public
+      - ec2_ebs_public_snapshot
+      - ec2_instance_public_ip
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_no_root_access_key
+      - rds_instance_no_public_access
+      - rds_snapshots_public_access
+      - redshift_cluster_public_access
+      - s3_account_level_public_access_blocks
+      - s3_bucket_policy_public_write_access
+      - s3_bucket_public_access
+      - sagemaker_notebook_instance_without_direct_internet_access_configured
+
+  - id: "164_308_a_3_ii_a"
+    title: "Authorization and/or supervision"
+    hipaa_refs: ["164.308(a)(3)(ii)(A)"]
+    prowler_checks:
+      - apigateway_restapi_logging_enabled
+      - cloudtrail_multi_region_enabled
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - elb_logging_enabled
+      - elbv2_logging_enabled
+      - guardduty_is_enabled
+      - iam_root_hardware_mfa_enabled
+      - iam_root_mfa_enabled
+      - iam_user_mfa_enabled_console_access
+      - redshift_cluster_audit_logging
+      - s3_bucket_server_access_logging_enabled
+      - securityhub_enabled
+      - vpc_flow_logs_enabled
+
+  - id: "164_308_a_3_ii_b"
+    title: "Workforce clearance procedure"
+    hipaa_refs: ["164.308(a)(3)(ii)(B)"]
+    prowler_checks:
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_no_root_access_key
+      - iam_user_accesskey_unused
+      - iam_user_console_access_unused
+
+  - id: "164_308_a_3_ii_c"
+    title: "Termination procedures"
+    hipaa_refs: ["164.308(a)(3)(ii)(C)"]
+    prowler_checks:
+      - iam_rotate_access_key_90_days
+
+  - id: "164_308_a_4_i"
+    title: "Information access management"
+    hipaa_refs: ["164.308(a)(4)(i)"]
+    prowler_checks:
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+
+  - id: "164_308_a_4_ii_a"
+    title: "Isolating health care clearinghouse functions"
+    hipaa_refs: ["164.308(a)(4)(ii)(A)"]
+    prowler_checks:
+      - acm_certificates_expiration_check
+      - cloudfront_distributions_https_enabled
+      - cloudtrail_kms_encryption_enabled
+      - cloudwatch_log_group_kms_encryption_enabled
+      - dynamodb_accelerator_cluster_encryption_enabled
+      - dynamodb_tables_kms_cmk_encryption_enabled
+      - ec2_ebs_default_encryption
+      - ec2_ebs_volume_encryption
+      - efs_encryption_at_rest_enabled
+      - eks_cluster_kms_cmk_encryption_in_secrets_enabled
+      - elb_ssl_listeners
+      - opensearch_service_domains_encryption_at_rest_enabled
+      - opensearch_service_domains_node_to_node_encryption_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_integration_cloudwatch_logs
+      - rds_instance_storage_encrypted
+      - redshift_cluster_audit_logging
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_default_encryption
+      - sagemaker_notebook_instance_encryption_enabled
+      - sns_topics_kms_encryption_at_rest_enabled
+
+  - id: "164_308_a_4_ii_b"
+    title: "Access authorization"
+    hipaa_refs: ["164.308(a)(4)(ii)(B)"]
+    prowler_checks:
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_inline_policy_no_wildcard_marketplace_subscribe
+      - iam_policy_no_wildcard_marketplace_subscribe
+
+  - id: "164_308_a_4_ii_c"
+    title: "Access authorization"
+    hipaa_refs: ["164.308(a)(4)(ii)(B)"]
+    prowler_checks:
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_no_root_access_key
+      - iam_password_policy_reuse_24
+      - iam_rotate_access_key_90_days
+      - iam_user_accesskey_unused
+      - iam_user_console_access_unused
+      - secretsmanager_automatic_rotation_enabled
+
+  - id: "164_308_a_5_ii_b"
+    title: "Protection from malicious software"
+    hipaa_refs: ["164.308(a)(5)(ii)(B)"]
+    prowler_checks:
+      - ec2_instance_managed_by_ssm
+      - ssm_managed_compliant_patching
+
+  - id: "164_308_a_5_ii_c"
+    title: "Log-in monitoring"
+    hipaa_refs: ["164.308(a)(5)(ii)(C)"]
+    prowler_checks:
+      - cloudwatch_log_metric_filter_authentication_failures
+      - guardduty_is_enabled
+      - securityhub_enabled
+
+  - id: "164_308_a_5_ii_d"
+    title: "Password management"
+    hipaa_refs: ["164.308(a)(5)(ii)(D)"]
+    prowler_checks:
+      - iam_password_policy_lowercase
+      - iam_password_policy_minimum_length_14
+      - iam_password_policy_number
+      - iam_password_policy_reuse_24
+      - iam_password_policy_symbol
+      - iam_password_policy_uppercase
+      - iam_rotate_access_key_90_days
+      - iam_user_accesskey_unused
+      - iam_user_console_access_unused
+
+  - id: "164_308_a_6_i"
+    title: "Security incident procedures"
+    hipaa_refs: ["164.308(a)(6)(i)"]
+    prowler_checks:
+      - cloudwatch_changes_to_network_acls_alarm_configured
+      - cloudwatch_changes_to_network_gateways_alarm_configured
+      - cloudwatch_changes_to_network_route_tables_alarm_configured
+      - cloudwatch_changes_to_vpcs_alarm_configured
+      - cloudwatch_log_metric_filter_authentication_failures
+      - cloudwatch_log_metric_filter_root_usage
+      - guardduty_is_enabled
+      - securityhub_enabled
+
+  - id: "164_308_a_6_ii"
+    title: "Response and reporting"
+    hipaa_refs: ["164.308(a)(6)(ii)"]
+    prowler_checks:
+      - apigateway_restapi_logging_enabled
+      - cloudtrail_cloudwatch_logging_enabled
+      - cloudtrail_multi_region_enabled
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - cloudwatch_log_metric_filter_authentication_failures
+      - cloudwatch_log_metric_filter_root_usage
+      - elb_logging_enabled
+      - elbv2_logging_enabled
+      - guardduty_is_enabled
+      - guardduty_no_high_severity_findings
+      - s3_bucket_server_access_logging_enabled
+      - securityhub_enabled
+      - vpc_flow_logs_enabled
+
+  - id: "164_308_a_7_i"
+    title: "Contingency plan"
+    hipaa_refs: ["164.308(a)(7)(i)"]
+    prowler_checks:
+      - dynamodb_tables_pitr_enabled
+      - efs_have_backup_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_multi_az
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_object_versioning
+
+  - id: "164_308_a_7_ii_a"
+    title: "Data backup plan"
+    hipaa_refs: ["164.308(a)(7)(ii)(A)"]
+    prowler_checks:
+      - dynamodb_tables_pitr_enabled
+      - efs_have_backup_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_multi_az
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_object_versioning
+
+  - id: "164_308_a_7_ii_b"
+    title: "Disaster recovery plan"
+    hipaa_refs: ["164.308(a)(7)(ii)(B)"]
+    prowler_checks:
+      - dynamodb_tables_pitr_enabled
+      - efs_have_backup_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_multi_az
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_object_versioning
+
+  - id: "164_308_a_7_ii_c"
+    title: "Emergency mode operation plan"
+    hipaa_refs: ["164.308(a)(7)(ii)(C)"]
+    prowler_checks:
+      - dynamodb_tables_pitr_enabled
+      - efs_have_backup_enabled
+      - rds_instance_backup_enabled
+      - rds_instance_multi_az
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_object_versioning
+
+  - id: "164_308_a_8"
+    title: "Evaluation"
+    hipaa_refs: ["164.308(a)(8)"]
+    prowler_checks:
+      - guardduty_is_enabled
+      - securityhub_enabled
 
   - id: "164_312_a_1"
-    title: Access control
+    title: "Access control"
     hipaa_refs: ["164.312(a)(1)"]
     prowler_checks:
-      - iam_root_hardware_mfa_enabled
-      - iam_password_policy_minimum_length_14
+      - awslambda_function_not_publicly_accessible
+      - awslambda_function_url_public
+      - ec2_ebs_public_snapshot
+      - ec2_instance_public_ip
+      - emr_cluster_master_nodes_no_public_ip
+      - iam_aws_attached_policy_no_administrative_privileges
+      - iam_customer_attached_policy_no_administrative_privileges
+      - iam_inline_policy_no_administrative_privileges
+      - iam_user_mfa_enabled_console_access
+      - rds_instance_no_public_access
+      - rds_snapshots_public_access
+      - redshift_cluster_public_access
+      - s3_bucket_policy_public_write_access
+      - s3_bucket_public_access
+      - sagemaker_notebook_instance_without_direct_internet_access_configured
+
+  - id: "164_312_a_2_i"
+    title: "Unique user identification"
+    hipaa_refs: ["164.312(a)(2)(i)"]
+    prowler_checks:
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - iam_no_root_access_key
       - s3_bucket_public_access
 
+  - id: "164_312_a_2_ii"
+    title: "Emergency access procedure"
+    hipaa_refs: ["164.312(a)(2)(ii)"]
+    prowler_checks:
+      - dynamodb_tables_pitr_enabled
+      - efs_have_backup_enabled
+      - rds_instance_backup_enabled
+      - redshift_cluster_automated_snapshot
+      - s3_bucket_object_versioning
+
+  - id: "164_312_a_2_iv"
+    title: "Encryption and decryption"
+    hipaa_refs: ["164.312(a)(2)(iv)"]
+    prowler_checks:
+      - cloudtrail_kms_encryption_enabled
+      - cloudwatch_log_group_kms_encryption_enabled
+      - dynamodb_accelerator_cluster_encryption_enabled
+      - dynamodb_tables_kms_cmk_encryption_enabled
+      - ec2_ebs_default_encryption
+      - ec2_ebs_volume_encryption
+      - efs_encryption_at_rest_enabled
+      - eks_cluster_kms_cmk_encryption_in_secrets_enabled
+      - kms_cmk_rotation_enabled
+      - opensearch_service_domains_encryption_at_rest_enabled
+      - rds_instance_storage_encrypted
+      - redshift_cluster_audit_logging
+      - s3_bucket_default_encryption
+      - s3_bucket_secure_transport_policy
+      - sagemaker_notebook_instance_encryption_enabled
+      - sns_topics_kms_encryption_at_rest_enabled
+
+  - id: "164_312_b"
+    title: "Audit controls"
+    hipaa_refs: ["164.312(b)"]
+    prowler_checks:
+      - apigateway_restapi_logging_enabled
+      - cloudtrail_bedrock_logging_enabled
+      - cloudtrail_cloudwatch_logging_enabled
+      - cloudtrail_log_file_validation_enabled
+      - cloudtrail_multi_region_enabled
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - cloudwatch_log_group_retention_policy_specific_days_enabled
+      - elb_logging_enabled
+      - elbv2_logging_enabled
+      - guardduty_is_enabled
+      - rds_instance_integration_cloudwatch_logs
+      - redshift_cluster_audit_logging
+      - s3_bucket_server_access_logging_enabled
+      - securityhub_enabled
+      - vpc_flow_logs_enabled
+
+  - id: "164_312_c_1"
+    title: "Integrity"
+    hipaa_refs: ["164.312(c)(1)"]
+    prowler_checks:
+      - cloudtrail_kms_encryption_enabled
+      - cloudtrail_log_file_validation_enabled
+      - ec2_ebs_volume_encryption
+      - s3_bucket_default_encryption
+      - s3_bucket_object_versioning
+      - s3_bucket_secure_transport_policy
+
+  - id: "164_312_c_2"
+    title: "Mechanism to authenticate electronic protected health information"
+    hipaa_refs: ["164.312(c)(2)"]
+    prowler_checks:
+      - cloudtrail_kms_encryption_enabled
+      - cloudtrail_log_file_validation_enabled
+      - ec2_ebs_volume_encryption
+      - s3_bucket_default_encryption
+      - s3_bucket_object_versioning
+      - s3_bucket_secure_transport_policy
+      - vpc_flow_logs_enabled
+
   - id: "164_312_d"
-    title: Person or entity authentication
+    title: "Person or entity authentication"
     hipaa_refs: ["164.312(d)"]
     prowler_checks:
+      - iam_password_policy_reuse_24
       - iam_root_hardware_mfa_enabled
+      - iam_root_mfa_enabled
       - iam_user_mfa_enabled_console_access
+
+  - id: "164_312_e_1"
+    title: "Transmission security"
+    hipaa_refs: ["164.312(e)(1)"]
+    prowler_checks:
+      - acm_certificates_expiration_check
+      - awslambda_function_not_publicly_accessible
+      - cloudfront_distributions_https_enabled
+      - ec2_networkacl_allow_ingress_any_port
+      - ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22
+      - elb_ssl_listeners
+      - opensearch_service_domains_node_to_node_encryption_enabled
+      - s3_bucket_secure_transport_policy
+
+  - id: "164_312_e_2_i"
+    title: "Integrity controls"
+    hipaa_refs: ["164.312(e)(2)(i)"]
+    prowler_checks:
+      - cloudtrail_cloudwatch_logging_enabled
+      - cloudtrail_multi_region_enabled
+      - cloudtrail_s3_dataevents_read_enabled
+      - cloudtrail_s3_dataevents_write_enabled
+      - elb_ssl_listeners
+      - guardduty_is_enabled
+      - s3_bucket_secure_transport_policy
+      - s3_bucket_server_access_logging_enabled
+      - securityhub_enabled
+
+  - id: "164_312_e_2_ii"
+    title: "Encryption"
+    hipaa_refs: ["164.312(e)(2)(ii)"]
+    prowler_checks:
+      - cloudtrail_kms_encryption_enabled
+      - cloudwatch_log_group_kms_encryption_enabled
+      - dynamodb_accelerator_cluster_encryption_enabled
+      - dynamodb_tables_kms_cmk_encryption_enabled
+      - ec2_ebs_default_encryption
+      - ec2_ebs_volume_encryption
+      - efs_encryption_at_rest_enabled
+      - eks_cluster_kms_cmk_encryption_in_secrets_enabled
+      - elb_ssl_listeners
+      - opensearch_service_domains_encryption_at_rest_enabled
+      - rds_instance_storage_encrypted
+      - redshift_cluster_audit_logging
+      - s3_bucket_default_encryption
+      - s3_bucket_secure_transport_policy
+      - sagemaker_notebook_instance_encryption_enabled
+      - sns_topics_kms_encryption_at_rest_enabled

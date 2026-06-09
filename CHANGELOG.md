@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.5.0] — 2026-05-28
+
+### Phase 4–6 — Workflow polish and audit depth
+
+- **PBC attachments (P-19)** — file uploads on org replies, download route, auditor thread detail + auditor-side replies
+- **Vendor reminders (P-16)** — manual Remind button, auto-remind on scan for questionnaires due within 7 days
+- **Policy diff + re-ack (P-09)** — `/policies/diff/{name}` unified diff; version bump syncs `acknowledgments.yaml` policy versions
+- **Employee ack portal (P-11)** — tokenized `/portals/ack/{token}` for workforce policy sign-off
+- **BAA expiry alerts (P-17)** — dashboard and `/baas` badges for expiring/expired agreements
+- **Intune device sync (P-12)** — `IntuneAdapter`, connect wizard, workspace Sync button, optional `devices.intune_sync` on scan
+- **Okta user picker (P-13)** — access review principal dropdown from Okta API
+- **Slack task assign (P-27)** — `notify_on_task_assign` toggle in Settings
+- **Auto auditor export (P-04)** — `auditor_portal.auto_export_on_scan` rebuilds ZIP after each scan
+- **Prowler crosswalk (P-21)** — full 32-requirement / 85-check catalog from upstream `hipaa_aws.json`
+- **RBAC proxy doc (P-28)** — `docs/rbac-proxy.md` for SSO + path-based admin gating
+
 ## [2.4.0] — 2026-05-28
 
 ### Phase 4–5 — Audit ops, vendors, devices, cloud depth

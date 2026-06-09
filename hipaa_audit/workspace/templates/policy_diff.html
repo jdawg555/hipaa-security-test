@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Policy diff</h1>
+<p class="subtitle">{{ policy_name }} — comparing <code>{{ left }}</code> vs <code>{{ right }}</code></p>
+
+<pre style="background:#0f172a;color:#e2e8f0;padding:1rem;border-radius:8px;overflow:auto;font-size:.8rem;line-height:1.5">{{ diff_text }}</pre>
+
+<p style="margin-top:1rem">
+  <a class="btn secondary" href="/policies/edit/{{ policy_name }}">Back to editor</a>
+  <a class="btn secondary" href="/policies" style="margin-left:.5rem">All policies</a>
+</p>
+{% endblock %}

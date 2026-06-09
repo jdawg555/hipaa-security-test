@@ -14,6 +14,27 @@
   <li><code>compliance/training-log.csv</code> — training completion dates</li>
 </ul>
 <p><code>hipaa-audit import-training</code> creates the training CSV template.</p>
-<p><a class="btn secondary" href="/integrations">Enable personnel integration</a>
-   <a class="btn secondary" href="/policies" style="margin-left:.5rem">View policies</a></p>
+
+{% if workforce %}
+<h2 style="margin-top:1.5rem;font-size:1.1rem">Acknowledgment links</h2>
+<p style="color:var(--muted);font-size:.85rem">Share tokenized links with employees — no workspace login required.</p>
+<table>
+  <thead><tr><th>Employee</th><th>Portal link</th></tr></thead>
+  <tbody>
+    {% for w in workforce %}
+    {% if w.ack_token %}
+    <tr>
+      <td>{{ w.id or w.employee_id }}</td>
+      <td><a href="/portals/ack/{{ w.ack_token }}" target="_blank">Open ack portal</a></td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<p style="margin-top:1rem">
+  <a class="btn secondary" href="/integrations">Enable personnel integration</a>
+  <a class="btn secondary" href="/policies" style="margin-left:.5rem">View policies</a>
+</p>
 {% endblock %}

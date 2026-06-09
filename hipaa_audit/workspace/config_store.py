@@ -115,6 +115,13 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "testable": True,
         },
         {
+            "id": "intune",
+            "name": "Microsoft Intune",
+            "enabled": config.get("devices", {}).get("enabled", False),
+            "hint": "Set AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET",
+            "testable": True,
+        },
+        {
             "id": "saas_inventory",
             "name": "SaaS inventory",
             "enabled": config.get("saas_inventory", {}).get("enabled", False),

@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Devices</h1>
-<p class="subtitle">Endpoint compliance via Jamf API sync or MDM CSV import.</p>
+<p class="subtitle">Endpoint compliance via Jamf or Microsoft Intune Graph API sync, or MDM CSV import.</p>
 
 <p>
   <form method="post" action="/devices/sync" style="display:inline">
+    <input type="hidden" name="source" value="jamf">
     <button class="btn" type="submit">Sync from Jamf</button>
+  </form>
+  <form method="post" action="/devices/sync" style="display:inline;margin-left:.5rem">
+    <input type="hidden" name="source" value="intune">
+    <button class="btn secondary" type="submit">Sync from Intune</button>
   </form>
   {% if imported_at %}<span style="color:var(--muted);font-size:.85rem;margin-left:.75rem">Last import: {{ imported_at }}</span>{% endif %}
 </p>

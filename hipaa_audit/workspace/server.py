@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -20,7 +20,7 @@ from hipaa_audit.access_reviews import (
     start_campaign,
 )
 from hipaa_audit.apps import discover_from_config, link_app, load_inventory, merge_discovered
-from hipaa_audit.baas import add_baa, delete_baa, load_baas, update_baa
+from hipaa_audit.baas import add_baa, delete_baa, expiring_baas, load_baas, update_baa
 from hipaa_audit.controls import PACKAGE_ROOT
 from hipaa_audit.auditor_requests import (
     add_message,
@@ -32,14 +32,24 @@ from hipaa_audit.auditor_requests import (
     update_request_status,
     verify_auditor_passphrase,
 )
-from hipaa_audit.devices import load_devices, sync_devices_jamf
+from hipaa_audit.devices import load_devices, sync_devices_intune, sync_devices_jamf
 from hipaa_audit.export_auditor import build_auditor_bundle
-from hipaa_audit.notify import send_questionnaire_email
-from hipaa_audit.policy_versions import list_versions, read_archive, snapshot_policy
+from hipaa_audit.identity_users import list_okta_users
+from hipaa_audit.notify import maybe_notify_task_assigned, send_questionnaire_email, send_questionnaire_reminder
+from hipaa_audit.pbc_attachments import list_attachments, save_attachment
+from hipaa_audit.personnel import (
+    ensure_workforce_tokens,
+    find_worker_by_token,
+    pending_policies_for_employee,
+    record_acknowledgment,
+)
+from hipaa_audit.policy_versions import list_versions, policy_diff, read_archive, snapshot_policy, sync_policy_version_to_acks
 from hipaa_audit.questionnaires import (
+    find_questionnaire,
     find_questionnaire_by_token,
     load_questionnaires,
     mark_questionnaire_emailed,
+    mark_reminder_sent,
     record_questionnaire_open,
     respond_questionnaire,
     send_questionnaire,
@@ -168,6 +178,10 @@ def create_app(repo_path: Path) -> FastAPI:
                 "history_points": load_history_points(repo_path),
                 "schedule_hours": config.get("workspace", {}).get("schedule_hours", 0),
                 "scan_running": state.running,
+                "baa_alerts": expiring_baas(
+                    repo_path / config.get("baas", {}).get("register_path", "compliance/baas.yaml"),
+                    within_days=int(config.get("baas", {}).get("expiry_warning_days", 30)),
+                ),
             }
         )
         return _render("dashboard.html", **ctx)
@@ -252,7 +266,7 @@ def create_app(repo_path: Path) -> FastAPI:
         if updates:
             merge_secrets(secrets_path(repo_path, config), updates)
         if integration_id != "aws":
-            if integration_id == "jamf":
+            if integration_id in ("jamf", "intune"):
                 config.setdefault("devices", {})["enabled"] = True
             else:
                 config = apply_integration_toggle(config, integration_id, True)
@@ -307,8 +321,13 @@ def create_app(repo_path: Path) -> FastAPI:
     @app.post("/tasks/assign")
     def tasks_assign(task_id: str = Form(...), owner: str = Form(...)) -> RedirectResponse:
         config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
         tasks_path = repo_path / config.get("tasks_path", "compliance/tasks.yaml")
-        if assign_task(tasks_path, task_id, owner):
+        data = load_tasks(tasks_path)
+        task = next((t for t in data.get("tasks", []) if t.get("id") == task_id), None)
+        if task and assign_task(tasks_path, task_id, owner):
+            task["owner"] = owner
+            maybe_notify_task_assigned(config=config, task=task, repo_path=repo_path)
             return RedirectResponse("/tasks?flash=Owner+updated", status_code=303)
         return RedirectResponse("/tasks?flash=Task+not+found", status_code=303)
 
@@ -320,15 +339,18 @@ def create_app(repo_path: Path) -> FastAPI:
         )
         training_path = repo_path / config.get("personnel", {}).get("training_csv", "compliance/training-log.csv")
         ack_count = 0
+        workforce: list[dict[str, Any]] = []
         if ack_path.exists():
             import yaml
 
-            ack_count = len((yaml.safe_load(ack_path.read_text()) or {}).get("acknowledgments", []))
+            data = ensure_workforce_tokens(ack_path)
+            ack_count = len(data.get("acknowledgments", []))
+            workforce = data.get("workforce", [])
         training_rows = 0
         if training_path.exists():
             training_rows = max(0, len(training_path.read_text().strip().splitlines()) - 1)
         ctx = base_ctx("personnel")
-        ctx.update({"ack_count": ack_count, "training_rows": training_rows})
+        ctx.update({"ack_count": ack_count, "training_rows": training_rows, "workforce": workforce})
         return _render("personnel.html", **ctx)
 
     @app.get("/vendors", response_class=HTMLResponse)
@@ -418,6 +440,26 @@ def create_app(repo_path: Path) -> FastAPI:
             mark_questionnaire_emailed(qpath, entry["id"])
         return RedirectResponse("/vendors?flash=Questionnaire+sent", status_code=303)
 
+    @app.post("/vendors/questionnaire/remind")
+    def vendors_questionnaire_remind(questionnaire_id: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+        entry = find_questionnaire(qpath, questionnaire_id)
+        if not entry:
+            return RedirectResponse("/vendors?flash=Questionnaire+not+found", status_code=303)
+        token = entry.get("portal_token", entry["id"])
+        err = send_questionnaire_reminder(
+            config=config,
+            questionnaire=entry,
+            portal_url=f"http://127.0.0.1:8787/portals/vendor/{token}",
+            repo_path=repo_path,
+        )
+        if err:
+            return RedirectResponse(f"/vendors?flash=Reminder+failed+({err})", status_code=303)
+        mark_reminder_sent(qpath, questionnaire_id)
+        return RedirectResponse("/vendors?flash=Reminder+sent", status_code=303)
+
     @app.get("/baas", response_class=HTMLResponse)
     def baas_page(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
@@ -426,6 +468,9 @@ def create_app(repo_path: Path) -> FastAPI:
         ctx = base_ctx("baas")
         ctx["baas"] = load_baas(bpath).get("baas", [])
         ctx["vendors"] = load_vendors(vpath).get("vendors", [])
+        ctx["expiring"] = expiring_baas(
+            bpath, within_days=int(config.get("baas", {}).get("expiry_warning_days", 30))
+        )
         ctx["flash"] = request.query_params.get("flash", "")
         return _render("baas.html", **ctx)
 
@@ -540,7 +585,9 @@ def create_app(repo_path: Path) -> FastAPI:
         config = load_workspace_config(repo_path)
         data = load_campaigns(_access_review_path(config))
         ctx = base_ctx("access_reviews")
+        apply_workspace_secrets(repo_path, config)
         ctx["campaigns"] = _campaign_rows(data)
+        ctx["idp_principals"] = list_okta_users(config)
         ctx["flash"] = request.query_params.get("flash", "")
         return _render("access_reviews.html", **ctx)
 
@@ -616,15 +663,20 @@ def create_app(repo_path: Path) -> FastAPI:
         return _render("devices.html", **ctx)
 
     @app.post("/devices/sync")
-    def devices_sync() -> RedirectResponse:
+    def devices_sync(source: str = Form("jamf")) -> RedirectResponse:
         config = load_workspace_config(repo_path)
         apply_workspace_secrets(repo_path, config)
         path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
         try:
-            count = sync_devices_jamf(path, config)
+            if source == "intune":
+                count = sync_devices_intune(path, config)
+                label = "Intune"
+            else:
+                count = sync_devices_jamf(path, config)
+                label = "Jamf"
             if count:
-                return RedirectResponse(f"/devices?flash=Synced+{count}+device(s)+from+Jamf", status_code=303)
-            return RedirectResponse("/devices?flash_error=No+devices+from+Jamf", status_code=303)
+                return RedirectResponse(f"/devices?flash=Synced+{count}+device(s)+from+{label}", status_code=303)
+            return RedirectResponse(f"/devices?flash_error=No+devices+from+{label}", status_code=303)
         except Exception as exc:  # noqa: BLE001
             return RedirectResponse(f"/devices?flash_error={str(exc)[:80]}", status_code=303)
 
@@ -678,10 +730,29 @@ def create_app(repo_path: Path) -> FastAPI:
             summary=summary,
             bump_version=bump_version == "on",
         )
+        if bump_version == "on":
+            ack_path = repo_path / config.get("personnel", {}).get(
+                "acknowledgments_path", "compliance/acknowledgments.yaml"
+            )
+            sync_policy_version_to_acks(ack_path, policy_name, meta["version"])
         return RedirectResponse(
             f"/policies/edit/{policy_name}?flash=Saved+v{meta['version']}",
             status_code=303,
         )
+
+    @app.get("/policies/diff/{policy_name}", response_class=HTMLResponse)
+    def policies_diff(policy_name: str, left: str = "current", right: str = "") -> HTMLResponse:
+        if ".." in policy_name or "/" in policy_name:
+            return RedirectResponse("/policies", status_code=302)
+        config = load_workspace_config(repo_path)
+        pdir = repo_path / config.get("policy_dir", "policies")
+        versions = list_versions(pdir, policy_name)
+        if not right and versions:
+            right = versions[-1].get("archive", "current")
+        diff_text = policy_diff(pdir, policy_name, left, right or "current")
+        ctx = base_ctx("policies")
+        ctx.update({"policy_name": policy_name, "diff_text": diff_text, "left": left, "right": right})
+        return _render("policy_diff.html", **ctx)
 
     @app.get("/audits", response_class=HTMLResponse)
     def audits_page(request: Request) -> HTMLResponse:
@@ -720,18 +791,40 @@ def create_app(repo_path: Path) -> FastAPI:
             return RedirectResponse("/audits", status_code=302)
         ctx = base_ctx("audits")
         ctx["pbc"] = req
+        ctx["attachments"] = list_attachments(repo_path, request_id)
         return _render("auditor_pbc.html", **ctx)
 
     @app.post("/audits/pbc/{request_id}/message")
-    def audits_pbc_message(
+    async def audits_pbc_message(
         request_id: str,
         author: str = Form(...),
         body: str = Form(...),
+        file: UploadFile | None = File(None),
     ) -> RedirectResponse:
         config = load_workspace_config(repo_path)
         adb = auditor_db_path(repo_path, config)
-        add_message(adb, request_id=request_id, author=author, author_role="org", body=body)
+        attachment_path = ""
+        if file and file.filename:
+            data = await file.read()
+            attachment_path = save_attachment(repo_path, request_id, file.filename, data)
+        add_message(
+            adb,
+            request_id=request_id,
+            author=author,
+            author_role="org",
+            body=body,
+            attachment_path=attachment_path,
+        )
         return RedirectResponse(f"/audits/pbc/{request_id}?flash=Reply+posted", status_code=303)
+
+    @app.get("/audits/pbc/{request_id}/attachment/{filename}", response_model=None)
+    def audits_pbc_attachment(request_id: str, filename: str):
+        if ".." in filename:
+            return RedirectResponse("/audits", status_code=302)
+        path = repo_path / "compliance" / "pbc-attachments" / request_id.replace("/", "") / filename
+        if path.is_file():
+            return FileResponse(path)
+        return RedirectResponse("/audits", status_code=302)
 
     @app.post("/audits/pbc/{request_id}/status")
     def audits_pbc_status(request_id: str, status: str = Form(...)) -> RedirectResponse:
@@ -788,6 +881,73 @@ def create_app(repo_path: Path) -> FastAPI:
         ctx = base_ctx("audits")
         ctx["pbc_requests"] = list_requests(adb)
         return _render("auditor_requests.html", **ctx)
+
+    @app.get("/portals/auditor/requests/{request_id}", response_class=HTMLResponse)
+    def portal_auditor_request_detail(request_id: str, request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        import os
+
+        env_key = config.get("auditor_portal", {}).get("access_passphrase_env", "AUDITOR_PORTAL_PASSPHRASE")
+        expected = os.environ.get(env_key, "")
+        if expected and request.cookies.get("auditor_session") != session_token(expected):
+            return RedirectResponse("/portals/auditor/requests?error=1", status_code=302)
+        adb = auditor_db_path(repo_path, config)
+        req = get_request(adb, request_id)
+        if not req:
+            return RedirectResponse("/portals/auditor/requests", status_code=302)
+        ctx = base_ctx("audits")
+        ctx["pbc"] = req
+        ctx["auditor_view"] = True
+        ctx["flash"] = request.query_params.get("flash", "")
+        return _render("auditor_pbc.html", **ctx)
+
+    @app.post("/portals/auditor/requests/{request_id}/message")
+    def portal_auditor_message(
+        request_id: str,
+        author: str = Form(...),
+        body: str = Form(...),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        adb = auditor_db_path(repo_path, config)
+        add_message(adb, request_id=request_id, author=author, author_role="auditor", body=body)
+        return RedirectResponse(f"/portals/auditor/requests/{request_id}?flash=Reply+posted", status_code=303)
+
+    @app.get("/portals/ack/{token}", response_class=HTMLResponse)
+    def portal_ack(token: str, request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        ack_path = repo_path / config.get("personnel", {}).get(
+            "acknowledgments_path", "compliance/acknowledgments.yaml"
+        )
+        worker = find_worker_by_token(ack_path, token)
+        if not worker:
+            return HTMLResponse("<p>Invalid acknowledgment link.</p>", status_code=404)
+        import yaml
+
+        data = yaml.safe_load(ack_path.read_text()) or {}
+        employee_id = worker.get("id") or worker.get("employee_id", "")
+        pending = pending_policies_for_employee(data, employee_id)
+        ctx = {
+            "org_name": config.get("org_name", "Organization"),
+            "employee_id": employee_id,
+            "pending": pending,
+            "token": token,
+            "flash": request.query_params.get("flash", ""),
+            "done": request.query_params.get("done") == "1",
+        }
+        return _render("ack_portal.html", **ctx)
+
+    @app.post("/portals/ack/{token}")
+    def portal_ack_submit(token: str, policy: str = Form(...), version: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        ack_path = repo_path / config.get("personnel", {}).get(
+            "acknowledgments_path", "compliance/acknowledgments.yaml"
+        )
+        worker = find_worker_by_token(ack_path, token)
+        if not worker:
+            return RedirectResponse("/personnel", status_code=303)
+        employee_id = worker.get("id") or worker.get("employee_id", "")
+        record_acknowledgment(ack_path, employee_id=employee_id, policy=policy, version=version)
+        return RedirectResponse(f"/portals/ack/{token}?flash=Acknowledged", status_code=303)
 
     @app.get("/portals/vendor/{token}", response_class=HTMLResponse)
     def portal_vendor(token: str, request: Request) -> HTMLResponse:
@@ -847,6 +1007,7 @@ def create_app(repo_path: Path) -> FastAPI:
         slack = config.setdefault("notifications", {}).setdefault("slack", {})
         slack["enabled"] = form.get("slack_enabled") == "on"
         slack["notify_on_fail"] = form.get("slack_notify_fail") == "on"
+        slack["notify_on_task_assign"] = form.get("slack_notify_task_assign") == "on"
         slack["min_score_drop"] = float(form.get("slack_min_drop", 5) or 5)
         webhook = str(form.get("slack_webhook", "")).strip()
         if webhook:

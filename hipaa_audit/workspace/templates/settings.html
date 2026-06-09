@@ -24,6 +24,7 @@
     <legend>Slack notifications</legend>
     <label><input type="checkbox" name="slack_enabled" {% if config.get('notifications', {}).get('slack', {}).get('enabled') %}checked{% endif %}> Enable Slack alerts</label><br>
     <label><input type="checkbox" name="slack_notify_fail" {% if config.get('notifications', {}).get('slack', {}).get('notify_on_fail', True) %}checked{% endif %}> Notify on failures</label><br>
+    <label><input type="checkbox" name="slack_notify_task_assign" {% if config.get('notifications', {}).get('slack', {}).get('notify_on_task_assign') %}checked{% endif %}> Notify on task assignment</label><br>
     <label style="margin-top:.5rem">Min score drop to alert
       <input type="number" name="slack_min_drop" value="{{ config.get('notifications', {}).get('slack', {}).get('min_score_drop', 5) }}" min="1" max="50" step="0.5">
     </label>

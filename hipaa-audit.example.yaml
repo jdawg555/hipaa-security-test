@@ -113,6 +113,9 @@ devices:
   register_path: compliance/devices.yaml
   max_last_seen_days: 30
   jamf_sync: false
+  intune_sync: false
+  # Intune Graph API — set via /integrations/connect/intune or env:
+  # AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
 
 # Quarterly access review campaigns (Vanta access reviews)
 access_reviews:
@@ -138,6 +141,7 @@ auditor_portal:
   output_dir: compliance/auditor-portal
   access_passphrase_env: AUDITOR_PORTAL_PASSPHRASE
   requests_db: compliance/auditor-requests.db
+  auto_export_on_scan: false
 
 # Slack alerts on posture drop or failures
 notifications:
@@ -146,6 +150,7 @@ notifications:
     webhook_env: SLACK_WEBHOOK_URL
     min_score_drop: 5
     notify_on_fail: true
+    notify_on_task_assign: false
   email:
     enabled: false
     smtp_host: ""

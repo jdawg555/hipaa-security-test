@@ -118,6 +118,57 @@ def _parse_date(value: str):
     return None
 
 
+def save_acknowledgments(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.dump(data, sort_keys=False, default_flow_style=False))
+
+
+def ensure_workforce_tokens(path: Path) -> dict[str, Any]:
+    import secrets
+
+    data = load_acknowledgments(path)
+    changed = False
+    for worker in data.get("workforce", []):
+        if not worker.get("ack_token"):
+            worker["ack_token"] = secrets.token_urlsafe(12)
+            changed = True
+    if changed:
+        save_acknowledgments(path, data)
+    return data
+
+
+def find_worker_by_token(path: Path, token: str) -> dict[str, Any] | None:
+    data = load_acknowledgments(path)
+    return next((w for w in data.get("workforce", []) if w.get("ack_token") == token), None)
+
+
+def pending_policies_for_employee(data: dict[str, Any], employee_id: str) -> list[dict[str, str]]:
+    policy_versions = {p["policy"]: p.get("version", "1.0") for p in data.get("policies", []) if p.get("policy")}
+    signed = {
+        (a.get("policy"), a.get("version", "1.0"))
+        for a in data.get("acknowledgments", [])
+        if (a.get("employee_id") or a.get("email")) == employee_id
+    }
+    pending: list[dict[str, str]] = []
+    for pol, ver in policy_versions.items():
+        if (pol, ver) not in signed:
+            pending.append({"policy": pol, "version": ver})
+    return pending
+
+
+def record_acknowledgment(path: Path, *, employee_id: str, policy: str, version: str) -> None:
+    data = load_acknowledgments(path)
+    data.setdefault("acknowledgments", []).append(
+        {
+            "employee_id": employee_id,
+            "policy": policy,
+            "version": version,
+            "acknowledged_at": datetime.now(UTC).strftime("%Y-%m-%d"),
+        }
+    )
+    save_acknowledgments(path, data)
+
+
 def import_training_template(output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():

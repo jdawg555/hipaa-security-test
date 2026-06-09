@@ -14,6 +14,9 @@ SECRET_ENV_MAP = {
     "jamf_url": "JAMF_URL",
     "jamf_user": "JAMF_USER",
     "jamf_password": "JAMF_PASSWORD",
+    "azure_tenant_id": "AZURE_TENANT_ID",
+    "azure_client_id": "AZURE_CLIENT_ID",
+    "azure_client_secret": "AZURE_CLIENT_SECRET",
 }
 
 
@@ -72,6 +75,11 @@ CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
         {"key": "jamf_url", "label": "Jamf URL", "type": "text", "hint": "https://yourorg.jamfcloud.com"},
         {"key": "jamf_user", "label": "Jamf API user", "type": "text"},
         {"key": "jamf_password", "label": "Jamf API password", "type": "password"},
+    ],
+    "intune": [
+        {"key": "azure_tenant_id", "label": "Azure tenant ID", "type": "text"},
+        {"key": "azure_client_id", "label": "Azure app client ID", "type": "text"},
+        {"key": "azure_client_secret", "label": "Azure client secret", "type": "password"},
     ],
     "aws": [
         {"key": "aws_note", "label": "AWS credentials", "type": "info", "hint": "Use env vars or IAM role — set region in Settings"},

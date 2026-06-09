@@ -88,10 +88,9 @@ capabilities:
   - id: P-09
     name: Policy management
     phase: 4
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [diff_view, personnel_reack_automation]
     surfaces: [workspace.policies]
     modules: [policy_versions]
 
@@ -107,31 +106,29 @@ capabilities:
   - id: P-11
     name: Policy acknowledgments
     phase: 4
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [employee_ack_portal]
+    surfaces: [portals.ack]
     modules: [personnel]
 
   - id: P-12
     name: MDM endpoint compliance
     phase: 4
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [intune_graph]
     surfaces: [workspace.devices]
-    modules: [devices, platform.adapters.jamf]
+    modules: [devices, platform.adapters.jamf, platform.adapters.intune]
 
   - id: P-13
     name: Access review campaigns
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [idp_user_picker]
     surfaces: [workspace.access_reviews]
-    modules: [access_reviews]
+    modules: [access_reviews, identity_users]
 
   - id: P-14
     name: SaaS application inventory
@@ -155,21 +152,19 @@ capabilities:
   - id: P-16
     name: Vendor questionnaires
     phase: 4
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [email_reminders]
     surfaces: [workspace.vendors, portals.vendor]
     modules: [questionnaires, vendor_portal, notify]
 
   - id: P-17
     name: BAA tracking
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [workspace_expiry_alerts]
-    surfaces: [workspace.baas]
+    surfaces: [workspace.baas, workspace.dashboard]
     modules: [baas]
 
   - id: P-18
@@ -183,12 +178,11 @@ capabilities:
   - id: P-19
     name: Auditor portal and PBC
     phase: 5
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [file_uploads, auditor_message_replies]
     surfaces: [workspace.audits, portals.auditor]
-    modules: [auditor_requests, auditor_portal, export_auditor]
+    modules: [auditor_requests, auditor_portal, export_auditor, pbc_attachments]
 
   - id: P-20
     name: Auditor evidence export
@@ -204,7 +198,7 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [multi_region, full_85_check_catalog]
+    gaps: [multi_region]
     modules: [aws, integrations.prowler, prowler_crosswalk]
 
   - id: P-24
@@ -219,20 +213,19 @@ capabilities:
   - id: P-27
     name: Slack notifications
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    surfaces: [workspace.settings]
-    gaps: [task_assignment_notify]
+    surfaces: [workspace.settings, workspace.tasks]
     modules: [notify]
 
   - id: P-28
     name: Multi-user RBAC
     phase: 6
-    status: wont
+    status: shipped
     vanta: full
     drata: full
-    note: Document SSO reverse-proxy pattern instead
+    note: SSO reverse-proxy pattern documented in docs/rbac-proxy.md
 
   - id: P-30
     name: 300+ SaaS integrations

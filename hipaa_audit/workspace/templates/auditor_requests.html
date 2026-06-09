@@ -4,12 +4,13 @@
 <p class="subtitle">Read-only list of prepared-by-client requests for your audit.</p>
 {% if pbc_requests %}
 <table>
-  <thead><tr><th>ID</th><th>Title</th><th>Control</th><th>Status</th><th>Due</th></tr></thead>
+  <thead><tr><th>ID</th><th>Title</th><th>Control</th><th>Status</th><th>Due</th><th></th></tr></thead>
   <tbody>
     {% for r in pbc_requests %}
     <tr>
       <td>{{ r.id }}</td><td>{{ r.title }}</td><td>{{ r.control_ref or '—' }}</td>
       <td>{{ r.status }}</td><td>{{ r.due_date or '—' }}</td>
+      <td><a href="/portals/auditor/requests/{{ r.id }}">View thread</a></td>
     </tr>
     {% endfor %}
   </tbody>

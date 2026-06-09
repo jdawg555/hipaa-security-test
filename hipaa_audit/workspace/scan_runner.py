@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from hipaa_audit.auditor_portal import publish_auditor_portal
+from hipaa_audit.export_auditor import build_auditor_bundle
 from hipaa_audit.engine import run_audit
 from hipaa_audit.posture import compute_posture, record_history
 from hipaa_audit.report import write_reports
@@ -54,12 +55,19 @@ def run_scan_job(repo_path: Path, *, publish_portals: bool = True) -> dict[str, 
         config = load_workspace_config(repo_path)
         apply_workspace_secrets(repo_path, config)
         config.setdefault("org_name", repo_path.name)
+        devices_path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
         if config.get("devices", {}).get("jamf_sync"):
             try:
                 from hipaa_audit.devices import sync_devices_jamf
 
-                devices_path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
                 sync_devices_jamf(devices_path, config)
+            except Exception:  # noqa: BLE001
+                pass
+        if config.get("devices", {}).get("intune_sync"):
+            try:
+                from hipaa_audit.devices import sync_devices_intune
+
+                sync_devices_intune(devices_path, config)
             except Exception:  # noqa: BLE001
                 pass
         output = repo_path / "evidence" / "latest"
@@ -73,6 +81,34 @@ def run_scan_job(repo_path: Path, *, publish_portals: bool = True) -> dict[str, 
             default_owner=config.get("tasks", {}).get("default_owner", "security@example.com"),
             due_days=int(config.get("tasks", {}).get("due_days", 14)),
         )
+        try:
+            from hipaa_audit.notify import send_questionnaire_reminder
+            from hipaa_audit.questionnaires import mark_reminder_sent, questionnaires_needing_reminder
+
+            qpath = repo_path / config.get("vendors", {}).get(
+                "questionnaires_path", "compliance/vendor-questionnaires.yaml"
+            )
+            for q in questionnaires_needing_reminder(qpath):
+                token = q.get("portal_token", q["id"])
+                portal_url = f"http://127.0.0.1:8787/portals/vendor/{token}"
+                err = send_questionnaire_reminder(
+                    config=config,
+                    questionnaire=q,
+                    portal_url=portal_url,
+                    repo_path=repo_path,
+                )
+                if not err:
+                    mark_reminder_sent(qpath, q["id"])
+        except Exception:  # noqa: BLE001
+            pass
+
+        if config.get("auditor_portal", {}).get("auto_export_on_scan"):
+            try:
+                out = repo_path / "evidence" / "latest" / "auditor-bundle.zip"
+                build_auditor_bundle(repo_path, out, config=config)
+            except Exception:  # noqa: BLE001
+                pass
+
         if publish_portals:
             report_json = output / "audit-report.json"
             try:

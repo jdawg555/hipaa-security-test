@@ -3,6 +3,17 @@
 <h1>Business Associate Agreements</h1>
 <p class="subtitle">Structured BAA register with expiry tracking — Vanta/Drata vendor compliance.</p>
 
+{% if expiring %}
+<div class="card" style="margin-bottom:1rem;border-color:var(--warn)">
+  <h2 style="font-size:1rem;margin:0 0 .5rem">Expiring soon</h2>
+  <ul style="margin:0;padding-left:1.25rem">
+    {% for b in expiring %}
+    <li>{{ b.vendor_name }} — {{ b.expiry_date }} <span class="badge {{ 'fail' if b.alert == 'expired' else 'warn' }}">{{ b.alert }}</span></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 <div class="card" style="margin-bottom:1.5rem">
   <h2 style="font-size:1rem;margin:0 0 .75rem">Add BAA</h2>
   <form method="post" action="/baas/add" class="form-grid">

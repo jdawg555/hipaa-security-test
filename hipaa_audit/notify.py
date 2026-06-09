@@ -136,3 +136,53 @@ def send_questionnaire_email(
         f"Thank you,\n{org} Security"
     )
     return send_email(config=config, to=contact, subject=subject, body=body, repo_path=repo_path)
+
+
+def send_questionnaire_reminder(
+    *,
+    config: dict[str, Any],
+    questionnaire: dict[str, Any],
+    portal_url: str,
+    repo_path: Path,
+) -> str | None:
+    org = config.get("org_name", "Organization")
+    subject = f"[{org}] Reminder: security questionnaire due {questionnaire.get('due_date')}"
+    body = (
+        f"Reminder: questionnaire {questionnaire.get('id')} for {questionnaire.get('vendor_name')} "
+        f"is due {questionnaire.get('due_date')}.\n\nComplete here:\n{portal_url}\n"
+    )
+    return send_email(
+        config=config,
+        to=questionnaire.get("contact", ""),
+        subject=subject,
+        body=body,
+        repo_path=repo_path,
+    )
+
+
+def maybe_notify_task_assigned(
+    *,
+    config: dict[str, Any],
+    task: dict[str, Any],
+    repo_path: Path,
+) -> str | None:
+    slack = config.get("notifications", {}).get("slack", {})
+    if not slack.get("notify_on_task_assign", False):
+        return None
+    webhook = os.environ.get(slack.get("webhook_env", "SLACK_WEBHOOK_URL"), "")
+    if not webhook:
+        return "Slack task notify enabled but webhook not set"
+    owner = task.get("owner", "")
+    text = (
+        f"*Task assigned* — {config.get('org_name', 'org')}\n"
+        f"{task.get('id')}: {task.get('title', '')[:80]}\n"
+        f"Owner: {owner} · Due: {task.get('due_date', '—')}"
+    )
+    payload = json.dumps({"text": text}).encode()
+    req = urllib.request.Request(webhook, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=15):  # noqa: S310
+            pass
+        return None
+    except Exception as exc:  # noqa: BLE001
+        return f"Slack task notify failed: {exc}"

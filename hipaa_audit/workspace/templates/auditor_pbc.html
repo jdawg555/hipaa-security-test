@@ -2,9 +2,11 @@
 {% block content %}
 <h1>PBC request — {{ pbc.id }}</h1>
 <p class="subtitle">{{ pbc.title }} · {{ pbc.status }} · Due {{ pbc.due_date or '—' }}</p>
+{% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
 
 <div class="card" style="margin-bottom:1rem">
   <p><strong>Control:</strong> {{ pbc.control_ref or '—' }}</p>
+  {% if not auditor_view %}
   <form method="post" action="/audits/pbc/{{ pbc.id }}/status" class="inline-form">
     <select name="status" class="input-sm">
       <option value="open" {% if pbc.status == 'open' %}selected{% endif %}>open</option>
@@ -13,7 +15,19 @@
     </select>
     <button class="btn secondary btn-sm" type="submit">Update status</button>
   </form>
+  {% endif %}
 </div>
+
+{% if attachments %}
+<div class="card" style="margin-bottom:1rem">
+  <h2 style="font-size:1rem;margin:0 0 .5rem">Attachments</h2>
+  <ul>
+    {% for f in attachments %}
+    <li><a href="/audits/pbc/{{ pbc.id }}/attachment/{{ f.name }}">{{ f.name }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 
 {% if pbc.messages %}
 <h2 style="font-size:1rem">Thread</h2>
@@ -22,17 +36,29 @@
   <strong>{{ m.author }}</strong> <span class="badge manual">{{ m.author_role }}</span>
   <span style="color:var(--muted);font-size:.8rem;margin-left:.5rem">{{ m.created_at[:16] }}</span>
   <p style="margin:.5rem 0 0;white-space:pre-wrap">{{ m.body }}</p>
+  {% if m.attachment_path %}
+  <p style="margin:.35rem 0 0;font-size:.85rem"><a href="/audits/pbc/{{ pbc.id }}/attachment/{{ m.attachment_path.split('/')[-1] }}">Download attachment</a></p>
+  {% endif %}
 </div>
 {% endfor %}
 {% endif %}
 
 <div class="card" style="margin-top:1rem">
   <h2 style="font-size:1rem;margin:0 0 .75rem">Post response</h2>
-  <form method="post" action="/audits/pbc/{{ pbc.id }}/message" class="form-grid">
-    <label>Author <input type="text" name="author" placeholder="security@your-org.com" required></label>
+  <form method="post" action="{% if auditor_view %}/portals/auditor/requests/{{ pbc.id }}/message{% else %}/audits/pbc/{{ pbc.id }}/message{% endif %}" class="form-grid"{% if not auditor_view %} enctype="multipart/form-data"{% endif %}>
+    <label>Author <input type="text" name="author" placeholder="{% if auditor_view %}auditor@firm.com{% else %}security@your-org.com{% endif %}" required></label>
     <label class="full">Message <textarea name="body" rows="4" required></textarea></label>
+    {% if not auditor_view %}
+    <label class="full">Attachment (optional) <input type="file" name="file"></label>
+    {% endif %}
     <div class="full"><button class="btn" type="submit">Post reply</button></div>
   </form>
 </div>
-<p style="margin-top:1rem"><a class="btn secondary" href="/audits">Back to audits</a></p>
+<p style="margin-top:1rem">
+  {% if auditor_view %}
+  <a class="btn secondary" href="/portals/auditor/requests">Back to PBC queue</a>
+  {% else %}
+  <a class="btn secondary" href="/audits">Back to audits</a>
+  {% endif %}
+</p>
 {% endblock %}

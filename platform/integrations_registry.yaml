@@ -142,8 +142,12 @@ integrations:
   - id: intune
     name: Microsoft Intune
     category: endpoints
-    auth: oauth
-    status: planned
+    auth: env_vars
+    env_vars: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET]
+    config_key: devices.enabled
+    connection_test: intune.graph_api
+    workspace_toggle: true
+    status: shipped
     parity_id: P-12
     phase: 4
 
