@@ -488,6 +488,11 @@ controls:
         handler: prowler_findings
         title: Prowler AWS findings (no FAIL)
         remediation: "prowler aws -M json -o evidence/prowler/"
+      - id: prowler-hipaa-crosswalk
+        module: integrations
+        handler: prowler_hipaa_crosswalk
+        title: Prowler HIPAA requirement crosswalk
+        remediation: "prowler aws --compliance hipaa_aws -M json -o evidence/prowler/"
       - id: trivy-evidence
         module: integrations
         handler: trivy_vulnerabilities

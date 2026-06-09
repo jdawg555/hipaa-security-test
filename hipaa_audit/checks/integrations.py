@@ -31,6 +31,7 @@ def run(
     handler = check.get("handler", check_id)
     handlers = {
         "prowler_findings": _prowler_findings,
+        "prowler_hipaa_crosswalk": _prowler_hipaa_crosswalk,
         "trivy_vulnerabilities": _trivy_vulnerabilities,
         "osv_vulnerabilities": _osv_vulnerabilities,
         "checkov_findings": _checkov_findings,
@@ -126,6 +127,63 @@ def _prowler_findings(check, *, repo_path, config, evidence_dir) -> CheckResult:
         title=check.get("title", check["id"]),
         status=CheckStatus.PASS,
         message=f"Prowler evidence clean ({len(files)} file(s))",
+        evidence_path=str(out),
+    )
+
+
+def _prowler_hipaa_crosswalk(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    from hipaa_audit.prowler_crosswalk import collect_finding_statuses, rollup_requirements
+
+    prowler_cfg = config.get("prowler", {})
+    if not prowler_cfg.get("enabled", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.SKIP,
+            message="Prowler integration disabled",
+        )
+    pattern = prowler_cfg.get("evidence_glob", "evidence/prowler/*.json")
+    files = _glob_files(repo_path, pattern)
+    if not files:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"No Prowler evidence at {pattern}",
+            remediation=check.get("remediation"),
+        )
+
+    statuses = collect_finding_statuses(files)
+    rollup = rollup_requirements(statuses)
+    failed_reqs = [r for r in rollup if r["status"] == "fail"]
+    unknown_reqs = [r for r in rollup if r["status"] == "unknown"]
+
+    out = evidence_dir / "integration-prowler-crosswalk.json"
+    out.write_text(json.dumps({"requirements": rollup, "finding_count": len(statuses)}, indent=2))
+
+    if failed_reqs:
+        names = ", ".join(r["id"] for r in failed_reqs[:3])
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.FAIL,
+            message=f"Prowler HIPAA crosswalk: {len(failed_reqs)} requirement(s) failing ({names})",
+            evidence_path=str(out),
+            remediation="Remediate failed Prowler checks mapped to HIPAA requirements",
+        )
+    if unknown_reqs and len(unknown_reqs) > len(rollup) // 2:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"Prowler crosswalk: {len(unknown_reqs)} requirement(s) without matching findings",
+            evidence_path=str(out),
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.PASS,
+        message=f"Prowler HIPAA crosswalk: {len(rollup)} requirement(s) assessed",
         evidence_path=str(out),
     )
 

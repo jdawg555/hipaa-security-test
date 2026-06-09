@@ -76,6 +76,31 @@ def assess_devices(path: Path, config: dict[str, Any]) -> tuple[str, str, list[s
     return "fail", f"{len(issues)} device gap(s)", issues[:5]
 
 
+def merge_devices(path: Path, discovered: list[dict[str, Any]], *, source: str = "jamf") -> int:
+    data = load_devices(path)
+    existing = {d.get("id"): d for d in data.get("devices", [])}
+    for device in discovered:
+        device_id = device.get("id")
+        if not device_id:
+            continue
+        existing[device_id] = {**existing.get(device_id, {}), **device}
+    data["devices"] = list(existing.values())
+    data["imported_at"] = datetime.now(UTC).strftime("%Y-%m-%d")
+    data["source"] = source
+    save_devices(path, data)
+    return len(discovered)
+
+
+def sync_devices_jamf(path: Path, config: dict[str, Any]) -> int:
+    from hipaa_audit.platform.adapters.jamf import JamfAdapter
+
+    adapter = JamfAdapter()
+    discovered = adapter.discover(config)
+    if not discovered:
+        return 0
+    return merge_devices(path, discovered, source="jamf-api")
+
+
 def device_csv_template(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

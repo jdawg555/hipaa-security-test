@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>PBC request — {{ pbc.id }}</h1>
+<p class="subtitle">{{ pbc.title }} · {{ pbc.status }} · Due {{ pbc.due_date or '—' }}</p>
+
+<div class="card" style="margin-bottom:1rem">
+  <p><strong>Control:</strong> {{ pbc.control_ref or '—' }}</p>
+  <form method="post" action="/audits/pbc/{{ pbc.id }}/status" class="inline-form">
+    <select name="status" class="input-sm">
+      <option value="open" {% if pbc.status == 'open' %}selected{% endif %}>open</option>
+      <option value="in_progress" {% if pbc.status == 'in_progress' %}selected{% endif %}>in_progress</option>
+      <option value="completed" {% if pbc.status == 'completed' %}selected{% endif %}>completed</option>
+    </select>
+    <button class="btn secondary btn-sm" type="submit">Update status</button>
+  </form>
+</div>
+
+{% if pbc.messages %}
+<h2 style="font-size:1rem">Thread</h2>
+{% for m in pbc.messages %}
+<div class="card" style="margin-bottom:.5rem;padding:.75rem 1rem">
+  <strong>{{ m.author }}</strong> <span class="badge manual">{{ m.author_role }}</span>
+  <span style="color:var(--muted);font-size:.8rem;margin-left:.5rem">{{ m.created_at[:16] }}</span>
+  <p style="margin:.5rem 0 0;white-space:pre-wrap">{{ m.body }}</p>
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="card" style="margin-top:1rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">Post response</h2>
+  <form method="post" action="/audits/pbc/{{ pbc.id }}/message" class="form-grid">
+    <label>Author <input type="text" name="author" placeholder="security@your-org.com" required></label>
+    <label class="full">Message <textarea name="body" rows="4" required></textarea></label>
+    <div class="full"><button class="btn" type="submit">Post reply</button></div>
+  </form>
+</div>
+<p style="margin-top:1rem"><a class="btn secondary" href="/audits">Back to audits</a></p>
+{% endblock %}

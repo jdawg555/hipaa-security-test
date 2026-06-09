@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import smtplib
 import urllib.request
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
 
@@ -69,3 +71,68 @@ def maybe_notify_slack(
         return "Slack notification sent"
     except Exception as exc:  # noqa: BLE001
         return f"Slack notification failed: {exc}"
+
+
+def send_email(
+    *,
+    config: dict[str, Any],
+    to: str,
+    subject: str,
+    body: str,
+    repo_path: Path | None = None,
+) -> str | None:
+    """Send email via SMTP. Returns error message or None on success."""
+    email_cfg = config.get("notifications", {}).get("email", {})
+    if not email_cfg.get("enabled", False):
+        return "Email notifications disabled"
+
+    if repo_path is not None:
+        from hipaa_audit.workspace.secrets import apply_workspace_secrets
+
+        apply_workspace_secrets(repo_path, config)
+
+    host = os.environ.get(email_cfg.get("smtp_host_env", "SMTP_HOST"), email_cfg.get("smtp_host", ""))
+    port = int(os.environ.get(email_cfg.get("smtp_port_env", "SMTP_PORT"), email_cfg.get("smtp_port", 587)))
+    user = os.environ.get(email_cfg.get("smtp_user_env", "SMTP_USER"), "")
+    password = os.environ.get(email_cfg.get("smtp_password_env", "SMTP_PASSWORD"), "")
+    from_addr = email_cfg.get("from_address") or user or "security@example.com"
+
+    if not host:
+        return "SMTP host not configured (notifications.email.smtp_host or SMTP_HOST)"
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = from_addr
+    msg["To"] = to
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP(host, port, timeout=20) as smtp:
+            if email_cfg.get("use_tls", True):
+                smtp.starttls()
+            if user and password:
+                smtp.login(user, password)
+            smtp.send_message(msg)
+        return None
+    except Exception as exc:  # noqa: BLE001
+        return f"Email send failed: {exc}"
+
+
+def send_questionnaire_email(
+    *,
+    config: dict[str, Any],
+    contact: str,
+    questionnaire: dict[str, Any],
+    portal_url: str,
+    repo_path: Path,
+) -> str | None:
+    org = config.get("org_name", "Organization")
+    subject = f"[{org}] Security questionnaire — {questionnaire.get('vendor_name', '')}"
+    body = (
+        f"Hello,\n\n"
+        f"{org} has sent a SIG-lite security questionnaire (ID {questionnaire.get('id')}).\n"
+        f"Due date: {questionnaire.get('due_date')}\n\n"
+        f"Complete the form here:\n{portal_url}\n\n"
+        f"Thank you,\n{org} Security"
+    )
+    return send_email(config=config, to=contact, subject=subject, body=body, repo_path=repo_path)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import secrets
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,9 @@ def send_questionnaire(
         "due_date": due,
         "status": "pending",
         "responded_at": None,
+        "portal_token": secrets.token_urlsafe(16),
+        "email_sent_at": None,
+        "opened_at": None,
         "responses": {k: None for k in SIG_LITE_KEYS},
     }
     data.setdefault("questionnaires", []).append(entry)
@@ -124,6 +128,32 @@ def parse_response_yaml(path: Path) -> dict[str, Any]:
 def find_questionnaire(q_path: Path, questionnaire_id: str) -> dict[str, Any] | None:
     data = load_questionnaires(q_path)
     return next((q for q in data.get("questionnaires", []) if q.get("id") == questionnaire_id), None)
+
+
+def find_questionnaire_by_token(q_path: Path, token: str) -> dict[str, Any] | None:
+    data = load_questionnaires(q_path)
+    return next((q for q in data.get("questionnaires", []) if q.get("portal_token") == token), None)
+
+
+def record_questionnaire_open(q_path: Path, token: str) -> bool:
+    data = load_questionnaires(q_path)
+    for q in data.get("questionnaires", []):
+        if q.get("portal_token") != token:
+            continue
+        if not q.get("opened_at"):
+            q["opened_at"] = datetime.now(UTC).isoformat()
+            save_questionnaires(q_path, data)
+        return True
+    return False
+
+
+def mark_questionnaire_emailed(q_path: Path, questionnaire_id: str) -> None:
+    data = load_questionnaires(q_path)
+    for q in data.get("questionnaires", []):
+        if q.get("id") == questionnaire_id:
+            q["email_sent_at"] = datetime.now(UTC).isoformat()
+            save_questionnaires(q_path, data)
+            return
 
 
 def _parse_date(value: str):

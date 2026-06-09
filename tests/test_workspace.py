@@ -136,9 +136,56 @@ def test_policy_editor(tmp_path):
     client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
     policy = tmp_path / "policies" / "test-policy.md"
     policy.write_text("# Old")
-    r = client.post("/policies/edit/test-policy.md", data={"content": "# New content"})
+    r = client.post("/policies/edit/test-policy.md", data={"content": "# New content", "summary": "test"})
     assert r.status_code == 303
     assert "New content" in policy.read_text()
+    assert (tmp_path / "policies" / ".history" / "manifest.yaml").exists()
+
+
+def test_pbc_queue(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    r = client.post(
+        "/audits/pbc/create",
+        data={"title": "IAM user list", "control_ref": "HIPAA-164", "due_date": "2026-08-01"},
+    )
+    assert r.status_code == 303
+    r = client.get("/audits", follow_redirects=True)
+    assert "IAM user list" in r.text
+
+
+def test_vendor_portal_submit(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    from hipaa_audit.questionnaires import send_questionnaire
+    from hipaa_audit.vendors import add_vendor
+
+    vpath = tmp_path / "compliance" / "vendors.yaml"
+    qpath = tmp_path / "compliance" / "vendor-questionnaires.yaml"
+    vendor = add_vendor(vpath, name="Acme")
+    entry = send_questionnaire(qpath, vpath, vendor_id=vendor["id"], contact="v@test.com")
+    token = entry["portal_token"]
+    r = client.post(
+        f"/portals/vendor/{token}",
+        data={
+            "soc2_or_iso": "true",
+            "encryption_at_rest": "true",
+            "encryption_in_transit": "true",
+            "mfa_enforced": "true",
+            "access_logging": "true",
+            "incident_notification": "true",
+            "subprocessors_disclosed": "true",
+            "data_retention_defined": "true",
+            "reviewer": "Vendor Sec",
+        },
+    )
+    assert r.status_code == 303
+    import yaml
+
+    data = yaml.safe_load(qpath.read_text())
+    assert data["questionnaires"][0]["status"] == "responded"
 
 
 def test_connect_wizard_saves_secrets(tmp_path):

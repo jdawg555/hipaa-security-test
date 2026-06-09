@@ -112,6 +112,7 @@ devices:
   enabled: false
   register_path: compliance/devices.yaml
   max_last_seen_days: 30
+  jamf_sync: false
 
 # Quarterly access review campaigns (Vanta access reviews)
 access_reviews:
@@ -136,6 +137,7 @@ trust_center:
 auditor_portal:
   output_dir: compliance/auditor-portal
   access_passphrase_env: AUDITOR_PORTAL_PASSPHRASE
+  requests_db: compliance/auditor-requests.db
 
 # Slack alerts on posture drop or failures
 notifications:
@@ -144,3 +146,13 @@ notifications:
     webhook_env: SLACK_WEBHOOK_URL
     min_score_drop: 5
     notify_on_fail: true
+  email:
+    enabled: false
+    smtp_host: ""
+    smtp_port: 587
+    use_tls: true
+    from_address: security@your-org.com
+    smtp_host_env: SMTP_HOST
+    smtp_port_env: SMTP_PORT
+    smtp_user_env: SMTP_USER
+    smtp_password_env: SMTP_PASSWORD

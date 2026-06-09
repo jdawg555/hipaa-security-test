@@ -54,6 +54,14 @@ def run_scan_job(repo_path: Path, *, publish_portals: bool = True) -> dict[str, 
         config = load_workspace_config(repo_path)
         apply_workspace_secrets(repo_path, config)
         config.setdefault("org_name", repo_path.name)
+        if config.get("devices", {}).get("jamf_sync"):
+            try:
+                from hipaa_audit.devices import sync_devices_jamf
+
+                devices_path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
+                sync_devices_jamf(devices_path, config)
+            except Exception:  # noqa: BLE001
+                pass
         output = repo_path / "evidence" / "latest"
         report = run_audit(repo_path, config=config, evidence_dir=output)
         write_reports(report, output)

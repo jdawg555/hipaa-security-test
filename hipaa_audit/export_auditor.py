@@ -35,6 +35,16 @@ OPTIONAL_PATHS = [
 ]
 
 
+def _export_pbc_json(repo_path: Path, config: dict[str, Any]) -> dict[str, Any] | None:
+    from hipaa_audit.auditor_requests import db_path, list_requests
+
+    path = db_path(repo_path, config)
+    if not path.exists():
+        return None
+    requests = list_requests(path)
+    return {"requests": requests, "exported_at": datetime.now(UTC).isoformat()}
+
+
 def build_auditor_bundle(repo_path: Path, output: Path, *, config: dict[str, Any]) -> Path:
     repo_path = repo_path.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -59,6 +69,11 @@ def build_auditor_bundle(repo_path: Path, output: Path, *, config: dict[str, Any
                 arc = str(path.relative_to(repo_path))
                 zf.write(path, arc)
                 manifest["files"].append(arc)
+
+        pbc = _export_pbc_json(repo_path, config)
+        if pbc:
+            zf.writestr("compliance/auditor-pbc-export.json", json.dumps(pbc, indent=2))
+            manifest["files"].append("compliance/auditor-pbc-export.json")
 
         zf.writestr("auditor-manifest.json", json.dumps(manifest, indent=2))
 

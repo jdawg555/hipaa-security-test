@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.4.0] — 2026-05-28
+
+### Phase 4–5 — Audit ops, vendors, devices, cloud depth
+
+- **Auditor PBC queue (P-19)** — SQLite `compliance/auditor-requests.db`, workspace create/thread UI, auditor login + PBC list, export in auditor ZIP
+- **Vendor questionnaires (P-16)** — workspace send form, tokenized portal with server-side submit, open tracking, optional SMTP email
+- **Jamf device sync (P-12)** — `JamfAdapter.discover()`, workspace Sync button, optional `devices.jamf_sync` on scan
+- **Prowler HIPAA crosswalk (P-21)** — `controls/prowler-hipaa-crosswalk.yaml`, requirement-level rollup check + evidence JSON
+- **Policy version history (P-09)** — snapshots in `policies/.history/`, version bump on save, history in policy editor
+
 ## [2.3.0] — 2026-05-28
 
 ### Phase 2 — Connection layer

@@ -1,0 +1,53 @@
+# Machine-readable Prowler hipaa_aws check → HIPAA requirement mapping (subset)
+# Full catalog: https://github.com/prowler-cloud/prowler/blob/master/prowler/compliance/aws/hipaa_aws.json
+
+version: "1.0"
+
+requirements:
+  - id: "164_308_a_1_ii_a"
+    title: Risk analysis
+    hipaa_refs: ["164.308(a)(1)(ii)(A)"]
+    prowler_checks:
+      - guardduty_is_enabled
+      - config_recorder_all_regions_enabled
+      - securityhub_enabled
+
+  - id: "164_308_a_1_ii_b"
+    title: Risk management
+    hipaa_refs: ["164.308(a)(1)(ii)(B)"]
+    prowler_checks:
+      - cloudtrail_kms_encryption_enabled
+      - rds_instance_storage_encrypted
+      - s3_bucket_default_encryption
+
+  - id: "164_312_a_2_iv"
+    title: Encryption and decryption
+    hipaa_refs: ["164.312(a)(2)(iv)"]
+    prowler_checks:
+      - s3_bucket_default_encryption
+      - ec2_ebs_volume_encryption
+      - rds_instance_storage_encrypted
+      - kms_cmk_rotation_enabled
+
+  - id: "164_312_b"
+    title: Audit controls
+    hipaa_refs: ["164.312(b)"]
+    prowler_checks:
+      - cloudtrail_multi_region_enabled
+      - cloudwatch_log_group_retention_policy_specific_days_enabled
+      - cloudtrail_log_file_validation_enabled
+
+  - id: "164_312_a_1"
+    title: Access control
+    hipaa_refs: ["164.312(a)(1)"]
+    prowler_checks:
+      - iam_root_hardware_mfa_enabled
+      - iam_password_policy_minimum_length_14
+      - s3_bucket_public_access
+
+  - id: "164_312_d"
+    title: Person or entity authentication
+    hipaa_refs: ["164.312(d)"]
+    prowler_checks:
+      - iam_root_hardware_mfa_enabled
+      - iam_user_mfa_enabled_console_access

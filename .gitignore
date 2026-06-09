@@ -23,6 +23,8 @@ compliance/devices.yaml
 compliance/vendor-questionnaires.yaml
 compliance/baas.yaml
 compliance/.workspace-secrets.yaml
+compliance/auditor-requests.db
+policies/.history/
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store

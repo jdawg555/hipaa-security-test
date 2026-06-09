@@ -34,19 +34,19 @@ Run live status: `hipaa-audit parity`
 | P-06 | Multi-framework crosswalk | Test once, map many | **partial** SOC2+ISO supplements | shared check refs | `controls/soc2-*` `iso27001-*` | 2 |
 | P-07 | Posture score + history | Dashboard KPI | **shipped** | trend charts in UI | `posture.py` + workspace charts | 3 |
 | P-08 | Remediation tasks + owners | Assigned tasks | **shipped** v2.2 `/tasks` UI | Slack notify | `tasks.py` + workspace tasks page | 3 |
-| P-09 | Policy library | In-app editor | **partial** git markdown | web editor + version | `policies/` + new editor module | 4 |
+| P-09 | Policy library | In-app editor | **partial** v2.4 editor + versions | diff view + auto re-ack | `policy_versions.py` | 4 |
 | P-10 | Personnel training | LMS integration | **partial** CSV | HRIS adapter (Bamboo, Rippling) | `personnel/` + HRIS registry | 4 |
 | P-11 | Policy acknowledgments | In-app ack | **partial** YAML | employee portal link | extend personnel module | 4 |
-| P-12 | MDM / endpoints | Agent (Jamf/Kandji) | **partial** CSV import | Jamf Pro API + Intune Graph | `devices.py` + API adapters | 4 |
+| P-12 | MDM / endpoints | Agent (Jamf/Kandji) | **partial** Jamf API sync (v2.4) | Intune Graph | `devices.py` + `JamfAdapter.discover` | 4 |
 | P-13 | Access reviews | In-app campaigns | **partial** UI builder (v2.2) | IdP user picker | `access_reviews.py` + workspace forms | 3 |
 | P-14 | SaaS inventory | Auto-discover apps | **partial** Okta/Google | + Azure AD, GitHub apps | `apps.py` adapters | 3 |
 | P-15 | Vendor register | VRM | **shipped** YAML | UI CRUD | vendors workspace forms | 3 |
-| P-16 | Vendor questionnaires | Portal + email | **partial** static HTML | send email + track opens | `vendor_portal.py` + notify | 4 |
+| P-16 | Vendor questionnaires | Portal + email | **partial** portal + SMTP (v2.4) | email reminders | `vendor_portal.py` + `notify.py` | 4 |
 | P-17 | BAA tracking | Document store | **partial** markdown register | structured BAA objects | `compliance/baas.yaml` | 3 |
 | P-18 | Trust Center | Hosted public | **shipped** static publish | custom domain helper | `trust_center.py` | 2 |
-| P-19 | Auditor portal | Login + requests | **partial** static + passphrase | request/response threads | `auditor_portal.py` → SQLite tickets | 5 |
+| P-19 | Auditor portal | Login + requests | **partial** PBC queue + threads (v2.4) | file uploads | `auditor_requests.py` SQLite | 5 |
 | P-20 | Auditor evidence ZIP | One-click PBC | **shipped** export auditor | scheduled auto-export | `export_auditor.py` | 2 |
-| P-21 | Cloud AWS | Deep checks | **partial** ~20 checks | full Prowler crosswalk | `aws.py` + Prowler ingest | 2 |
+| P-21 | Cloud AWS | Deep checks | **partial** crosswalk rollup (v2.4) | full 85-check catalog + multi-region | `prowler_crosswalk.py` | 2 |
 | P-22 | Cloud GCP/Azure | Multi-cloud | **planned** | Prowler Azure/GCP | integrations adapter | 5 |
 | P-23 | GitHub / GitLab | Repo security | **partial** GitHub | GitLab parity | `github.py` + `gitlab.py` | 4 |
 | P-24 | IdP Okta/Google | MFA, users | **partial** API checks | connection wizard | `identity.py` | 2 |

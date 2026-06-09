@@ -69,6 +69,9 @@ def test_jamf_adapter_pro_api(monkeypatch):
     class FakeResponse:
         status_code = 200
 
+        def json(self):
+            return {"token": "test-token"}
+
     def fake_post(url, **kwargs):
         assert url.endswith("/api/v1/auth")
         return FakeResponse()

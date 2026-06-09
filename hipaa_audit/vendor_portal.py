@@ -33,16 +33,18 @@ VENDOR_PORTAL_TEMPLATE = """<!DOCTYPE html>
     select, input[type=text], textarea { width: 100%; padding: .6rem; border: 1px solid #d0d5dd; border-radius: 8px; }
     button { margin-top: 1.5rem; background: #0c6e7c; color: white; border: 0; padding: .75rem 1.25rem;
              border-radius: 8px; cursor: pointer; }
-    #out { display: none; margin-top: 2rem; }
-    pre { background: #f8fafc; padding: 1rem; border-radius: 8px; overflow: auto; font-size: .85rem; }
+    .flash { background: #e0f2f4; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
   <h1>Vendor Security Questionnaire (SIG-lite)</h1>
   <p class="meta">{{ org_name }} · {{ questionnaire_id }} · Due {{ due_date }}</p>
-  <p>Complete this form and send the downloaded YAML file to <strong>{{ contact }}</strong>.</p>
-
-  <form id="form" onsubmit="return submitForm(event)">
+  {% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+  {% if submitted %}
+  <p><strong>Thank you.</strong> Your responses were recorded.</p>
+  {% else %}
+  <p>Complete this form for <strong>{{ vendor_name }}</strong>.</p>
+  <form method="post" action="{{ submit_url }}">
     {% for key, label in questions %}
     <label for="{{ key }}">{{ loop.index }}. {{ label }}</label>
     <select id="{{ key }}" name="{{ key }}" required>
@@ -55,55 +57,34 @@ VENDOR_PORTAL_TEMPLATE = """<!DOCTYPE html>
     <input type="text" id="reviewer" name="reviewer" required>
     <label for="notes">Additional notes (optional)</label>
     <textarea id="notes" name="notes" rows="3"></textarea>
-    <button type="submit">Download response YAML</button>
+    <button type="submit">Submit responses</button>
   </form>
-
-  <div id="out">
-    <h2>Response file</h2>
-    <p>Email this file or send via secure channel. Recipient runs:</p>
-    <pre>hipaa-audit vendor import-response {{ questionnaire_id }} {{ questionnaire_id }}-response.yaml</pre>
-    <pre id="yaml"></pre>
-  </div>
-
-  <script>
-    function submitForm(e) {
-      e.preventDefault();
-      const responses = {
-        {% for key, label in questions %}
-        {{ key }}: document.getElementById('{{ key }}').value === 'true'{% if not loop.last %},{% endif %}
-        {% endfor %}
-      };
-      const payload = {
-        questionnaire_id: "{{ questionnaire_id }}",
-        vendor_id: "{{ vendor_id }}",
-        reviewer: document.getElementById('reviewer').value,
-        notes: document.getElementById('notes').value,
-        responses: responses
-      };
-      const yaml = [
-        'questionnaire_id: {{ questionnaire_id }}',
-        'vendor_id: {{ vendor_id }}',
-        'reviewer: ' + payload.reviewer,
-        'notes: ' + JSON.stringify(payload.notes),
-        'responses:'
-      ];
-      for (const [k,v] of Object.entries(responses)) {
-        yaml.push('  ' + k + ': ' + v);
-      }
-      const text = yaml.join('\\n');
-      document.getElementById('yaml').textContent = text;
-      document.getElementById('out').style.display = 'block';
-      const blob = new Blob([text], {{ '{' }}type: 'text/yaml'{{ '}' }});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = '{{ questionnaire_id }}-response.yaml';
-      a.click();
-      return false;
-    }
-  </script>
+  {% endif %}
 </body>
 </html>
 """
+
+
+def render_vendor_portal_html(
+    *,
+    config: dict[str, Any],
+    questionnaire: dict[str, Any],
+    submit_url: str,
+    flash: str = "",
+    submitted: bool = False,
+) -> str:
+    return Template(VENDOR_PORTAL_TEMPLATE).render(
+        org_name=config.get("org_name", "Organization"),
+        questionnaire_id=questionnaire["id"],
+        vendor_id=questionnaire.get("vendor_id", ""),
+        vendor_name=questionnaire.get("vendor_name", ""),
+        contact=questionnaire.get("contact", ""),
+        due_date=questionnaire.get("due_date", ""),
+        questions=QUESTIONS,
+        submit_url=submit_url,
+        flash=flash,
+        submitted=submitted,
+    )
 
 
 def publish_vendor_portal(
@@ -115,14 +96,11 @@ def publish_vendor_portal(
     out_dir = repo_path / config.get("vendors", {}).get("portal_dir", "compliance/vendor-portals")
     out_dir.mkdir(parents=True, exist_ok=True)
     qid = questionnaire["id"]
-    html = Template(VENDOR_PORTAL_TEMPLATE).render(
-        org_name=config.get("org_name", "Organization"),
-        questionnaire_id=qid,
-        vendor_id=questionnaire.get("vendor_id", ""),
-        vendor_name=questionnaire.get("vendor_name", ""),
-        contact=questionnaire.get("contact", ""),
-        due_date=questionnaire.get("due_date", ""),
-        questions=QUESTIONS,
+    token = questionnaire.get("portal_token", qid)
+    html = render_vendor_portal_html(
+        config=config,
+        questionnaire=questionnaire,
+        submit_url=f"/portals/vendor/{token}",
     )
     out = out_dir / f"{qid}.html"
     out.write_text(html)

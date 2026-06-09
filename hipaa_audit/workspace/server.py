@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -22,9 +22,29 @@ from hipaa_audit.access_reviews import (
 from hipaa_audit.apps import discover_from_config, link_app, load_inventory, merge_discovered
 from hipaa_audit.baas import add_baa, delete_baa, load_baas, update_baa
 from hipaa_audit.controls import PACKAGE_ROOT
-from hipaa_audit.devices import load_devices
+from hipaa_audit.auditor_requests import (
+    add_message,
+    create_request,
+    db_path as auditor_db_path,
+    get_request,
+    list_requests,
+    session_token,
+    update_request_status,
+    verify_auditor_passphrase,
+)
+from hipaa_audit.devices import load_devices, sync_devices_jamf
 from hipaa_audit.export_auditor import build_auditor_bundle
-from hipaa_audit.questionnaires import load_questionnaires
+from hipaa_audit.notify import send_questionnaire_email
+from hipaa_audit.policy_versions import list_versions, read_archive, snapshot_policy
+from hipaa_audit.questionnaires import (
+    find_questionnaire_by_token,
+    load_questionnaires,
+    mark_questionnaire_emailed,
+    record_questionnaire_open,
+    respond_questionnaire,
+    send_questionnaire,
+)
+from hipaa_audit.vendor_portal import publish_vendor_portal, render_vendor_portal_html
 from hipaa_audit.report import _load_history, load_history_points
 from hipaa_audit.platform.adapters.registry import record_connection_test, test_integration_connection
 from hipaa_audit.tasks import assign_task, complete_task, list_open_tasks, load_tasks
@@ -368,6 +388,36 @@ def create_app(repo_path: Path) -> FastAPI:
             return RedirectResponse("/vendors?flash=Vendor+removed", status_code=303)
         return RedirectResponse("/vendors?flash=Vendor+not+found", status_code=303)
 
+    @app.post("/vendors/questionnaire/send")
+    def vendors_questionnaire_send(
+        vendor_id: str = Form(...),
+        contact: str = Form(...),
+        due_days: int = Form(30),
+        send_email: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+        entry = send_questionnaire(qpath, vpath, vendor_id=vendor_id, contact=contact, due_days=due_days)
+        if not entry:
+            return RedirectResponse("/vendors?flash=Vendor+not+found", status_code=303)
+        publish_vendor_portal(repo_path=repo_path, config=config, questionnaire=entry)
+        if send_email == "on":
+            token = entry.get("portal_token", entry["id"])
+            portal_url = f"http://127.0.0.1:8787/portals/vendor/{token}"
+            err = send_questionnaire_email(
+                config=config,
+                contact=contact,
+                questionnaire=entry,
+                portal_url=portal_url,
+                repo_path=repo_path,
+            )
+            if err:
+                return RedirectResponse(f"/vendors?flash=Questionnaire+created+({err})", status_code=303)
+            mark_questionnaire_emailed(qpath, entry["id"])
+        return RedirectResponse("/vendors?flash=Questionnaire+sent", status_code=303)
+
     @app.get("/baas", response_class=HTMLResponse)
     def baas_page(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
@@ -554,12 +604,29 @@ def create_app(repo_path: Path) -> FastAPI:
         return RedirectResponse("/access-reviews?flash=Campaign+not+found", status_code=303)
 
     @app.get("/devices", response_class=HTMLResponse)
-    def devices_page() -> HTMLResponse:
+    def devices_page(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
         path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
+        data = load_devices(path)
         ctx = base_ctx("devices")
-        ctx["devices"] = load_devices(path).get("devices", [])
+        ctx["devices"] = data.get("devices", [])
+        ctx["imported_at"] = data.get("imported_at")
+        ctx["flash"] = request.query_params.get("flash", "")
+        ctx["flash_error"] = request.query_params.get("flash_error", "")
         return _render("devices.html", **ctx)
+
+    @app.post("/devices/sync")
+    def devices_sync() -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        path = repo_path / config.get("devices", {}).get("register_path", "compliance/devices.yaml")
+        try:
+            count = sync_devices_jamf(path, config)
+            if count:
+                return RedirectResponse(f"/devices?flash=Synced+{count}+device(s)+from+Jamf", status_code=303)
+            return RedirectResponse("/devices?flash_error=No+devices+from+Jamf", status_code=303)
+        except Exception as exc:  # noqa: BLE001
+            return RedirectResponse(f"/devices?flash_error={str(exc)[:80]}", status_code=303)
 
     @app.get("/policies", response_class=HTMLResponse)
     def policies_page() -> HTMLResponse:
@@ -584,13 +651,19 @@ def create_app(repo_path: Path) -> FastAPI:
             {
                 "policy_name": policy_name,
                 "content": path.read_text(),
+                "versions": list_versions(pdir, policy_name),
                 "flash": request.query_params.get("flash", ""),
             }
         )
         return _render("policy_edit.html", **ctx)
 
     @app.post("/policies/edit/{policy_name}")
-    def policies_save(policy_name: str, content: str = Form(...)) -> RedirectResponse:
+    def policies_save(
+        policy_name: str,
+        content: str = Form(...),
+        summary: str = Form(""),
+        bump_version: str = Form(""),
+    ) -> RedirectResponse:
         if ".." in policy_name or "/" in policy_name or not policy_name.endswith(".md"):
             return RedirectResponse("/policies", status_code=302)
         config = load_workspace_config(repo_path)
@@ -598,23 +671,74 @@ def create_app(repo_path: Path) -> FastAPI:
         path = pdir / policy_name
         if not path.is_file():
             return RedirectResponse("/policies", status_code=302)
-        path.write_text(content)
-        return RedirectResponse(f"/policies/edit/{policy_name}?flash=Saved", status_code=303)
+        meta = snapshot_policy(
+            pdir,
+            policy_name,
+            new_content=content,
+            summary=summary,
+            bump_version=bump_version == "on",
+        )
+        return RedirectResponse(
+            f"/policies/edit/{policy_name}?flash=Saved+v{meta['version']}",
+            status_code=303,
+        )
 
     @app.get("/audits", response_class=HTMLResponse)
-    def audits_page(flash: str = "") -> HTMLResponse:
+    def audits_page(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
         trust = repo_path / config.get("trust_center", {}).get("output_dir", "compliance/trust-center") / "index.html"
         auditor = repo_path / config.get("auditor_portal", {}).get("output_dir", "compliance/auditor-portal") / "index.html"
+        adb = auditor_db_path(repo_path, config)
         ctx = base_ctx("audits")
         ctx.update(
             {
-                "flash": flash,
+                "flash": request.query_params.get("flash", ""),
                 "trust_exists": trust.exists(),
                 "auditor_exists": auditor.exists(),
+                "pbc_requests": list_requests(adb),
             }
         )
         return _render("audits.html", **ctx)
+
+    @app.post("/audits/pbc/create")
+    def audits_pbc_create(
+        title: str = Form(...),
+        control_ref: str = Form(""),
+        due_date: str = Form(""),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        adb = auditor_db_path(repo_path, config)
+        create_request(adb, title=title, control_ref=control_ref, due_date=due_date)
+        return RedirectResponse("/audits?flash=PBC+request+created", status_code=303)
+
+    @app.get("/audits/pbc/{request_id}", response_class=HTMLResponse)
+    def audits_pbc_detail(request_id: str) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        adb = auditor_db_path(repo_path, config)
+        req = get_request(adb, request_id)
+        if not req:
+            return RedirectResponse("/audits", status_code=302)
+        ctx = base_ctx("audits")
+        ctx["pbc"] = req
+        return _render("auditor_pbc.html", **ctx)
+
+    @app.post("/audits/pbc/{request_id}/message")
+    def audits_pbc_message(
+        request_id: str,
+        author: str = Form(...),
+        body: str = Form(...),
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        adb = auditor_db_path(repo_path, config)
+        add_message(adb, request_id=request_id, author=author, author_role="org", body=body)
+        return RedirectResponse(f"/audits/pbc/{request_id}?flash=Reply+posted", status_code=303)
+
+    @app.post("/audits/pbc/{request_id}/status")
+    def audits_pbc_status(request_id: str, status: str = Form(...)) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        adb = auditor_db_path(repo_path, config)
+        update_request_status(adb, request_id, status)
+        return RedirectResponse("/audits?flash=PBC+status+updated", status_code=303)
 
     @app.post("/audits/export")
     def audits_export() -> RedirectResponse:
@@ -638,6 +762,65 @@ def create_app(repo_path: Path) -> FastAPI:
         if path.exists():
             return FileResponse(path)
         return RedirectResponse("/audits", status_code=302)
+
+    @app.post("/portals/auditor/login")
+    def portal_auditor_login(passphrase: str = Form(...)) -> Response:
+        config = load_workspace_config(repo_path)
+        if not verify_auditor_passphrase(config, passphrase):
+            return RedirectResponse("/portals/auditor/requests?error=1", status_code=303)
+        resp = RedirectResponse("/portals/auditor/requests", status_code=303)
+        resp.set_cookie("auditor_session", session_token(passphrase), httponly=True, samesite="lax")
+        return resp
+
+    @app.get("/portals/auditor/requests", response_class=HTMLResponse)
+    def portal_auditor_requests(request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        import os
+
+        env_key = config.get("auditor_portal", {}).get("access_passphrase_env", "AUDITOR_PORTAL_PASSPHRASE")
+        expected = os.environ.get(env_key, "")
+        if expected and request.cookies.get("auditor_session") != session_token(expected):
+            return _render(
+                "auditor_login.html",
+                **{**base_ctx("audits"), "error": request.query_params.get("error", "")},
+            )
+        adb = auditor_db_path(repo_path, config)
+        ctx = base_ctx("audits")
+        ctx["pbc_requests"] = list_requests(adb)
+        return _render("auditor_requests.html", **ctx)
+
+    @app.get("/portals/vendor/{token}", response_class=HTMLResponse)
+    def portal_vendor(token: str, request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+        entry = find_questionnaire_by_token(qpath, token)
+        if not entry:
+            return HTMLResponse("<p>Questionnaire not found.</p>", status_code=404)
+        record_questionnaire_open(qpath, token)
+        html = render_vendor_portal_html(
+            config=config,
+            questionnaire=entry,
+            submit_url=f"/portals/vendor/{token}",
+            flash=request.query_params.get("flash", ""),
+            submitted=request.query_params.get("submitted") == "1",
+        )
+        return HTMLResponse(html)
+
+    @app.post("/portals/vendor/{token}")
+    async def portal_vendor_submit(token: str, request: Request) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        entry = find_questionnaire_by_token(qpath, token)
+        if not entry:
+            return RedirectResponse("/vendors", status_code=303)
+        form = await request.form()
+        from hipaa_audit.vendors import SIG_LITE_KEYS
+
+        responses = {k: form.get(k) == "true" for k in SIG_LITE_KEYS if k in form}
+        reviewer = str(form.get("reviewer", ""))
+        respond_questionnaire(qpath, vpath, entry["id"], responses, reviewer=reviewer)
+        return RedirectResponse(f"/portals/vendor/{token}?submitted=1", status_code=303)
 
     @app.get("/settings", response_class=HTMLResponse)
     def settings_page(request: Request) -> HTMLResponse:

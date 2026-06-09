@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Audits & trust</h1>
-<p class="subtitle">Customer trust center and auditor evidence — publish after each scan.</p>
+<p class="subtitle">Customer trust center, auditor evidence, and PBC request queue.</p>
+
 <div class="grid">
   <div class="card">
     <strong>Trust center</strong>
@@ -16,7 +17,10 @@
     <strong>Auditor portal</strong>
     <p style="font-size:.88rem;color:var(--muted)">Read-only evidence for auditors under NDA.</p>
     {% if auditor_exists %}
-    <p><a class="btn secondary" href="/portals/auditor" target="_blank">Open auditor portal</a></p>
+    <p>
+      <a class="btn secondary" href="/portals/auditor" target="_blank">Open auditor portal</a>
+      <a class="btn secondary" href="/portals/auditor/requests" target="_blank" style="margin-left:.35rem">PBC queue</a>
+    </p>
     {% else %}
     <p style="font-size:.85rem">Run a scan to generate.</p>
     {% endif %}
@@ -29,4 +33,31 @@
     </form>
   </div>
 </div>
+
+<div class="card" style="margin-top:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">PBC request queue</h2>
+  <form method="post" action="/audits/pbc/create" class="form-grid">
+    <label>Request title <input type="text" name="title" placeholder="Provide CloudTrail logs Q2" required></label>
+    <label>Control reference <input type="text" name="control_ref" placeholder="HIPAA-164.312(b)"></label>
+    <label>Due date <input type="date" name="due_date"></label>
+    <div class="full"><button class="btn" type="submit">Create PBC request</button></div>
+  </form>
+</div>
+
+{% if pbc_requests %}
+<table style="margin-top:1rem">
+  <thead><tr><th>ID</th><th>Title</th><th>Control</th><th>Status</th><th>Due</th><th></th></tr></thead>
+  <tbody>
+    {% for r in pbc_requests %}
+    <tr>
+      <td>{{ r.id }}</td><td>{{ r.title }}</td><td>{{ r.control_ref or '—' }}</td>
+      <td>{{ r.status }}</td><td>{{ r.due_date or '—' }}</td>
+      <td><a class="btn secondary btn-sm" href="/audits/pbc/{{ r.id }}">View</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="margin-top:1rem;color:var(--muted)">No auditor requests yet — create one when your auditor sends a PBC list.</p>
+{% endif %}
 {% endblock %}

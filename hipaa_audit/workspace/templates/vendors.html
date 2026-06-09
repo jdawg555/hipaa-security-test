@@ -26,6 +26,22 @@
   </form>
 </div>
 
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">Send questionnaire</h2>
+  <form method="post" action="/vendors/questionnaire/send" class="form-grid">
+    <label>Vendor
+      <select name="vendor_id" required>
+        <option value="">Select vendor</option>
+        {% for v in vendors %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Contact email <input type="email" name="contact" required></label>
+    <label>Due in (days) <input type="number" name="due_days" value="30" min="7" max="90"></label>
+    <label style="align-self:end"><input type="checkbox" name="send_email"> Send email (SMTP)</label>
+    <div class="full"><button class="btn secondary" type="submit">Send SIG-lite questionnaire</button></div>
+  </form>
+</div>
+
 {% if vendors %}
 <table>
   <thead><tr><th>ID</th><th>Name</th><th>PHI</th><th>Risk</th><th>BAA</th><th>Last review</th><th></th></tr></thead>
@@ -73,10 +89,14 @@
 {% if questionnaires %}
 <h2 style="margin-top:1.5rem">Questionnaires</h2>
 <table>
-  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Due</th></tr></thead>
+  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Due</th><th>Opened</th><th>Portal</th></tr></thead>
   <tbody>
     {% for q in questionnaires %}
-    <tr><td>{{ q.id }}</td><td>{{ q.vendor_name }}</td><td>{{ q.status }}</td><td>{{ q.due_date }}</td></tr>
+    <tr>
+      <td>{{ q.id }}</td><td>{{ q.vendor_name }}</td><td>{{ q.status }}</td><td>{{ q.due_date }}</td>
+      <td>{{ (q.opened_at or '')[:10] or '—' }}</td>
+      <td>{% if q.portal_token %}<a href="/portals/vendor/{{ q.portal_token }}" target="_blank">Open</a>{% else %}—{% endif %}</td>
+    </tr>
     {% endfor %}
   </tbody>
 </table>

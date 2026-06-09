@@ -91,9 +91,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [version_history]
+    gaps: [diff_view, personnel_reack_automation]
     surfaces: [workspace.policies]
-    modules: [policies]
+    modules: [policy_versions]
 
   - id: P-10
     name: Personnel training
@@ -119,8 +119,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [jamf_api, intune_graph]
-    modules: [devices]
+    gaps: [intune_graph]
+    surfaces: [workspace.devices]
+    modules: [devices, platform.adapters.jamf]
 
   - id: P-13
     name: Access review campaigns
@@ -157,8 +158,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [email_delivery, response_tracking]
-    modules: [questionnaires, vendor_portal]
+    gaps: [email_reminders]
+    surfaces: [workspace.vendors, portals.vendor]
+    modules: [questionnaires, vendor_portal, notify]
 
   - id: P-17
     name: BAA tracking
@@ -184,8 +186,9 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [auditor_requests, evidence_threads, auditor_login]
-    modules: [auditor_portal, export_auditor]
+    gaps: [file_uploads, auditor_message_replies]
+    surfaces: [workspace.audits, portals.auditor]
+    modules: [auditor_requests, auditor_portal, export_auditor]
 
   - id: P-20
     name: Auditor evidence export
@@ -201,8 +204,8 @@ capabilities:
     status: partial
     vanta: full
     drata: full
-    gaps: [prowler_full_crosswalk, multi_region]
-    modules: [aws, integrations.prowler]
+    gaps: [multi_region, full_85_check_catalog]
+    modules: [aws, integrations.prowler, prowler_crosswalk]
 
   - id: P-24
     name: Identity provider checks

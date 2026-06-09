@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Auditor access</h1>
+<p class="subtitle">Enter the auditor portal passphrase to view PBC requests.</p>
+{% if error %}<div class="flash error">Invalid passphrase</div>{% endif %}
+<form method="post" action="/portals/auditor/login" style="max-width:400px">
+  <label style="display:block;margin-bottom:.5rem;font-weight:600">Passphrase</label>
+  <input type="password" name="passphrase" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px" required>
+  <p style="margin-top:1rem"><button class="btn" type="submit">Enter</button></p>
+</form>
+{% endblock %}
