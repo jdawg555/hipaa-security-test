@@ -24,3 +24,4 @@ compliance/vendor-questionnaires.yaml
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store
+workspace-data/

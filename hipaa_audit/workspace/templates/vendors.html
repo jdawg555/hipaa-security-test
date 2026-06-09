@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Vendors</h1>
+<p class="subtitle">Third-party risk — BAAs, SIG-lite questionnaires, vendor portal.</p>
+{% if vendors %}
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>PHI</th><th>BAA</th><th>Last review</th></tr></thead>
+  <tbody>
+    {% for v in vendors %}
+    <tr>
+      <td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.phi_access }}</td>
+      <td>{{ 'Yes' if v.baa_executed else 'No' }}</td><td>{{ v.last_review or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No vendors yet. CLI: <code>hipaa-audit vendor init</code> then <code>hipaa-audit vendor add "Vendor Name"</code></p>
+{% endif %}
+{% if questionnaires %}
+<h2 style="margin-top:1.5rem">Questionnaires</h2>
+<table>
+  <thead><tr><th>ID</th><th>Vendor</th><th>Status</th><th>Due</th></tr></thead>
+  <tbody>
+    {% for q in questionnaires %}
+    <tr><td>{{ q.id }}</td><td>{{ q.vendor_name }}</td><td>{{ q.status }}</td><td>{{ q.due_date }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+<p style="margin-top:1rem"><a class="btn secondary" href="/integrations">Enable vendor module</a></p>
+{% endblock %}

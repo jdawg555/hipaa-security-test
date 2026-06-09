@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Policies</h1>
+<p class="subtitle">HIPAA-aligned policy library — edit markdown in <code>policies/</code> and track acks in Personnel.</p>
+<ul style="line-height:2">
+  {% for p in policies %}
+  <li>{{ p }}</li>
+  {% else %}
+  <li>Run onboarding or <code>hipaa-audit init</code> to copy policy templates.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

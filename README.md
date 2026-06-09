@@ -1,146 +1,83 @@
 # hipaa-audit
 
-> **Free, open-source HIPAA compliance toolkit** — continuous monitoring, control mapping,
-> policy library, and evidence collection. MIT licensed. No subscription.
+> **Self-hosted HIPAA compliance workspace** — use it like Vanta or Drata, without the subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.9](https://img.shields.io/badge/Version-1.9-blue.svg)](CHANGELOG.md)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
+[![Version: 2.0](https://img.shields.io/badge/Version-2.0-blue.svg)](CHANGELOG.md)
 
-A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
-subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
+Open your browser. Connect integrations. Run monitoring scans. Track vendors, access reviews, and personnel. Publish trust center and auditor portals.
+
+**MIT licensed · runs on your machine or Docker · your data stays in your repo**
 
 ---
 
-## Features
-
-| Component | Description |
-|-----------|-------------|
-| **`hipaa-audit` CLI** | 77 controls — full Probo HIPAA catalog + automated checks |
-| **Vendors** | SIG-lite questionnaire register (`hipaa-audit vendor`) |
-| **Access reviews** | Quarterly campaign tracker (`hipaa-audit access-review`) |
-| **Trust center** | Public compliance page (`hipaa-audit trust publish`) |
-| **Auditor bundle** | `hipaa-audit export auditor` ZIP for NDA sharing |
-| **SaaS inventory** | Okta + Google app discovery (`hipaa-audit apps discover`) |
-| **SOC 2 + ISO 27001** | Optional supplements (`frameworks.soc2` / `iso27001`) |
-| **Auditor portal** | NDA-gated read-only portal (`hipaa-audit auditor publish`) |
-| **Vendor portal** | In-browser SIG-lite form (`hipaa-audit vendor portal`) |
-| **MDM devices** | Jamf/Intune CSV import (`hipaa-audit devices import`) |
-| **Vendor questionnaires** | Send/respond workflow (`hipaa-audit vendor send`) |
-| **Personnel** | Policy acks + training CSV (Vanta workforce module) |
-| **Slack alerts** | `--notify` on posture drop or new failures |
-| **Posture score** | Weighted compliance % + history trend |
-| **Remediation tasks** | Auto-sync failures → `compliance/tasks.yaml` |
-| **Probo export** | `hipaa-audit export probo` for full GRC stack |
-| **Control catalog** | `controls/hipaa-security-rule.yaml` with CFR citations |
-| **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors… |
-| **Registers** | SRA, risk, BAA, vendor risk, **AI risk**, **state law overlay** |
-| **Integrations** | Ingest **Prowler**, **Checkov**, **Trivy**, **OSV-Scanner** evidence |
-| **OSS catalog** | `hipaa-audit sources` — curated GitHub ecosystem |
-| **SRA import** | `hipaa-audit import-sra` — browser JSON → Markdown gaps |
-| **ComplianceKit** | Ingest `control-mapping.csv` HIPAA findings |
-| **HTML dashboard** | Pass/fail dashboard for auditors and security reviews |
-| **GitHub Actions** | Weekly compliance workflow |
+## Start in 60 seconds
 
 ```bash
-pip install git+https://github.com/jdawg555/hipaa-security-test.git
-hipaa-audit init && hipaa-audit scan .
-hipaa-audit import-sra ~/Downloads/hipaa-sra-export.json
-open evidence/latest/dashboard.html
+pip install "hipaa-audit[serve,aws,github]"
+mkdir ~/my-compliance && cd ~/my-compliance
+hipaa-audit serve .
 ```
 
----
+Opens **http://127.0.0.1:8787** — onboarding wizard → integrations → run scan.
 
-## Quick start
+Or with Docker:
 
 ```bash
 git clone https://github.com/jdawg555/hipaa-security-test.git
 cd hipaa-security-test
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+docker compose up
+# → http://localhost:8787  (data in ./workspace-data/)
+```
 
-hipaa-audit scan .                 # audit this repo
-hipaa-audit init                   # bootstrap your app repo
+**Full guide:** [docs/how-to-use-this.md](docs/how-to-use-this.md)
+
+---
+
+## What you get (mapped to Vanta / Drata)
+
+| Vanta / Drata | hipaa-audit workspace |
+|---------------|---------------------|
+| Dashboard | Posture score, pass/fail, open tasks |
+| Integrations | Toggle AWS, GitHub, Okta, Google, Prowler, personnel, vendors… |
+| Continuous tests | Run scan on demand or auto-scan every N hours |
+| Personnel | Policy acks + training CSV |
+| Vendors | Risk register + questionnaire portal |
+| Access reviews | Quarterly campaign tracker |
+| Devices | Jamf/Intune CSV import |
+| Policies | 12 HIPAA policy templates |
+| Trust Center | Auto-published after each scan |
+| Auditor portal | Read-only evidence + ZIP export |
+| HIPAA + SOC 2 + ISO 27001 | Optional framework supplements |
+
+---
+
+## Who this is for
+
+- Healthcare startups needing **HIPAA Security Rule** discipline for enterprise customers
+- Teams that want **Vanta-like workflow** but can run a local server or Docker
+- Engineering-led security (comfortable with env vars for AWS/GitHub/Okta tokens)
+
+## Who should still pay for Vanta/Drata
+
+- Need 300+ one-click SaaS integrations
+- Need MDM laptop agents (not CSV export)
+- Need HRIS-driven onboarding and non-technical compliance hires only
+
+---
+
+## CLI (CI & power users)
+
+The workspace uses the same engine:
+
+```bash
+hipaa-audit scan .
+hipaa-audit export auditor
 bash scripts/run-e2e.sh .
 ```
-
-Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml` and set `org_name`.
-
-Full guide: [docs/getting-started.md](docs/getting-started.md) · OSS stack: [docs/oss-ecosystem.md](docs/oss-ecosystem.md)
-
----
-
-## Repository layout
-
-```
-├── hipaa_audit/          # CLI + check engine
-├── controls/             # HIPAA control catalog (YAML)
-├── policies/             # Customizable policy templates
-├── templates/            # SRA, registers, AI + state overlays
-├── scripts/              # External evidence collection helper
-└── .github/workflows/    # compliance-audit.yml
-```
-
----
-
-## Configuration (generic)
-
-```yaml
-org_name: "Your Organization"
-
-integrations:
-  max_evidence_age_days: 7
-  prowler:
-    enabled: true
-    evidence_glob: evidence/prowler/*.json
-  trivy:
-    enabled: true
-    fail_severities: [CRITICAL, HIGH]
-  require_ai_register: false   # true if clinical AI in scope
-  applicable_states: []        # e.g. [CA, TX, WA] for state overlay
-
-aws:
-  enabled: false
-  region: us-east-1
-
-github:
-  enabled: false
-  repo: your-org/your-repo
-```
-
----
-
-## vs paid GRC platforms
-
-| | Vanta / Drata | hipaa-audit |
-|---|---------------|-------------|
-| License cost | ~$10k+/yr | **$0 (MIT)** |
-| HIPAA controls | ✅ | ✅ |
-| Evidence export | ✅ | JSON + HTML |
-| AWS / code checks | ✅ | ✅ + Prowler/Trivy ingest |
-| Personnel MDM | ✅ | Manual attestation templates |
-| Self-hosted / git-native | ❌ | ✅ |
-
-See [docs/vanta-comparison.md](docs/vanta-comparison.md)
-
----
-
-## What this is NOT
-
-- Legal or compliance advice ([NOTICE](NOTICE))
-- A substitute for counsel-reviewed policies
-- SOC 2 / HITRUST certification
-- Workforce MDM or training platform
-
----
-
-## Contributing
-
-PRs welcome — keep checks **vendor-neutral** and **org-agnostic**.
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ---
 
 ## License
 
-[MIT](LICENSE) — use, modify, sublicense, commercially. See [NOTICE](NOTICE) for disclaimers.
+[MIT](LICENSE) — see [NOTICE](NOTICE). Not legal advice; policies require counsel review.

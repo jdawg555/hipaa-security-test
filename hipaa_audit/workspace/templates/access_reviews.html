@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Access reviews</h1>
+<p class="subtitle">Quarterly campaigns for SaaS, IAM, and IdP access — Vanta-style access review tracker.</p>
+{% if campaigns %}
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Due</th><th>Decisions</th></tr></thead>
+  <tbody>
+    {% for c in campaigns %}
+    <tr>
+      <td>{{ c.id }}</td><td>{{ c.name }}</td><td>{{ c.status }}</td>
+      <td>{{ c.due_date }}</td><td>{{ c.decisions }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No campaigns. Start one: <code>hipaa-audit access-review start "Q2 review" security@your-org.com</code></p>
+{% endif %}
+<p style="margin-top:1rem"><a class="btn secondary" href="/integrations">Enable access reviews</a></p>
+{% endblock %}

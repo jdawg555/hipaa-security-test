@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hipaa-audit"
-version = "1.9.0"
-description = "Free, open-source HIPAA Security Rule compliance auditor — Vanta/Drata-style controls without the subscription."
+version = "2.0.0"
+description = "Self-hosted HIPAA compliance workspace — Vanta/Drata-style monitoring without the subscription."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -32,7 +32,8 @@ dependencies = [
 aws = ["boto3>=1.34"]
 github = ["PyGithub>=2.3"]
 identity = ["google-api-python-client>=2.100", "google-auth>=2.29"]
-all = ["hipaa-audit[aws,github,identity]"]
+serve = ["uvicorn[standard]>=0.30", "fastapi>=0.115", "python-multipart>=0.0.9", "httpx>=0.27"]
+all = ["hipaa-audit[aws,github,identity,serve]"]
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [project.scripts]
@@ -55,6 +56,8 @@ packages = ["hipaa_audit"]
 "hipaa-audit.example.yaml" = "hipaa-audit.example.yaml"
 "compliance" = "compliance"
 "scripts" = "scripts"
+"hipaa_audit/workspace/static" = "hipaa_audit/workspace/static"
+"hipaa_audit/workspace/templates" = "hipaa_audit/workspace/templates"
 
 [tool.ruff]
 line-length = 100

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Compliance dashboard</h1>
+<p class="subtitle">Continuous HIPAA monitoring — like Vanta/Drata, self-hosted in your repo.</p>
+
+<div class="grid">
+  <div class="card">
+    <strong class="stat">{{ posture_score }}%</strong>
+    Posture score
+    {% if last_scan %}<div style="color:var(--muted);font-size:.8rem;margin-top:.35rem">Last scan {{ last_scan[:16] }}</div>{% endif %}
+  </div>
+  <div class="card"><strong class="stat" style="color:var(--pass)">{{ summary.pass or 0 }}</strong>Passing</div>
+  <div class="card"><strong class="stat" style="color:var(--fail)">{{ summary.fail or 0 }}</strong>Failing</div>
+  <div class="card"><strong class="stat" style="color:var(--warn)">{{ summary.warn or 0 }}</strong>Warnings</div>
+  <div class="card"><strong class="stat">{{ open_tasks }}</strong>Open tasks</div>
+  <div class="card"><strong class="stat">{{ integrations_on }}</strong>Integrations on</div>
+</div>
+
+<p style="margin-top:1.5rem">
+  <form method="post" action="/scan" style="display:inline">
+    <button class="btn" type="submit" {% if scan_running %}disabled{% endif %}>
+      {% if scan_running %}Scan running…{% else %}Run monitoring scan{% endif %}
+    </button>
+  </form>
+  <a class="btn secondary" href="/monitoring" style="margin-left:.5rem">View controls</a>
+</p>
+
+{% if history %}
+<p style="margin-top:1rem;color:var(--muted);font-size:.85rem"><strong>Trend:</strong> {{ history }}</p>
+{% endif %}
+
+<h2 style="margin-top:2rem;font-size:1.1rem">Getting started</h2>
+<ol style="line-height:1.8">
+  <li><a href="/integrations">Connect integrations</a> (AWS, GitHub, Okta, personnel, vendors…)</li>
+  <li>Run a <strong>monitoring scan</strong> — tests execute like Vanta's hourly checks (on your schedule)</li>
+  <li>Assign remediation via <a href="/monitoring">open tasks</a> on failed controls</li>
+  <li>Publish <a href="/audits">trust center + auditor portal</a> for customers and audits</li>
+</ol>
+{% endblock %}

@@ -3,6 +3,11 @@
 
 org_name: "Your Organization Name"
 
+# Workspace UI (hipaa-audit serve) — auto-scan interval in hours, 0 = manual only
+workspace:
+  schedule_hours: 0
+  onboarded: false
+
 # Frameworks to include in scans (HIPAA always on; SOC 2 optional)
 frameworks:
   hipaa: true

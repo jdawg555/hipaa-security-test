@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Monitoring</h1>
+<p class="subtitle">Controls and automated tests — mapped to HIPAA Security Rule (and optional SOC 2 / ISO 27001).</p>
+<form method="post" action="/scan" style="margin-bottom:1rem">
+  <button class="btn" type="submit" {% if scan_running %}disabled{% endif %}>Run scan now</button>
+</form>
+<table>
+  <thead><tr><th>Control</th><th>Framework</th><th>Category</th><th>Status</th><th>Details</th></tr></thead>
+  <tbody>
+    {% for row in controls %}
+    <tr>
+      <td><strong>{{ row.id }}</strong><br>{{ row.title }}</td>
+      <td>{{ row.framework }}</td>
+      <td>{{ row.category }}</td>
+      <td><span class="badge {{ row.status }}">{{ row.status }}</span></td>
+      <td>{{ row.message }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No scan yet — <a href="/integrations">enable integrations</a> and run a scan.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

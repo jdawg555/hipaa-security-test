@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Audits & trust</h1>
+<p class="subtitle">Customer trust center and auditor evidence — publish after each scan.</p>
+<div class="grid">
+  <div class="card">
+    <strong>Trust center</strong>
+    <p style="font-size:.88rem;color:var(--muted)">Public compliance page for prospects.</p>
+    {% if trust_exists %}
+    <p><a class="btn secondary" href="/portals/trust" target="_blank">Open trust center</a></p>
+    {% else %}
+    <p style="font-size:.85rem">Run a scan to generate.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <strong>Auditor portal</strong>
+    <p style="font-size:.88rem;color:var(--muted)">Read-only evidence for auditors under NDA.</p>
+    {% if auditor_exists %}
+    <p><a class="btn secondary" href="/portals/auditor" target="_blank">Open auditor portal</a></p>
+    {% else %}
+    <p style="font-size:.85rem">Run a scan to generate.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <strong>Evidence bundle</strong>
+    <p style="font-size:.88rem;color:var(--muted)">ZIP for email / VDR upload.</p>
+    <form method="post" action="/audits/export">
+      <button class="btn secondary" type="submit">Build auditor ZIP</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} — hipaa-audit</title>
+  <link rel="stylesheet" href="/static/workspace.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        hipaa-audit
+        <small>{{ org_name }}</small>
+      </div>
+      <nav>
+        <a href="/" class="{{ 'active' if page == 'dashboard' else '' }}">Dashboard</a>
+        <a href="/monitoring" class="{{ 'active' if page == 'monitoring' else '' }}">Monitoring</a>
+        <a href="/integrations" class="{{ 'active' if page == 'integrations' else '' }}">Integrations</a>
+        <a href="/personnel" class="{{ 'active' if page == 'personnel' else '' }}">Personnel</a>
+        <a href="/vendors" class="{{ 'active' if page == 'vendors' else '' }}">Vendors</a>
+        <a href="/access-reviews" class="{{ 'active' if page == 'access_reviews' else '' }}">Access reviews</a>
+        <a href="/devices" class="{{ 'active' if page == 'devices' else '' }}">Devices</a>
+        <a href="/policies" class="{{ 'active' if page == 'policies' else '' }}">Policies</a>
+        <a href="/audits" class="{{ 'active' if page == 'audits' else '' }}">Audits & trust</a>
+        <a href="/settings" class="{{ 'active' if page == 'settings' else '' }}">Settings</a>
+      </nav>
+    </aside>
+    <main class="main">
+      {% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+      {% if flash_error %}<div class="flash error">{{ flash_error }}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

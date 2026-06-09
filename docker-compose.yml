@@ -1,0 +1,19 @@
+# Self-hosted HIPAA compliance workspace (Vanta/Drata-style)
+# Usage: docker compose up
+# Open http://localhost:8787
+
+services:
+  hipaa-audit:
+    build: .
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./workspace-data:/workspace
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=us-east-1
+      - GITHUB_TOKEN
+      - OKTA_API_TOKEN
+      - GOOGLE_APPLICATION_CREDENTIALS
+    restart: unless-stopped

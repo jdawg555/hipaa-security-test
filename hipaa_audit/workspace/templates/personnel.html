@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Personnel</h1>
+<p class="subtitle">Workforce compliance — policy acknowledgments and HIPAA training (Vanta Personnel module).</p>
+<p>Enable the <strong>Personnel</strong> integration, then maintain:</p>
+<ul>
+  <li><code>compliance/acknowledgments.yaml</code> — who signed which policy</li>
+  <li><code>compliance/training-log.csv</code> — training completion dates</li>
+</ul>
+<p><code>hipaa-audit import-training</code> creates the training CSV template.</p>
+<p><a class="btn secondary" href="/integrations">Enable personnel integration</a></p>
+{% endblock %}

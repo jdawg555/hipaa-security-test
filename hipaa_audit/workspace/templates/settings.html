@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Settings</h1>
+<p class="subtitle">Workspace configuration — saved to <code>hipaa-audit.yaml</code>.</p>
+<form method="post" action="/settings">
+  <label>Organization name</label>
+  <input type="text" name="org_name" value="{{ config.get('org_name', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
+  <label style="display:block;margin-top:1rem">GitHub repo (org/name)</label>
+  <input type="text" name="github_repo" value="{{ config.get('github', {}).get('repo', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
+  <label style="display:block;margin-top:1rem">Okta domain</label>
+  <input type="text" name="okta_domain" value="{{ config.get('identity', {}).get('okta', {}).get('domain', '') }}" style="width:100%;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
+  <fieldset style="margin-top:1rem;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+    <legend>Frameworks</legend>
+    <label><input type="checkbox" name="soc2" {% if config.get('frameworks', {}).get('soc2') %}checked{% endif %}> SOC 2 TSC</label><br>
+    <label><input type="checkbox" name="iso27001" {% if config.get('frameworks', {}).get('iso27001') %}checked{% endif %}> ISO 27001</label>
+  </fieldset>
+  <label style="display:block;margin-top:1rem">Auto-scan interval (hours, 0 = manual only)</label>
+  <input type="number" name="schedule_hours" value="{{ schedule_hours }}" min="0" max="168" style="width:120px;padding:.65rem;border:1px solid #cbd5e1;border-radius:8px">
+  <p style="margin-top:1.25rem"><button class="btn" type="submit">Save settings</button></p>
+</form>
+{% endblock %}

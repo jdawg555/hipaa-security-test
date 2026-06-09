@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Setup — hipaa-audit</title>
+  <link rel="stylesheet" href="/static/workspace.css">
+</head>
+<body style="background:var(--bg);padding:2rem">
+  <div class="onboarding card" style="margin:2rem auto">
+    <h1>Welcome to hipaa-audit</h1>
+    <p class="subtitle">Self-hosted HIPAA compliance workspace — set up in 2 minutes.</p>
+    <div class="steps">
+      <div class="step done"></div><div class="step"></div><div class="step"></div>
+    </div>
+    <form method="post" action="/onboarding">
+      <label>Organization name</label>
+      <input type="text" name="org_name" required placeholder="Acme Health">
+      <label style="margin-top:1rem">
+        <input type="checkbox" name="bootstrap" value="yes" checked>
+        Copy policy templates, compliance registers, and CI workflow
+      </label>
+      <p style="margin-top:1.5rem">
+        <button class="btn" type="submit">Create workspace</button>
+      </p>
+    </form>
+  </div>
+</body>
+</html>

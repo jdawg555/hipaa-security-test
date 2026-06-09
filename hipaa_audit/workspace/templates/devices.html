@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Devices</h1>
+<p class="subtitle">Endpoint compliance via MDM export — encryption and screen lock (Jamf / Intune CSV).</p>
+{% if devices %}
+<table>
+  <thead><tr><th>ID</th><th>Owner</th><th>Platform</th><th>MDM</th><th>Encrypted</th><th>Screen lock</th></tr></thead>
+  <tbody>
+    {% for d in devices %}
+    <tr>
+      <td>{{ d.id }}</td><td>{{ d.owner }}</td><td>{{ d.platform }}</td><td>{{ d.mdm }}</td>
+      <td>{{ 'Yes' if d.encrypted else 'No' }}</td><td>{{ 'Yes' if d.screen_lock else 'No' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Import MDM CSV: <code>hipaa-audit devices import jamf-export.csv</code></p>
+{% endif %}
+<p style="margin-top:1rem"><a class="btn secondary" href="/integrations">Enable devices module</a></p>
+{% endblock %}

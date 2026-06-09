@@ -1007,6 +1007,31 @@ def sources() -> None:
 
 
 @app.command()
+def serve(
+    path: Path = typer.Argument(Path.cwd(), help="Compliance workspace directory"),
+    host: str = typer.Option("127.0.0.1", "--host", "-h"),
+    port: int = typer.Option(8787, "--port", "-p"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Do not open browser"),
+) -> None:
+    """Start the self-hosted compliance workspace (Vanta/Drata-style UI)."""
+    try:
+        from hipaa_audit.workspace import run_server
+    except ImportError as exc:
+        console.print("[red]Install workspace extras: pip install hipaa-audit[serve][/red]")
+        raise typer.Exit(1) from exc
+    run_server(path, host=host, port=port, open_browser=not no_browser)
+
+
+@app.command()
+def up(
+    path: Path = typer.Argument(Path.cwd(), help="Compliance workspace directory"),
+    port: int = typer.Option(8787, "--port", "-p"),
+) -> None:
+    """Alias for hipaa-audit serve — start compliance workspace."""
+    serve(path=path, host="127.0.0.1", port=port, no_browser=False)
+
+
+@app.command()
 def version() -> None:
     """Print version."""
     console.print(f"hipaa-audit {__version__}")

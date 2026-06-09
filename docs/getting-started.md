@@ -1,20 +1,26 @@
 # Getting Started
 
-## Quick start (5 minutes)
+## Quick start (recommended)
+
+```bash
+pip install "hipaa-audit[serve,aws,github]"
+mkdir ~/acme-compliance && cd ~/acme-compliance
+hipaa-audit serve .
+```
+
+Browser opens the **compliance workspace**. Complete onboarding → Integrations → Run scan.
+
+See [how-to-use-this.md](how-to-use-this.md) for the full Vanta/Drata-style workflow.
+
+## CLI-only (CI / advanced)
 
 ```bash
 git clone https://github.com/jdawg555/hipaa-security-test.git
 cd hipaa-security-test
-pip install -e .
+pip install -e ".[dev]"
 
-# Audit this repo (self-test)
 hipaa-audit scan .
-
-# Bootstrap your healthcare app repo
-cd /path/to/your-app
-hipaa-audit init
-hipaa-audit scan .
-open evidence/latest/dashboard.html
+hipaa-audit init   # bootstrap another repo
 ```
 
 ## What you get (Vanta/Drata-style, free)

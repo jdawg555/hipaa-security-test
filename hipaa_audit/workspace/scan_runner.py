@@ -1,0 +1,84 @@
+from __future__ import annotations
+
+import json
+import threading
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from hipaa_audit.auditor_portal import publish_auditor_portal
+from hipaa_audit.engine import run_audit
+from hipaa_audit.posture import compute_posture, record_history
+from hipaa_audit.report import write_reports
+from hipaa_audit.tasks import sync_from_report
+from hipaa_audit.trust_center import publish_trust_center
+from hipaa_audit.workspace.config_store import load_workspace_config
+
+
+@dataclass
+class ScanState:
+    running: bool = False
+    last_started: str | None = None
+    last_finished: str | None = None
+    last_error: str | None = None
+    last_score: float | None = None
+
+
+_state = ScanState()
+_lock = threading.Lock()
+
+
+def get_scan_state() -> ScanState:
+    return _state
+
+
+def latest_report(repo_path: Path) -> dict[str, Any] | None:
+    report_path = repo_path / "evidence" / "latest" / "audit-report.json"
+    if not report_path.exists():
+        return None
+    return json.loads(report_path.read_text())
+
+
+def run_scan_job(repo_path: Path, *, publish_portals: bool = True) -> dict[str, Any]:
+    with _lock:
+        if _state.running:
+            raise RuntimeError("Scan already in progress")
+        _state.running = True
+        _state.last_started = datetime.now(UTC).isoformat()
+        _state.last_error = None
+
+    try:
+        repo_path = repo_path.resolve()
+        config = load_workspace_config(repo_path)
+        config.setdefault("org_name", repo_path.name)
+        output = repo_path / "evidence" / "latest"
+        report = run_audit(repo_path, config=config, evidence_dir=output)
+        write_reports(report, output)
+        posture = compute_posture(report)
+        record_history(report, repo_path)
+        sync_from_report(
+            report,
+            repo_path / config.get("tasks_path", "compliance/tasks.yaml"),
+            default_owner=config.get("tasks", {}).get("default_owner", "security@example.com"),
+            due_days=int(config.get("tasks", {}).get("due_days", 14)),
+        )
+        if publish_portals:
+            report_json = output / "audit-report.json"
+            try:
+                publish_trust_center(repo_path=repo_path, config=config, report_json=report_json)
+                publish_auditor_portal(repo_path=repo_path, config=config, report_json=report_json, access_passphrase="")
+            except Exception:  # noqa: BLE001 — portals are best-effort
+                pass
+
+        with _lock:
+            _state.last_finished = datetime.now(UTC).isoformat()
+            _state.last_score = posture["score"]
+        return {"score": posture["score"], "summary": report.summary}
+    except Exception as exc:  # noqa: BLE001
+        with _lock:
+            _state.last_error = str(exc)
+        raise
+    finally:
+        with _lock:
+            _state.running = False

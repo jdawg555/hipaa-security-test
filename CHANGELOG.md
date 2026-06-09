@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.0.0] — 2026-05-28
+
+### Product: self-hosted compliance workspace
+
+hipaa-audit is now primarily used via **`hipaa-audit serve`** — a local web UI modeled on Vanta/Drata:
+
+- **Dashboard** — posture, tasks, run scan
+- **Integrations** — toggle AWS, GitHub, Okta, personnel, vendors, etc.
+- **Monitoring** — full control list with status
+- **Personnel, Vendors, Access reviews, Devices, Policies**
+- **Audits & trust** — trust center, auditor portal, ZIP export
+- **Onboarding wizard** — bootstrap policies and registers in 2 minutes
+- **Auto-scan scheduler** — configurable interval in Settings
+- **Docker Compose** — `docker compose up` on port 8787
+
+### Added
+
+- `hipaa_audit/workspace/` — FastAPI server + Vanta-style navigation
+- `hipaa-audit serve` and `hipaa-audit up`
+- `docs/how-to-use-this.md` — operator guide
+- `Dockerfile`, `docker-compose.yml`
+
+### Changed
+
+- README repositioned: workspace first, CLI second
+- Scans from UI sync tasks and refresh trust/auditor portals
+
 ## [1.9.0] — 2026-05-28
 
 ### Added

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Integrations</h1>
+<p class="subtitle">Connect your stack — toggle modules on, then add credentials via environment variables or CI secrets.</p>
+
+<div class="card" style="padding:0">
+  {% for item in integrations %}
+  <div class="integration">
+    <div>
+      <strong>{{ item.name }}</strong><br>
+      <span style="color:var(--muted);font-size:.82rem">{{ item.hint }}</span>
+    </div>
+    <form method="post" action="/integrations/toggle">
+      <input type="hidden" name="integration_id" value="{{ item.id }}">
+      <input type="hidden" name="enabled" value="{{ 'false' if item.enabled else 'true' }}">
+      <label class="toggle">
+        <input type="checkbox" {% if item.enabled %}checked{% endif %} onchange="this.form.submit()">
+        <span class="slider"></span>
+      </label>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 style="margin-top:1.5rem;font-size:1rem">Credential checklist</h2>
+<ul style="line-height:1.9;font-size:.9rem">
+  <li><code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code> or instance role</li>
+  <li><code>GITHUB_TOKEN</code> — repo scope for branch protection checks</li>
+  <li><code>OKTA_API_TOKEN</code> + Okta domain in Settings</li>
+  <li><code>GOOGLE_APPLICATION_CREDENTIALS</code> — Workspace admin service account</li>
+</ul>
+<p><a class="btn secondary" href="/settings">Edit connection settings</a></p>
+{% endblock %}
