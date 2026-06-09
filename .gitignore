@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+evidence/*/
+!evidence/.gitkeep
+!evidence/README.md
+hipaa-audit.yaml
+.DS_Store

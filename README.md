@@ -1,123 +1,149 @@
-# HIPAA Security Risk Assessment Template
+# hipaa-audit
 
-> A free, opinionated, **first-cut** SRA template for healthcare teams bringing PHI online.
-> Adapted from the actual one we use for [Luxon Sync](https://luxonmedical.com).
+> **Free, open-source HIPAA compliance platform** — Vanta/Drata-style continuous monitoring, control mapping, policy library, and evidence collection. **$0 forever.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 0.1](https://img.shields.io/badge/Version-0.1-blue.svg)](CHANGELOG.md)
-[![Maintained by Luxon Medical](https://img.shields.io/badge/Maintained%20by-Luxon%20Medical-0c6e7c.svg)](https://luxonmedical.com/ai)
+[![Version: 1.0](https://img.shields.io/badge/Version-1.0-blue.svg)](CHANGELOG.md)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
+
+Built by [Luxon Medical](https://luxonmedical.com) for healthcare teams who need HIPAA Security Rule compliance without a $10k/yr GRC subscription.
 
 ---
 
 ## What this is
 
-A **starting skeleton** for a HIPAA Security Risk Assessment, stripped of Luxon-specific
-content and intentionally short. Use it to:
+A **complete HIPAA compliance toolkit** in one repo:
 
-- Get a draft SRA in front of your team in an afternoon, not a quarter.
-- Stop paying $5–10k for a generic template you'll have to rewrite anyway.
-- Have an honest conversation with your privacy officer about what's actually in scope.
+| Component | Description |
+|-----------|-------------|
+| **`hipaa-audit` CLI** | Scan your repo + cloud for 25+ HIPAA Security Rule controls |
+| **Control catalog** | `controls/hipaa-security-rule.yaml` — §164.308/310/312 mapped to checks |
+| **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors, training… |
+| **SRA + registers** | Risk assessment, BAA register, vendor risk register |
+| **HTML dashboard** | Open `evidence/latest/dashboard.html` — pass/fail by control |
+| **GitHub Actions** | Weekly continuous monitoring + PR gate |
+| **AWS + GitHub checks** | CloudTrail, S3, RDS, KMS, branch protection, secret scanning |
 
-**This is not a finished assessment.** Real SRAs need engineering input, business
-context, and a privacy/security officer's sign-off.
+```bash
+pip install git+https://github.com/jdawg555/hipaa-security-test.git
+hipaa-audit init          # bootstrap your app repo
+hipaa-audit scan .        # run all checks
+open evidence/latest/dashboard.html
+```
+
+---
+
+## Quick start
+
+```bash
+# Clone and install
+git clone https://github.com/jdawg555/hipaa-security-test.git
+cd hipaa-security-test
+pip install -e ".[aws,github]"
+
+# Self-audit (this repo audits itself)
+hipaa-audit scan .
+
+# Bootstrap your healthcare application
+cd /path/to/your-app
+hipaa-audit init
+# Edit hipaa-audit.yaml + customize policies/
+hipaa-audit scan .
+```
+
+See [docs/getting-started.md](docs/getting-started.md) for AWS/GitHub setup.
+
+---
+
+## Architecture
+
+```
+hipaa-security-test/
+├── hipaa_audit/           # Python CLI + check engine
+│   └── checks/            # repo, aws, github, policies modules
+├── controls/              # HIPAA control catalog (YAML)
+├── policies/              # 12 customizable policy templates
+├── templates/             # SRA, risk register, BAA register
+├── evidence/              # Scan output (gitignored in your app)
+└── .github/workflows/     # Continuous compliance CI
+```
+
+**Check flow:** `hipaa-audit scan` → load controls → run automated checks → collect evidence JSON → generate dashboard + audit report.
+
+---
+
+## Control coverage
+
+| HIPAA area | Controls | Automated |
+|------------|----------|-----------|
+| Administrative (§164.308) | Risk analysis, workforce, access, training, IR, BAA | Partial |
+| Physical (§164.310) | Facility, device/media | Manual |
+| Technical (§164.312) | Access, audit, integrity, authentication, transmission | **Yes** |
+| Documentation (§164.316) | Policy library, review cadence | **Yes** |
+| Developer hygiene | Secrets, PHI in repo, lockfiles, CI gates | **Yes** |
+| AWS hardening | CloudTrail, S3, RDS, KMS, GuardDuty | **Yes** (optional) |
+
+List all controls: `hipaa-audit controls`
+
+---
+
+## vs Vanta / Drata
+
+| | Vanta/Drata | hipaa-audit |
+|---|-------------|-------------|
+| Cost | ~$10–15k/yr | **Free (MIT)** |
+| HIPAA controls | ✅ | ✅ |
+| Evidence export | ✅ | ✅ JSON + HTML |
+| AWS monitoring | ✅ | ✅ (Prowler-compatible) |
+| Policy templates | ✅ | ✅ |
+| Personnel/device agents | ✅ | ❌ (manual) |
+| Auditor trust center | ✅ | HTML dashboard |
+| Self-hosted / git-native | ❌ | ✅ |
+
+Full comparison: [docs/vanta-comparison.md](docs/vanta-comparison.md)
+
+Pair with **[Prowler](https://github.com/prowler-cloud/prowler)** + **[Trivy](https://github.com/aquasecurity/trivy)** for enterprise-grade evidence at zero license cost.
+
+---
+
+## Configuration
+
+Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml`:
+
+```yaml
+org_name: "Acme Health"
+aws:
+  enabled: true
+  region: us-east-1
+github:
+  enabled: true
+  repo: acme-health/platform
+```
 
 ---
 
 ## What this is NOT
 
-- ❌ A substitute for legal counsel
-- ❌ A substitute for a real Security Risk Assessment when you have PHI in production
-- ❌ Coverage of state-law overlays (CCPA, TX HB 300, NY SHIELD, WA My Health My Data)
-- ❌ AI-specific risk modeling (model drift, training data provenance, prompt injection)
-
-For any of the above — or for help filling this in for a real system —
-[Luxon AI](https://luxonmedical.com/ai) does HIPAA + AI Implementation Audits in 2 weeks.
-
----
-
-## How to use it
-
-1. **Fork or download** [`sra-template.md`](sra-template.md).
-2. Drop it into your repo at `docs/security/sra.md` (or wherever your team keeps governance docs).
-3. Walk through every section in order. Where you don't have an answer yet, write **TBD** —
-   never lie or skip silently.
-4. Have your **engineering lead**, **security officer**, and **one operational owner** review
-   and sign section 8 before you call it done.
-5. Re-review at least every **12 months** or after any material change to the system,
-   vendors, or data flows.
-
----
-
-## What's in it
-
-- **Scope & system description** — what's covered, what isn't
-- **Data inventory** — PHI, sensitive non-PHI, and explicitly-excluded data
-- **Data flow & locations** — at rest, in transit, third parties
-- **Access controls** — IdP, MFA, roles, joiner/mover/leaver, break-glass
-- **Audit logging** — what's logged, who reads it, tamper-evidence
-- **Threats & vulnerabilities** — likelihood × impact ratings, residual risk
-- **Incident response** — named commander, 60-day breach clock, tabletop cadence
-- **Sign-off** — accountability with names + dates
-
-Plus an honest appendix on what the template intentionally leaves out.
-
----
-
-## Why we made this public
-
-Most healthcare consultants treat their SRA template as secret sauce.
-We don't, because:
-
-1. **The template isn't the work.** The work is interpreting it for *your* system.
-2. **Public artifacts build trust faster than logos.** This document is a free
-   demonstration of how we think.
-3. **Healthcare AI is moving too fast for everyone to learn HIPAA the hard way.**
-   If 100 teams use this and 5 of them don't ship a HIPAA incident next year, that's
-   a win for patients.
-
----
-
-## Versioning
-
-- **v0.1 — April 2026.** First public cut. Expect breaking changes.
-- See [CHANGELOG.md](CHANGELOG.md) for revision history.
-
-Future versions will add:
-
-- AI-specific risk rows (model drift, prompt injection, training-data provenance, clinician override)
-- State privacy law overlay appendix
-- Vendor risk register companion template
-- A YAML / JSON variant for teams that want machine-parseable controls
+- ❌ Legal advice or a substitute for counsel
+- ❌ A finished Security Risk Assessment (use `templates/sra-template.md`)
+- ❌ SOC 2 / HITRUST certification (HIPAA-focused; mappings are informative)
+- ❌ Laptop MDM or workforce training tracking (manual attestation)
 
 ---
 
 ## Contributing
 
-Improvements welcome — open an issue or PR. We're especially interested in:
+PRs welcome — especially:
 
-- Wording that proves false in real audits
-- Additional threat rows from incidents you've seen
-- State-law appendices contributed by counsel in those states
-- Cleaner Markdown / table layout
-
-If you're contributing on behalf of an organization, mention it in the PR — we'll
-credit it in `CHANGELOG.md`.
+- New check modules (Azure, GCP, Okta, Telnyx…)
+- State privacy law overlays (CCPA, TX HB 300, WA My Health My Data)
+- Prowler/Trivy evidence ingestion
+- AI-specific risk rows (model drift, prompt injection)
 
 ---
 
 ## License
 
-[MIT](LICENSE) — fork, adapt, sell, sublicense. No attribution required, but appreciated.
+[MIT](LICENSE) — use commercially, fork freely.
 
----
-
-## About
-
-This template is maintained by **[Luxon Medical](https://luxonmedical.com)**, the team behind:
-
-- **[Luxon Sync](https://luxonmedical.com/asc-logistics)** — ASC case-readiness platform with an
-  executed Google Cloud BAA, AI-assisted intake on real PHI, role-based access, and live OR orchestration.
-- **[Luxon AI](https://luxonmedical.com/ai)** — HIPAA + AI Implementation Audits for healthcare
-  operators and medtech AI vendors. Founding cohort pricing through 2026.
-
-Questions: **luxonmed@gmail.com**
+Maintained by **[Luxon Medical](https://luxonmedical.com)** · Questions: luxonmed@gmail.com

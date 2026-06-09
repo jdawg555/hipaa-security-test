@@ -1,10 +1,4 @@
 # HIPAA Security Risk Assessment — Sample Template
-
-> **Moved:** Canonical copy lives at [`templates/sra-template.md`](templates/sra-template.md).
-> This root file is kept for backward-compatible links.
-
-See [`templates/sra-template.md`](templates/sra-template.md) for the full template.
-
 **Luxon AI · v0.1 · April 2026**
 
 > **What this is:** a first-cut SRA template adapted from the actual one we use for Luxon Sync.

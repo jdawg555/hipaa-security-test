@@ -1,0 +1,35 @@
+# hipaa-audit configuration — copy to hipaa-audit.yaml in your project root
+
+org_name: "Your Organization Name"
+
+# Where your customized policies live (after hipaa-audit init)
+policy_dir: policies
+
+# Optional paths to your completed artifacts
+sra_path: templates/sra-template.md
+risk_register_path: templates/risk-register.md
+baa_register_path: templates/baa-register.md
+
+# AWS automated checks (requires: pip install hipaa-audit[aws] + credentials)
+aws:
+  enabled: false
+  region: us-east-1
+  # account_id: "123456789012"  # optional, for evidence metadata
+
+# GitHub checks (requires: gh CLI auth or GITHUB_TOKEN)
+github:
+  enabled: false
+  repo: "your-org/your-repo"  # auto-detected from git remote if omitted
+  default_branch: main
+
+# Integrate external scanners (run separately, drop evidence here)
+integrations:
+  prowler:
+    enabled: false
+    evidence_glob: evidence/prowler/*.json
+  trivy:
+    enabled: false
+    evidence_glob: evidence/trivy/*.json
+  steampipe:
+    enabled: false
+    evidence_glob: evidence/steampipe/*.json

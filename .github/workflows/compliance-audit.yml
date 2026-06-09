@@ -1,0 +1,68 @@
+name: HIPAA Compliance Audit
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Weekly Monday 06:00 UTC
+  pull_request:
+    paths:
+      - "policies/**"
+      - "templates/**"
+      - "compliance/**"
+      - "hipaa-audit.yaml"
+      - ".github/workflows/compliance-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # for AWS OIDC if enabled
+
+jobs:
+  hipaa-audit:
+    name: hipaa-audit scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install hipaa-audit
+        run: pip install -e ".[aws,github]"
+
+      - name: Run compliance scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+          import yaml
+          src = Path("hipaa-audit.example.yaml")
+          cfg = yaml.safe_load(src.read_text())
+          cfg["org_name"] = "CI Audit"
+          cfg.setdefault("github", {})["enabled"] = True
+          Path("hipaa-audit.yaml").write_text(yaml.dump(cfg))
+          PY
+          hipaa-audit scan . -o evidence/ci-${{ github.run_id }}
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hipaa-audit-evidence
+          path: evidence/ci-${{ github.run_id }}/
+          retention-days: 90
+
+      - name: Fail on critical control failures
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          data = json.load(open("evidence/ci-${{ github.run_id }}/audit-report.json"))
+          fails = [c for c in data["controls"] if c["status"] in ("fail", "error")]
+          if fails:
+              print(f"::error::{len(fails)} HIPAA control(s) failed")
+              for c in fails[:10]:
+                  print(f"  FAIL {c['id']}: {c['checks'][0]['message']}")
+              sys.exit(1)
+          print(f"All automated checks passed ({data['summary']})")
+          PY

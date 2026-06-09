@@ -1,27 +1,24 @@
 # Changelog
 
-All notable changes to this template will be documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+## [1.0.0] — 2026-06-09
 
----
+### Added — full open-source HIPAA compliance platform
+
+- **`hipaa-audit` CLI** — `scan`, `init`, `controls`, `version` commands
+- **25+ HIPAA Security Rule controls** in `controls/hipaa-security-rule.yaml`
+- **Automated checks:** repo secrets/PHI scan, policy library, AWS (CloudTrail, S3, RDS, KMS, GuardDuty), GitHub (branch protection, secret scanning, Dependabot)
+- **12 policy templates** in `policies/`
+- **Registers:** SRA, risk register, BAA register, vendor risk register in `templates/`
+- **Evidence export:** JSON, Markdown, HTML dashboard
+- **GitHub Actions** weekly compliance workflow
+- **Docs:** getting started, Vanta/Drata comparison
+- **Tests:** control catalog + self-audit integration test
+
+### Changed
+
+- Repo renamed scope: from SRA-only template → holistic GRC toolkit
+- `sra-template.md` moved to `templates/sra-template.md` (root copy retained for backward links)
 
 ## [0.1] — 2026-04-19
 
-### Added
-- First public cut of the HIPAA SRA template.
-- Eight-section structure: scope, data inventory, data flow, access controls,
-  audit logging, threats & vulnerabilities, incident response, sign-off.
-- Appendix A noting intentional omissions (state laws, vendor risk register,
-  AI-specific risk rows).
-
-### Known limitations
-- No state-law overlay (CCPA, TX HB 300, NY SHIELD, WA My Health My Data).
-- No AI-specific risk modeling.
-- No machine-parseable variant.
-- No vendor risk register companion.
-
-### Coming in v0.2
-- AI risk row examples (model drift, training-data provenance, prompt injection,
-  clinician override).
-- One state-law overlay appendix as a reference.
-- Cleaner Markdown table formatting based on first-week feedback.
+- Initial SRA Markdown template only

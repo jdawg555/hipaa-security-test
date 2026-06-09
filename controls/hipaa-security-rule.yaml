@@ -1,0 +1,368 @@
+# HIPAA Security Rule control catalog
+# Maps 45 CFR Part 164 Subpart C to automated + manual checks.
+# Cross-walk: NIST CSF 2.0, SOC 2 TSC (informative, not exhaustive).
+
+version: "1.0"
+framework: HIPAA Security Rule
+citations:
+  - "45 CFR §164.308 — Administrative safeguards"
+  - "45 CFR §164.310 — Physical safeguards"
+  - "45 CFR §164.312 — Technical safeguards"
+  - "45 CFR §164.314 — Organizational requirements"
+  - "45 CFR §164.316 — Policies, procedures, documentation"
+
+controls:
+  # ── Administrative Safeguards (§164.308) ──────────────────────────────────
+
+  - id: HIPAA-164.308-a1
+    title: Security management process
+    category: administrative
+    citation: "§164.308(a)(1)"
+    type: hybrid
+    severity: required
+    nist_csf: ["GV.RM", "ID.RA"]
+    soc2_mapping: ["CC3.1", "CC3.2"]
+    description: Conduct risk analysis and implement security measures to reduce risk.
+    checks:
+      - id: sra-documented
+        type: manual
+        title: Security Risk Assessment completed
+        instructions: Complete templates/sra-template.md; sign section 8 annually.
+        remediation: Run hipaa-audit init and fill SRA template.
+      - id: risk-register-maintained
+        module: repo
+        handler: risk_register_present
+        title: Risk register exists
+        remediation: Copy templates/risk-register.md and maintain quarterly.
+
+  - id: HIPAA-164.308-a2
+    title: Assigned security responsibility
+    category: administrative
+    citation: "§164.308(a)(2)"
+    type: manual
+    severity: required
+    description: Identify the security official responsible for HIPAA Security Rule.
+    checks:
+      - id: security-officer-named
+        type: manual
+        title: Security Officer designated
+        instructions: Name Security Officer in hipaa-security-policy.md and SRA section 1.
+
+  - id: HIPAA-164.308-a3
+    title: Workforce security
+    category: administrative
+    citation: "§164.308(a)(3)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: workforce-policy
+        module: policies
+        handler: policy_library_complete
+        title: Workforce security policy documented
+      - id: jml-process
+        type: manual
+        title: Joiner/mover/leaver process documented
+        instructions: Document IdP provisioning and deprovisioning in access-control-policy.md.
+
+  - id: HIPAA-164.308-a4
+    title: Information access management
+    category: administrative
+    citation: "§164.308(a)(4)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: access-control-policy
+        module: repo
+        handler: file_exists
+        paths: [policies/access-control-policy.md]
+        title: Access control policy exists
+        remediation: Customize policies/access-control-policy.md
+      - id: role-based-access
+        type: manual
+        title: Role-based access matrix documented
+        instructions: Map roles to PHI access in SRA section 4.
+
+  - id: HIPAA-164.308-a5
+    title: Security awareness and training
+    category: administrative
+    citation: "§164.308(a)(5)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: training-plan
+        module: policies
+        handler: policy_library_complete
+        title: Workforce training plan exists
+      - id: annual-training
+        type: manual
+        title: Annual HIPAA training completed
+        instructions: Record training completion dates; retain certificates 6 years.
+
+  - id: HIPAA-164.308-a6
+    title: Security incident procedures
+    category: administrative
+    citation: "§164.308(a)(6)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: ir-plan
+        module: repo
+        handler: incident_runbook_present
+        title: Incident response plan documented
+      - id: tabletop-exercise
+        type: manual
+        title: Annual tabletop exercise completed
+        instructions: Run IR tabletop; document findings in risk register.
+
+  - id: HIPAA-164.308-a7
+    title: Contingency plan
+    category: administrative
+    citation: "§164.308(a)(7)"
+    type: manual
+    severity: required
+    checks:
+      - id: bcdr-plan
+        type: manual
+        title: Backup and disaster recovery documented
+        instructions: Document RTO/RPO, backup frequency, restore test cadence.
+
+  - id: HIPAA-164.308-a8
+    title: Evaluation
+    category: administrative
+    citation: "§164.308(a)(8)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: continuous-monitoring
+        module: repo
+        handler: precommit_or_ci_security
+        title: Continuous compliance monitoring configured
+      - id: annual-evaluation
+        type: manual
+        title: Annual technical evaluation performed
+        instructions: Re-run hipaa-audit scan and update SRA after material changes.
+
+  - id: HIPAA-164.308-b1
+    title: Business associate contracts
+    category: administrative
+    citation: "§164.308(b)(1)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: baa-register
+        module: repo
+        handler: baa_register_present
+        title: BAA register maintained for PHI subprocessors
+      - id: baa-executed
+        type: manual
+        title: BAAs executed with all PHI vendors
+        instructions: File countersigned BAAs; track expiry in templates/baa-register.md.
+
+  # ── Physical Safeguards (§164.310) ───────────────────────────────────────
+
+  - id: HIPAA-164.310-a1
+    title: Facility access controls
+    category: physical
+    citation: "§164.310(a)(1)"
+    type: manual
+    severity: required
+    checks:
+      - id: facility-access
+        type: manual
+        title: Physical access to systems documented
+        instructions: "For cloud-only deployments, document datacenter SOC 2 / ISO certs from cloud provider."
+
+  - id: HIPAA-164.310-d1
+    title: Device and media controls
+    category: physical
+    citation: "§164.310(d)(1)"
+    type: manual
+    severity: required
+    checks:
+      - id: media-disposal
+        type: manual
+        title: Media disposal and re-use procedures documented
+        instructions: Document secure wipe for laptops; S3 lifecycle for PHI buckets.
+
+  # ── Technical Safeguards (§164.312) ────────────────────────────────────────
+
+  - id: HIPAA-164.312-a1
+    title: Access control
+    category: technical
+    citation: "§164.312(a)(1)"
+    type: hybrid
+    severity: required
+    nist_csf: ["PR.AA"]
+    soc2_mapping: ["CC6.1", "CC6.2"]
+    checks:
+      - id: unique-user-ids
+        type: manual
+        title: Unique user identification enforced
+        instructions: No shared accounts for PHI systems; document in access-control-policy.
+      - id: github-branch-protection
+        module: github
+        handler: branch_protection
+        title: Production branch protected
+
+  - id: HIPAA-164.312-a2
+    title: Emergency access procedure
+    category: technical
+    citation: "§164.312(a)(2)"
+    type: manual
+    severity: required
+    checks:
+      - id: break-glass
+        type: manual
+        title: Break-glass access documented
+        instructions: Document emergency access path, approval, and audit trail.
+
+  - id: HIPAA-164.312-b
+    title: Audit controls
+    category: technical
+    citation: "§164.312(b)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: audit-logging-policy
+        module: policies
+        handler: policy_library_complete
+        title: Logging and audit policy exists
+      - id: cloudtrail-enabled
+        module: aws
+        handler: cloudtrail_enabled
+        title: CloudTrail audit logging enabled
+
+  - id: HIPAA-164.312-c1
+    title: Integrity
+    category: technical
+    citation: "§164.312(c)(1)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: dependency-integrity
+        module: repo
+        handler: dependency_lockfile
+        title: Dependency lockfiles for supply chain integrity
+      - id: ci-security-gates
+        module: repo
+        handler: precommit_or_ci_security
+        title: CI security gates on merge
+
+  - id: HIPAA-164.312-d
+    title: Person or entity authentication
+    category: technical
+    citation: "§164.312(d)"
+    type: manual
+    severity: required
+    checks:
+      - id: mfa-enforced
+        type: manual
+        title: MFA enforced for PHI system access
+        instructions: Document IdP MFA policy; no password-only admin access.
+
+  - id: HIPAA-164.312-e1
+    title: Transmission security
+    category: technical
+    citation: "§164.312(e)(1)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: encryption-policy
+        module: repo
+        handler: encryption_docs_present
+        title: Encryption policy documented
+      - id: tls-in-transit
+        type: manual
+        title: TLS 1.2+ for all PHI in transit
+        instructions: Document TLS termination points in SRA section 3.2.
+
+  # ── Encryption & PHI handling (addressable → treated as required) ─────────
+
+  - id: HIPAA-164.312-a2-enc
+    title: Encryption and decryption
+    category: technical
+    citation: "§164.312(a)(2)(iv) — addressable"
+    type: hybrid
+    severity: addressable
+    checks:
+      - id: rds-encrypted
+        module: aws
+        handler: rds_encryption
+        title: Database encryption at rest
+      - id: kms-rotation
+        module: aws
+        handler: kms_rotation
+        title: KMS key rotation enabled
+
+  # ── Organizational & documentation (§164.316) ────────────────────────────
+
+  - id: HIPAA-164.316
+    title: Policies and procedures documentation
+    category: administrative
+    citation: "§164.316"
+    type: hybrid
+    severity: required
+    checks:
+      - id: policy-library
+        module: policies
+        handler: policy_library_complete
+        title: Complete HIPAA policy library
+      - id: policy-review-cadence
+        module: policies
+        handler: policy_review_dates
+        title: Policies include review cadence
+
+  # ── Developer / repo hygiene (supports integrity + minimum necessary) ─────
+
+  - id: HIPAA-DEV-001
+    title: Source code PHI and secret hygiene
+    category: technical
+    citation: "§164.312(c)(1) — integrity"
+    type: automated
+    severity: required
+    description: Prevent PHI and credentials in version control.
+    checks:
+      - id: gitignore-secrets
+        module: repo
+        handler: gitignore_env
+        title: .gitignore blocks env and credential files
+      - id: no-inline-secrets
+        module: repo
+        handler: no_secrets_in_repo
+        title: No inline secrets in repository
+      - id: phi-heuristic
+        module: repo
+        handler: phi_heuristic_scan
+        title: No PHI-like literals in source
+
+  - id: HIPAA-DEV-002
+    title: Vulnerability and dependency management
+    category: technical
+    citation: "§164.308(a)(1)(ii)(B) — risk management"
+    type: hybrid
+    severity: required
+    checks:
+      - id: dependabot-config
+        module: github
+        handler: dependabot
+        title: Dependabot or equivalent configured
+      - id: secret-scanning
+        module: github
+        handler: secret_scanning
+        title: GitHub secret scanning enabled
+
+  - id: HIPAA-AWS-001
+    title: AWS infrastructure hardening
+    category: technical
+    citation: "§164.312(a)(1) — access control"
+    type: automated
+    severity: required
+    checks:
+      - id: s3-public-block
+        module: aws
+        handler: s3_public_access_blocked
+        title: S3 public access blocked
+      - id: guardduty
+        module: aws
+        handler: guardduty_enabled
+        title: GuardDuty threat detection
