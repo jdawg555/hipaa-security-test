@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.7](https://img.shields.io/badge/Version-1.7-blue.svg)](CHANGELOG.md)
+[![Version: 1.8](https://img.shields.io/badge/Version-1.8-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -21,7 +21,10 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 | **Access reviews** | Quarterly campaign tracker (`hipaa-audit access-review`) |
 | **Trust center** | Public compliance page (`hipaa-audit trust publish`) |
 | **Auditor bundle** | `hipaa-audit export auditor` ZIP for NDA sharing |
-| **SaaS inventory** | Okta app discovery (`hipaa-audit apps discover`) |
+| **SaaS inventory** | Okta + Google app discovery (`hipaa-audit apps discover`) |
+| **SOC 2 TSC** | Optional supplement (`frameworks.soc2: true`) |
+| **MDM devices** | Jamf/Intune CSV import (`hipaa-audit devices import`) |
+| **Vendor questionnaires** | Send/respond workflow (`hipaa-audit vendor send`) |
 | **Personnel** | Policy acks + training CSV (Vanta workforce module) |
 | **Slack alerts** | `--notify` on posture drop or new failures |
 | **Posture score** | Weighted compliance % + history trend |

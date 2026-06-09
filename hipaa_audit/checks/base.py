@@ -7,11 +7,13 @@ from hipaa_audit.checks import (
     access_reviews,
     apps,
     aws,
+    devices,
     github,
     identity,
     integrations,
     personnel,
     policies,
+    questionnaires,
     repo,
     vendors,
 )
@@ -28,6 +30,8 @@ RUNNERS = {
     "vendors": vendors,
     "access_reviews": access_reviews,
     "apps": apps,
+    "devices": devices,
+    "questionnaires": questionnaires,
 }
 
 

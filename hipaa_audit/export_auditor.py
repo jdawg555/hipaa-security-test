@@ -28,6 +28,8 @@ OPTIONAL_PATHS = [
     "compliance/acknowledgments.yaml",
     "compliance/training-log.csv",
     "compliance/saas-inventory.yaml",
+    "compliance/devices.yaml",
+    "compliance/vendor-questionnaires.yaml",
     "compliance/trust-center/index.html",
     "evidence/history/posture.jsonl",
 ]

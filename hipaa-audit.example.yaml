@@ -3,6 +3,11 @@
 
 org_name: "Your Organization Name"
 
+# Frameworks to include in scans (HIPAA always on; SOC 2 optional)
+frameworks:
+  hipaa: true
+  soc2: false
+
 policy_dir: policies
 templates_dir: templates
 
@@ -87,6 +92,13 @@ personnel:
 vendors:
   enabled: false
   register_path: compliance/vendors.yaml
+  questionnaires_path: compliance/vendor-questionnaires.yaml
+
+# MDM / endpoint inventory (Jamf, Intune CSV export)
+devices:
+  enabled: false
+  register_path: compliance/devices.yaml
+  max_last_seen_days: 30
 
 # Quarterly access review campaigns (Vanta access reviews)
 access_reviews:

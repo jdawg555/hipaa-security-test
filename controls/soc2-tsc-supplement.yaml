@@ -1,0 +1,191 @@
+# SOC 2 Trust Services Criteria supplement (maps to shared hipaa-audit checks)
+# Enable: frameworks.soc2: true in hipaa-audit.yaml
+
+version: "1.8"
+framework: SOC 2 TSC
+citations:
+  - "AICPA TSC — Common Criteria (CC)"
+  - "AICPA TSC — Availability (A1)"
+  - "AICPA TSC — Confidentiality (C1)"
+
+controls:
+  - id: SOC2-CC1.2
+    title: Board and management oversight
+    category: governance
+    citation: CC1.2
+    type: manual
+    severity: required
+    soc2_mapping: [CC1.2]
+    description: Management demonstrates commitment to integrity and ethical values.
+    checks:
+      - id: soc2-oversight-documented
+        type: manual
+        title: Security governance and oversight documented
+        instructions: Document security committee or officer reporting in hipaa-security-policy.md.
+
+  - id: SOC2-CC2.2
+    title: Internal communication of control information
+    category: governance
+    citation: CC2.2
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC2.2]
+    checks:
+      - id: soc2-policy-library
+        module: policies
+        handler: policy_library_complete
+        title: Security policies communicated to workforce
+
+  - id: SOC2-CC3.2
+    title: Risk assessment process
+    category: risk
+    citation: CC3.2
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC3.2]
+    checks:
+      - id: soc2-sra-complete
+        module: repo
+        handler: sra_template_present
+        title: Security risk assessment completed
+      - id: soc2-risk-register
+        module: repo
+        handler: risk_register_present
+        title: Risk register maintained
+
+  - id: SOC2-CC5.2
+    title: Control activities over technology
+    category: operations
+    citation: CC5.2
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC5.2]
+    checks:
+      - id: soc2-change-management
+        module: github
+        handler: branch_protection
+        title: Change management via protected branches
+      - id: soc2-ci-monitoring
+        module: repo
+        handler: precommit_or_ci_security
+        title: Continuous compliance monitoring in CI
+
+  - id: SOC2-CC6.1
+    title: Logical access security
+    category: access
+    citation: CC6.1
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC6.1]
+    checks:
+      - id: soc2-access-reviews
+        module: access_reviews
+        handler: access_review_campaign
+        title: Periodic access reviews performed
+      - id: soc2-saas-inventory
+        module: apps
+        handler: saas_inventory_tracked
+        title: SaaS applications inventoried
+
+  - id: SOC2-CC6.6
+    title: Encryption and key management
+    category: technical
+    citation: CC6.6
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC6.6]
+    checks:
+      - id: soc2-encryption-policy
+        module: repo
+        handler: encryption_docs_present
+        title: Encryption standards documented
+      - id: soc2-aws-encryption
+        module: aws
+        handler: s3_default_encryption
+        title: S3 default encryption enabled
+
+  - id: SOC2-CC6.7
+    title: Endpoint and device controls
+    category: access
+    citation: CC6.7
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC6.7]
+    checks:
+      - id: soc2-device-inventory
+        module: devices
+        handler: device_inventory_compliant
+        title: MDM device inventory encryption and screen lock
+
+  - id: SOC2-CC7.2
+    title: System monitoring
+    category: monitoring
+    citation: CC7.2
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC7.2]
+    checks:
+      - id: soc2-cloudtrail
+        module: aws
+        handler: cloudtrail_enabled
+        title: CloudTrail logging enabled
+      - id: soc2-integrations-fresh
+        module: integrations
+        handler: evidence_freshness
+        title: External scanner evidence current
+
+  - id: SOC2-CC8.1
+    title: Change management
+    category: operations
+    citation: CC8.1
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC8.1]
+    checks:
+      - id: soc2-iac-scan
+        module: integrations
+        handler: checkov_findings
+        title: IaC scanned before deploy (Checkov)
+
+  - id: SOC2-CC9.2
+    title: Vendor and partner risk
+    category: vendors
+    citation: CC9.2
+    type: hybrid
+    severity: required
+    soc2_mapping: [CC9.2]
+    checks:
+      - id: soc2-vendor-register
+        module: vendors
+        handler: vendor_register_current
+        title: Vendor risk assessments current
+      - id: soc2-vendor-questionnaires
+        module: questionnaires
+        handler: vendor_questionnaires_current
+        title: Outbound vendor questionnaires tracked
+
+  - id: SOC2-C1.1
+    title: Confidentiality commitments
+    category: confidentiality
+    citation: C1.1
+    type: hybrid
+    severity: addressable
+    soc2_mapping: [C1.1]
+    checks:
+      - id: soc2-baa-register
+        module: repo
+        handler: baa_register_present
+        title: Confidentiality agreements (BAAs) tracked
+
+  - id: SOC2-A1.2
+    title: Availability monitoring
+    category: availability
+    citation: A1.2
+    type: manual
+    severity: addressable
+    soc2_mapping: [A1.2]
+    checks:
+      - id: soc2-bcdr
+        type: manual
+        title: Availability and recovery objectives documented
+        instructions: Document RTO/RPO and uptime monitoring in contingency plan.

@@ -14,11 +14,21 @@ from hipaa_audit.access_reviews import (
     start_campaign,
 )
 from hipaa_audit.apps import (
+    discover_google_apps,
     discover_okta_apps,
+    google_config_from_identity,
+    import_google_apps_csv,
     link_app,
     load_inventory,
     merge_discovered,
     okta_config_from_identity,
+)
+from hipaa_audit.devices import device_csv_template, import_devices_csv, load_devices
+from hipaa_audit.frameworks import soc2_report
+from hipaa_audit.questionnaires import (
+    load_questionnaires,
+    respond_questionnaire,
+    send_questionnaire,
 )
 from hipaa_audit.catalog import coverage_report
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
@@ -46,12 +56,16 @@ vendor_app = typer.Typer(help="Vendor risk register and SIG-lite questionnaires.
 access_review_app = typer.Typer(help="Quarterly access review campaigns.")
 apps_app = typer.Typer(help="SaaS / IdP application inventory.")
 trust_app = typer.Typer(help="Public trust center (compliance page).")
+devices_app = typer.Typer(help="MDM endpoint inventory (Jamf, Intune).")
+framework_app = typer.Typer(help="Multi-framework control catalogs.")
 app.add_typer(tasks_app, name="tasks")
 app.add_typer(export_app, name="export")
 app.add_typer(vendor_app, name="vendor")
 app.add_typer(access_review_app, name="access-review")
 app.add_typer(apps_app, name="apps")
 app.add_typer(trust_app, name="trust")
+app.add_typer(devices_app, name="devices")
+app.add_typer(framework_app, name="framework")
 
 
 @app.command()
@@ -156,6 +170,8 @@ def init(
         (src / "compliance" / "access-reviews.example.yaml", path / "compliance" / "access-reviews.yaml"),
         (src / "compliance" / "saas-inventory.example.yaml", path / "compliance" / "saas-inventory.yaml"),
         (src / "compliance" / "certifications.example.yaml", path / "compliance" / "certifications.yaml"),
+        (src / "compliance" / "devices.example.yaml", path / "compliance" / "devices.yaml"),
+        (src / "compliance" / "vendor-questionnaires.example.yaml", path / "compliance" / "vendor-questionnaires.yaml"),
         (src / "hipaa-audit.example.yaml", path / "hipaa-audit.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", path / ".github" / "workflows" / "compliance-audit.yml"),
     ]
@@ -409,6 +425,79 @@ def vendor_review_cmd(
         raise typer.Exit(1)
 
 
+@vendor_app.command("send")
+def vendor_send(
+    vendor_id: str = typer.Argument(..., help="Vendor ID e.g. VND-001"),
+    contact: str = typer.Argument(..., help="Vendor security contact email"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    due_days: int = typer.Option(30, help="Days until questionnaire due"),
+) -> None:
+    """Send an outbound SIG-lite questionnaire to a vendor."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    vendors_path = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    q_path = path / cfg.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+    entry = send_questionnaire(q_path, vendors_path, vendor_id=vendor_id, contact=contact, due_days=due_days)
+    if not entry:
+        console.print(f"[red]Vendor not found: {vendor_id}[/red]")
+        raise typer.Exit(1)
+    console.print(f"[green]Sent[/green] {entry['id']} to {contact} — due {entry['due_date']}")
+    console.print("Share templates/vendor-questionnaire.md with the vendor contact.")
+
+
+@vendor_app.command("respond")
+def vendor_respond(
+    questionnaire_id: str = typer.Argument(..., help="Questionnaire ID e.g. QNR-001"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+    reviewer: str = typer.Option("", "--reviewer", "-r"),
+    complete: bool = typer.Option(True, "--complete/--partial", help="Mark all SIG-lite items satisfied"),
+) -> None:
+    """Record vendor questionnaire responses."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    vendors_path = path / cfg.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+    q_path = path / cfg.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+    responses = {k: True for k in SIG_LITE_KEYS} if complete else {}
+    if not responses:
+        console.print("[red]Use --complete or extend with per-field flags[/red]")
+        raise typer.Exit(1)
+    if respond_questionnaire(q_path, vendors_path, questionnaire_id, responses, reviewer=reviewer):
+        console.print(f"[green]Recorded[/green] responses for {questionnaire_id}")
+    else:
+        console.print(f"[red]Questionnaire not found: {questionnaire_id}[/red]")
+        raise typer.Exit(1)
+
+
+@vendor_app.command("questionnaires")
+def vendor_questionnaires(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """List outbound vendor questionnaires."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    q_path = path / cfg.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+    data = load_questionnaires(q_path)
+    items = data.get("questionnaires", [])
+    if not items:
+        console.print("[yellow]No questionnaires — hipaa-audit vendor send[/yellow]")
+        return
+    table = Table(title="Vendor questionnaires")
+    table.add_column("ID")
+    table.add_column("Vendor")
+    table.add_column("Contact")
+    table.add_column("Status")
+    table.add_column("Due")
+    for q in items:
+        table.add_row(
+            q.get("id", ""),
+            q.get("vendor_name", q.get("vendor_id", "")),
+            q.get("contact", ""),
+            q.get("status", ""),
+            q.get("due_date", ""),
+        )
+    console.print(table)
+
+
 @access_review_app.command("start")
 def access_review_start(
     name: str = typer.Argument(..., help="Campaign name"),
@@ -515,17 +604,55 @@ def apps_discover(
     path: Path = typer.Argument(Path.cwd()),
     config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
 ) -> None:
-    """Discover SaaS apps from Okta and merge into inventory."""
+    """Discover SaaS apps from Okta and/or Google Workspace."""
     cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
     register = path / cfg.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+    discovered: list = []
+    sources: list[str] = []
+
     okta = okta_config_from_identity(cfg)
-    if not okta:
-        console.print("[red]Enable identity.okta and set OKTA_API_TOKEN[/red]")
+    if okta:
+        domain, token = okta
+        okta_apps = discover_okta_apps(domain, token)
+        discovered.extend(okta_apps)
+        sources.append("okta")
+        console.print(f"[green]Okta[/green] {len(okta_apps)} app(s)")
+
+    google = google_config_from_identity(cfg)
+    if google:
+        try:
+            creds_path, admin = google
+            google_apps = discover_google_apps(creds_path, admin)
+            discovered.extend(google_apps)
+            sources.append("google")
+            console.print(f"[green]Google[/green] {len(google_apps)} app(s)")
+        except ImportError:
+            console.print("[yellow]Google skipped — pip install hipaa-audit[identity][/yellow]")
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[yellow]Google API error: {exc}[/yellow]")
+
+    if not discovered:
+        console.print("[red]Enable identity.okta and/or identity.google with API credentials[/red]")
         raise typer.Exit(1)
-    domain, token = okta
-    discovered = discover_okta_apps(domain, token)
-    data = merge_discovered(register, discovered, source="okta")
-    console.print(f"[green]Discovered[/green] {len(discovered)} Okta app(s) → {register}")
+
+    source = "+".join(sources)
+    data = merge_discovered(register, discovered, source=source)
+    console.print(f"[green]Merged[/green] {len(discovered)} app(s) → {register}")
+    console.print(f"[dim]Total inventory: {len(data.get('apps', []))}[/dim]")
+
+
+@apps_app.command("import-google")
+def apps_import_google(
+    csv_file: Path = typer.Argument(..., help="Google Admin third-party apps CSV export"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Import Google Workspace apps from Admin Console CSV export."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("saas_inventory", {}).get("register_path", "compliance/saas-inventory.yaml")
+    discovered = import_google_apps_csv(csv_file)
+    data = merge_discovered(register, discovered, source="google-csv")
+    console.print(f"[green]Imported[/green] {len(discovered)} Google app(s) → {register}")
     console.print(f"[dim]Total inventory: {len(data.get('apps', []))}[/dim]")
 
 
@@ -592,6 +719,82 @@ def trust_publish(
     out = publish_trust_center(repo_path=path, config=cfg, report_json=report)
     console.print(f"[green]Trust center[/green] → {out}")
     console.print("Host at compliance/trust-center/ or sync to your public site.")
+
+
+@devices_app.command("template")
+def devices_template(
+    path: Path = typer.Argument(Path.cwd()),
+    output: Path = typer.Option(Path("compliance/devices-template.csv"), "--output", "-o"),
+) -> None:
+    """Bootstrap MDM device import CSV template."""
+    out = path / output if not output.is_absolute() else output
+    device_csv_template(out)
+    console.print(f"[green]Created[/green] {out}")
+
+
+@devices_app.command("import")
+def devices_import(
+    csv_file: Path = typer.Argument(..., help="Jamf or Intune device export CSV"),
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Import MDM device inventory from CSV."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("devices", {}).get("register_path", "compliance/devices.yaml")
+    count = import_devices_csv(register, csv_file)
+    console.print(f"[green]Imported[/green] {count} device(s) → {register}")
+
+
+@devices_app.command("list")
+def devices_list(
+    path: Path = typer.Argument(Path.cwd()),
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """List MDM device inventory."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    register = path / cfg.get("devices", {}).get("register_path", "compliance/devices.yaml")
+    data = load_devices(register)
+    devices = data.get("devices", [])
+    if not devices:
+        console.print("[yellow]No devices — hipaa-audit devices import[/yellow]")
+        return
+    table = Table(title=f"Device inventory ({data.get('imported_at', 'unknown')})")
+    table.add_column("ID")
+    table.add_column("Owner")
+    table.add_column("Platform")
+    table.add_column("MDM")
+    table.add_column("Encrypted")
+    table.add_column("Screen lock")
+    for d in devices:
+        table.add_row(
+            d.get("id", ""),
+            d.get("owner", ""),
+            d.get("platform", ""),
+            d.get("mdm", ""),
+            "Y" if d.get("encrypted") else "N",
+            "Y" if d.get("screen_lock") else "N",
+        )
+    console.print(table)
+
+
+@framework_app.command("soc2")
+def framework_soc2(
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Show SOC 2 TSC supplement status (enable frameworks.soc2 in config)."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = soc2_report(cfg)
+    table = Table(title="SOC 2 TSC supplement")
+    table.add_column("Metric")
+    table.add_column("Value")
+    table.add_row("SOC 2 enabled in config", "yes" if report["enabled"] else "no (set frameworks.soc2: true)")
+    table.add_row("SOC 2 controls", str(report["soc2_controls"]))
+    table.add_row("HIPAA controls", str(report["hipaa_controls"]))
+    table.add_row("Total when enabled", str(report["total_controls"]))
+    table.add_row("TSC criteria mapped", str(report["soc2_criteria_count"]))
+    console.print(table)
+    if not report["enabled"]:
+        console.print("[dim]Run scan with frameworks.soc2: true to include SOC2-* controls[/dim]")
 
 
 @app.command("import-training")

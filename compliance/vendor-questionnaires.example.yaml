@@ -1,0 +1,20 @@
+# Outbound vendor questionnaire workflow — copy to compliance/vendor-questionnaires.yaml
+
+questionnaires:
+  - id: QNR-001
+    vendor_id: VND-002
+    vendor_name: Example EHR SaaS
+    contact: security-vendor@example.com
+    sent_at: "2026-04-01"
+    due_date: "2026-04-30"
+    status: responded
+    responded_at: "2026-04-28"
+    responses:
+      soc2_or_iso: true
+      encryption_at_rest: true
+      encryption_in_transit: true
+      mfa_enforced: true
+      access_logging: true
+      incident_notification: true
+      subprocessors_disclosed: true
+      data_retention_defined: true

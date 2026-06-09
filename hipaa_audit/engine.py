@@ -21,7 +21,7 @@ def run_audit(
     evidence = evidence_dir or (repo_path / "evidence" / datetime.now(UTC).strftime("%Y-%m-%d"))
     evidence.mkdir(parents=True, exist_ok=True)
 
-    controls = load_controls(controls_path)
+    controls = load_controls(controls_path, config=config)
     if categories:
         controls = [c for c in controls if c.category in categories]
 

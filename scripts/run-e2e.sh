@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end HIPAA compliance workflow (v1.7)
+# End-to-end HIPAA compliance workflow (v1.8)
 set -euo pipefail
 
 ROOT="${1:-.}"
@@ -12,9 +12,14 @@ echo "==> 2/10 Compliance registers (examples for smoke)"
 cp -n compliance/vendors.example.yaml compliance/vendors.yaml 2>/dev/null || true
 cp -n compliance/access-reviews.example.yaml compliance/access-reviews.yaml 2>/dev/null || true
 cp -n compliance/saas-inventory.example.yaml compliance/saas-inventory.yaml 2>/dev/null || true
+cp -n compliance/devices.example.yaml compliance/devices.yaml 2>/dev/null || true
+cp -n compliance/vendor-questionnaires.example.yaml compliance/vendor-questionnaires.yaml 2>/dev/null || true
 hipaa-audit vendor list . || true
+hipaa-audit vendor questionnaires . || true
 hipaa-audit access-review list . || true
 hipaa-audit apps list . || true
+hipaa-audit devices list . || true
+hipaa-audit framework soc2 || true
 
 echo "==> 3/10 Run hipaa-audit scan + posture history + task sync"
 hipaa-audit scan . -o evidence/latest

@@ -33,17 +33,28 @@ def _parse_controls_file(controls_path: Path) -> list[Control]:
     return controls
 
 
-def load_controls(path: Path | None = None) -> list[Control]:
+def _catalog_globs(config: dict[str, Any] | None) -> list[str]:
+    frameworks = (config or {}).get("frameworks", {})
+    patterns = ["hipaa-*.yaml"]
+    if frameworks.get("soc2", False):
+        patterns.append("soc2-*.yaml")
+    return patterns
+
+
+def load_controls(path: Path | None = None, *, config: dict[str, Any] | None = None) -> list[Control]:
     if path is not None:
         return _parse_controls_file(path)
 
-    catalog_files = sorted((PACKAGE_ROOT / "controls").glob("hipaa-*.yaml"))
+    controls_dir = PACKAGE_ROOT / "controls"
+    catalog_files: list[Path] = []
+    for pattern in _catalog_globs(config):
+        catalog_files.extend(sorted(controls_dir.glob(pattern)))
     if not catalog_files:
         return _parse_controls_file(DEFAULT_CONTROLS)
 
     merged: list[Control] = []
     seen: set[str] = set()
-    for catalog_path in catalog_files:
+    for catalog_path in sorted(set(catalog_files)):
         for control in _parse_controls_file(catalog_path):
             if control.id in seen:
                 continue

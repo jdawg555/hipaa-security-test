@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.0] — 2026-05-28
+
+### Added
+
+- **SOC 2 TSC supplement** — 12 controls via `frameworks.soc2: true` + `hipaa-audit framework soc2`
+- **MDM device inventory** — `hipaa-audit devices import|list|template` (Jamf/Intune CSV)
+- **Vendor questionnaire workflow** — `hipaa-audit vendor send|respond|questionnaires`
+- **Google Workspace apps** — API discovery + `apps import-google` CSV in `apps discover`
+- **Controls** — `device-inventory-compliant`, `vendor-questionnaires-tracked`
+- **Docs** — `docs/frameworks.md`
+
+### Changed
+
+- `load_controls()` merges `soc2-*.yaml` when SOC 2 framework enabled
+- `apps discover` pulls Okta and Google when both identity providers enabled
+
 ## [1.7.0] — 2026-05-28
 
 ### Added

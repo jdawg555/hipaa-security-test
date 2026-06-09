@@ -123,6 +123,79 @@ def load_vendors_safe(path: Path) -> list[dict[str, Any]]:
     return raw.get("vendors", [])
 
 
+def discover_google_apps(creds_path: str, admin_email: str) -> list[dict[str, Any]]:
+    from google.oauth2 import service_account  # noqa: PLC0415
+    from googleapiclient.discovery import build  # noqa: PLC0415
+
+    scopes = ["https://www.googleapis.com/auth/admin.reports.audit.readonly"]
+    credentials = service_account.Credentials.from_service_account_file(creds_path, scopes=scopes)
+    delegated = credentials.with_subject(admin_email)
+    service = build("admin", "reports_v1", credentials=delegated, cache_discovery=False)
+    activities = (
+        service.activities()
+        .list(userKey="all", applicationName="token", maxResults=500)
+        .execute()
+    )
+    seen: dict[str, dict[str, Any]] = {}
+    for item in activities.get("items", []):
+        for event in item.get("events", []):
+            params = {p.get("name"): p.get("value") for p in event.get("parameters", [])}
+            name = params.get("client_name") or params.get("app_name") or params.get("application_name")
+            if not name:
+                continue
+            app_id = f"google-{name.lower().replace(' ', '-')[:40]}"
+            seen[app_id] = {
+                "id": app_id,
+                "name": name,
+                "provider": "google",
+                "status": "active",
+                "sso": True,
+                "vendor_id": None,
+                "phi_risk": "unknown",
+                "scopes": params.get("scope"),
+            }
+    return list(seen.values())
+
+
+def import_google_apps_csv(csv_path: Path) -> list[dict[str, Any]]:
+    import csv
+
+    apps: list[dict[str, Any]] = []
+    with csv_path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            name = (row.get("app_name") or row.get("name") or row.get("Application") or "").strip()
+            if not name:
+                continue
+            app_id = f"google-{name.lower().replace(' ', '-')[:40]}"
+            apps.append(
+                {
+                    "id": app_id,
+                    "name": name,
+                    "provider": "google",
+                    "status": (row.get("status") or "active").lower(),
+                    "sso": True,
+                    "vendor_id": None,
+                    "phi_risk": "unknown",
+                    "users": row.get("users") or row.get("user_count"),
+                }
+            )
+    return apps
+
+
+def google_config_from_identity(config: dict[str, Any]) -> tuple[str, str] | None:
+    google = config.get("identity", {}).get("google", {})
+    if not google.get("enabled", False):
+        return None
+    creds_path = google.get("credentials_file") or os.environ.get(
+        google.get("credentials_env", "GOOGLE_APPLICATION_CREDENTIALS"), ""
+    )
+    admin = google.get("admin_email") or os.environ.get(google.get("admin_email_env", "GOOGLE_ADMIN_EMAIL"), "")
+    if creds_path and admin:
+        return creds_path, admin
+    return None
+
+
 def okta_config_from_identity(config: dict[str, Any]) -> tuple[str, str] | None:
     okta = config.get("identity", {}).get("okta", {})
     if not okta.get("enabled", False):

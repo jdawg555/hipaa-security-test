@@ -2,7 +2,7 @@
 # Maps 45 CFR Part 164 Subpart C to automated + manual checks.
 # Cross-walk: NIST CSF 2.0, SOC 2 TSC (informative, not exhaustive).
 
-version: "1.7"
+version: "1.8"
 framework: HIPAA Security Rule
 citations:
   - "45 CFR §164.308 — Administrative safeguards"
@@ -177,6 +177,11 @@ controls:
         handler: vendor_register_current
         title: Vendor risk register and SIG-lite questionnaire current
         remediation: "hipaa-audit vendor init && hipaa-audit vendor add <name>"
+      - id: vendor-questionnaires-tracked
+        module: questionnaires
+        handler: vendor_questionnaires_current
+        title: Outbound vendor questionnaires sent and tracked
+        remediation: "hipaa-audit vendor send VND-001 vendor@example.com"
 
   # ── Physical Safeguards (§164.310) ───────────────────────────────────────
 
@@ -203,6 +208,11 @@ controls:
         type: manual
         title: Media disposal and re-use procedures documented
         instructions: Document secure wipe for laptops; S3 lifecycle for PHI buckets.
+      - id: device-inventory-compliant
+        module: devices
+        handler: device_inventory_compliant
+        title: MDM device inventory — encryption and screen lock
+        remediation: "hipaa-audit devices import <jamf-or-intune.csv>"
 
   # ── Technical Safeguards (§164.312) ────────────────────────────────────────
 
