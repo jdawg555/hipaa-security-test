@@ -2,7 +2,7 @@
 # Maps 45 CFR Part 164 Subpart C to automated + manual checks.
 # Cross-walk: NIST CSF 2.0, SOC 2 TSC (informative, not exhaustive).
 
-version: "1.4"
+version: "1.5"
 framework: HIPAA Security Rule
 citations:
   - "45 CFR §164.308 — Administrative safeguards"
@@ -482,6 +482,26 @@ controls:
         module: integrations
         handler: evidence_freshness
         title: Compliance evidence refreshed within SLA
+
+  # ── Personnel (Vanta-style workforce compliance) ──────────────────────────
+
+  - id: HIPAA-PERSONNEL-001
+    title: Workforce policy acknowledgments and training
+    category: administrative
+    citation: "§164.308(a)(5)"
+    type: hybrid
+    severity: required
+    checks:
+      - id: policy-acknowledgments
+        module: personnel
+        handler: policy_acknowledgments
+        title: Annual policy acknowledgments recorded
+        remediation: "Copy compliance/acknowledgments.example.yaml and collect sign-offs"
+      - id: training-current
+        module: personnel
+        handler: training_csv_current
+        title: HIPAA training log current
+        remediation: "hipaa-audit import-training"
 
   # ── AI systems (addressable — required if clinical AI in scope) ───────────
 

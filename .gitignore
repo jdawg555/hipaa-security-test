@@ -10,6 +10,8 @@ evidence/*/
 !evidence/README.md
 hipaa-audit.yaml
 compliance/tasks.yaml
+compliance/acknowledgments.yaml
+compliance/training-log.csv
 templates/sra-imported.md
 docs/security/sra-imported.md
 .DS_Store

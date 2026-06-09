@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0] — 2026-05-28
+
+### Added
+
+- **Probo HIPAA catalog** — 60 CFR specs via `controls/probo-hipaa-catalog.json` + 48 supplement controls (100% coverage)
+- **`hipaa-audit catalog coverage`** — crosswalk report vs Probo
+- **Personnel module** — policy acknowledgments YAML + training CSV checks
+- **`hipaa-audit import-training`** — bootstrap `compliance/training-log.csv`
+- **Slack notifications** — `--notify` or `notifications.slack` on posture drop / failures
+- **Examples** — `compliance/acknowledgments.example.yaml`
+
+### Changed
+
+- `load_controls()` merges all `controls/hipaa-*.yaml` catalogs (76+ controls total)
+- E2E script includes catalog coverage step
+
 ## [1.4.0] — 2026-05-28
 
 ### Added

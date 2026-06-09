@@ -1,0 +1,726 @@
+# Auto-generated from Probo HIPAA.json — manual attestation for CFR specs
+version: '1.5'
+framework: HIPAA Security Rule (Probo supplement)
+source: "https://github.com/getprobo/probo \u2014 reference catalog, manual attestation"
+controls:
+- id: HIPAA-PROBO-164-308-a-1-ii-A
+  title: Conduct an accurate and thorough assessment of the potential risks and vul...
+  category: administrative
+  citation: "\xA7164.308(a)(1)(ii)(A)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(1)(ii)(A)
+  description: 'Administrative Safeguards - Risk Analysis: Conduct an accurate and
+    thorough assessment of the potential risks and vul...'
+  checks:
+  - id: attest-164-308-a-1-ii-A
+    type: manual
+    title: "Attest \xA7164.308(a)(1)(ii)(A)"
+    instructions: "Document implementation for \xA7164.308(a)(1)(ii)(A). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-1-ii-D
+  title: Implement procedures to regularly review records of i...
+  category: administrative
+  citation: "\xA7164.308(a)(1)(ii)(D)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(1)(ii)(D)
+  description: 'Administrative Safeguards - Information System Activity Review: Implement
+    procedures to regularly review records of i...'
+  checks:
+  - id: attest-164-308-a-1-ii-D
+    type: manual
+    title: "Attest \xA7164.308(a)(1)(ii)(D)"
+    instructions: "Document implementation for \xA7164.308(a)(1)(ii)(D). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-3-ii-A
+  title: Implement procedures for the authorization and/or super...
+  category: administrative
+  citation: "\xA7164.308(a)(3)(ii)(A)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(3)(ii)(A)
+  description: 'Administrative Safeguards - Authorization and/or Supervision: Implement
+    procedures for the authorization and/or super...'
+  checks:
+  - id: attest-164-308-a-3-ii-A
+    type: manual
+    title: "Attest \xA7164.308(a)(3)(ii)(A)"
+    instructions: "Document implementation for \xA7164.308(a)(3)(ii)(A). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-4-ii-B
+  title: Implement policies and procedures for granting access to ePHI, for ...
+  category: administrative
+  citation: "\xA7164.308(a)(4)(ii)(B)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(4)(ii)(B)
+  description: 'Administrative Safeguards - Access Authorization: Implement policies
+    and procedures for granting access to ePHI, for ...'
+  checks:
+  - id: attest-164-308-a-4-ii-B
+    type: manual
+    title: "Attest \xA7164.308(a)(4)(ii)(B)"
+    instructions: "Document implementation for \xA7164.308(a)(4)(ii)(B). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-4-ii-C
+  title: Implement policies and procedures that, based upon...
+  category: administrative
+  citation: "\xA7164.308(a)(4)(ii)(C)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(4)(ii)(C)
+  description: 'Administrative Safeguards - Access Establishment and Modification:
+    Implement policies and procedures that, based upon...'
+  checks:
+  - id: attest-164-308-a-4-ii-C
+    type: manual
+    title: "Attest \xA7164.308(a)(4)(ii)(C)"
+    instructions: "Document implementation for \xA7164.308(a)(4)(ii)(C). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-5-ii-B
+  title: Implement procedures for guarding against, detecting,...
+  category: administrative
+  citation: "\xA7164.308(a)(5)(ii)(B)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(5)(ii)(B)
+  description: 'Administrative Safeguards - Protection from Malicious Software: Implement
+    procedures for guarding against, detecting,...'
+  checks:
+  - id: attest-164-308-a-5-ii-B
+    type: manual
+    title: "Attest \xA7164.308(a)(5)(ii)(B)"
+    instructions: "Document implementation for \xA7164.308(a)(5)(ii)(B). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-5-ii-D
+  title: Implement procedures for creating, changing, and safeguarding passwo...
+  category: administrative
+  citation: "\xA7164.308(a)(5)(ii)(D)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(5)(ii)(D)
+  description: 'Administrative Safeguards - Password Management: Implement procedures
+    for creating, changing, and safeguarding passwo...'
+  checks:
+  - id: attest-164-308-a-5-ii-D
+    type: manual
+    title: "Attest \xA7164.308(a)(5)(ii)(D)"
+    instructions: "Document implementation for \xA7164.308(a)(5)(ii)(D). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-310-d-2-iii
+  title: Implement procedures to maintain a record of the movements of hardware and
+    elec...
+  category: physical
+  citation: "\xA7164.310(d)(2)(iii)"
+  type: manual
+  severity: required
+  probo_id: 164.310(d)(2)(iii)
+  description: 'Physical Safeguards - Accountability: Implement procedures to maintain
+    a record of the movements of hardware and elec...'
+  checks:
+  - id: attest-164-310-d-2-iii
+    type: manual
+    title: "Attest \xA7164.310(d)(2)(iii)"
+    instructions: "Document implementation for \xA7164.310(d)(2)(iii). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-312-a-2-i
+  title: Implement procedures to assign a unique name and/or number for ide...
+  category: technical
+  citation: "\xA7164.312(a)(2)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.312(a)(2)(i)
+  description: 'Technical Safeguards - Unique User Identification: Implement procedures
+    to assign a unique name and/or number for ide...'
+  checks:
+  - id: attest-164-312-a-2-i
+    type: manual
+    title: "Attest \xA7164.312(a)(2)(i)"
+    instructions: "Document implementation for \xA7164.312(a)(2)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-312-a-2-iii
+  title: Implement electronic procedures that terminate an electronic session after
+    a...
+  category: technical
+  citation: "\xA7164.312(a)(2)(iii)"
+  type: manual
+  severity: required
+  probo_id: 164.312(a)(2)(iii)
+  description: 'Technical Safeguards - Automatic Logoff: Implement electronic procedures
+    that terminate an electronic session after a...'
+  checks:
+  - id: attest-164-312-a-2-iii
+    type: manual
+    title: "Attest \xA7164.312(a)(2)(iii)"
+    instructions: "Document implementation for \xA7164.312(a)(2)(iii). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-312-c-2
+  title: Implement electronic mechanisms to corroborate that e...
+  category: technical
+  citation: "\xA7164.312(c)(2)"
+  type: manual
+  severity: required
+  probo_id: 164.312(c)(2)
+  description: 'Technical Safeguards - Mechanism to Authenticate ElectronicPHI: Implement
+    electronic mechanisms to corroborate that e...'
+  checks:
+  - id: attest-164-312-c-2
+    type: manual
+    title: "Attest \xA7164.312(c)(2)"
+    instructions: "Document implementation for \xA7164.312(c)(2). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-316-b-2-iii
+  title: Review documentation periodically, and update as need...
+  category: administrative
+  citation: "\xA7164.316(b)(2)(iii)"
+  type: manual
+  severity: required
+  probo_id: 164.316(b)(2)(iii)
+  description: 'Policies & Procedures and Documentation Requirements - Updates: Review
+    documentation periodically, and update as need...'
+  checks:
+  - id: attest-164-316-b-2-iii
+    type: manual
+    title: "Attest \xA7164.316(b)(2)(iii)"
+    instructions: "Document implementation for \xA7164.316(b)(2)(iii). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-1-i
+  title: Implement policies and procedures to prevent, detect, contai...
+  category: administrative
+  citation: "\xA7164.308(a)(1)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(1)(i)
+  description: 'Administrative Safeguards - Security Management Process: Implement
+    policies and procedures to prevent, detect, contai...'
+  checks:
+  - id: attest-164-308-a-1-i
+    type: manual
+    title: "Attest \xA7164.308(a)(1)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(1)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-1-ii-C
+  title: Apply appropriate sanctions against workforce members who fail to comply...
+  category: administrative
+  citation: "\xA7164.308(a)(1)(ii)(C)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(1)(ii)(C)
+  description: 'Administrative Safeguards - Sanction Policy: Apply appropriate sanctions
+    against workforce members who fail to comply...'
+  checks:
+  - id: attest-164-308-a-1-ii-C
+    type: manual
+    title: "Attest \xA7164.308(a)(1)(ii)(C)"
+    instructions: "Document implementation for \xA7164.308(a)(1)(ii)(C). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-3-i
+  title: Implement policies and procedures to ensure that all members of its w...
+  category: administrative
+  citation: "\xA7164.308(a)(3)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(3)(i)
+  description: 'Administrative Safeguards - Workforce Security: Implement policies
+    and procedures to ensure that all members of its w...'
+  checks:
+  - id: attest-164-308-a-3-i
+    type: manual
+    title: "Attest \xA7164.308(a)(3)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(3)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-3-ii-B
+  title: Implement procedures to determine that the access of a wor...
+  category: administrative
+  citation: "\xA7164.308(a)(3)(ii)(B)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(3)(ii)(B)
+  description: 'Administrative Safeguards - Workforce Clearance Procedure: Implement
+    procedures to determine that the access of a wor...'
+  checks:
+  - id: attest-164-308-a-3-ii-B
+    type: manual
+    title: "Attest \xA7164.308(a)(3)(ii)(B)"
+    instructions: "Document implementation for \xA7164.308(a)(3)(ii)(B). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-3-ii-C
+  title: Implement procedures for terminating access to ePHI when the empl...
+  category: administrative
+  citation: "\xA7164.308(a)(3)(ii)(C)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(3)(ii)(C)
+  description: 'Administrative Safeguards - Termination Procedures: Implement procedures
+    for terminating access to ePHI when the empl...'
+  checks:
+  - id: attest-164-308-a-3-ii-C
+    type: manual
+    title: "Attest \xA7164.308(a)(3)(ii)(C)"
+    instructions: "Document implementation for \xA7164.308(a)(3)(ii)(C). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-4-i
+  title: Implement policies and procedures for authorizing access t...
+  category: administrative
+  citation: "\xA7164.308(a)(4)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(4)(i)
+  description: 'Administrative Safeguards - Information Access Management: Implement
+    policies and procedures for authorizing access t...'
+  checks:
+  - id: attest-164-308-a-4-i
+    type: manual
+    title: "Attest \xA7164.308(a)(4)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(4)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-4-ii-A
+  title: If a health care clearinghouse is part of a...
+  category: administrative
+  citation: "\xA7164.308(a)(4)(ii)(A)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(4)(ii)(A)
+  description: 'Administrative Safeguards - Isolating Health Care Clearinghouse Function:
+    If a health care clearinghouse is part of a...'
+  checks:
+  - id: attest-164-308-a-4-ii-A
+    type: manual
+    title: "Attest \xA7164.308(a)(4)(ii)(A)"
+    instructions: "Document implementation for \xA7164.308(a)(4)(ii)(A). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-5-i
+  title: Implement a security awareness and training program for ...
+  category: administrative
+  citation: "\xA7164.308(a)(5)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(5)(i)
+  description: 'Administrative Safeguards - Security Awareness and Training: Implement
+    a security awareness and training program for ...'
+  checks:
+  - id: attest-164-308-a-5-i
+    type: manual
+    title: "Attest \xA7164.308(a)(5)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(5)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-5-ii-A
+  title: Implement policies and procedures for periodic security updates.
+  category: administrative
+  citation: "\xA7164.308(a)(5)(ii)(A)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(5)(ii)(A)
+  description: 'Administrative Safeguards - Security Reminders: Implement policies
+    and procedures for periodic security updates.'
+  checks:
+  - id: attest-164-308-a-5-ii-A
+    type: manual
+    title: "Attest \xA7164.308(a)(5)(ii)(A)"
+    instructions: "Document implementation for \xA7164.308(a)(5)(ii)(A). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-5-ii-C
+  title: Implement procedures for monitoring log-in attempts and reporting disc...
+  category: administrative
+  citation: "\xA7164.308(a)(5)(ii)(C)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(5)(ii)(C)
+  description: 'Administrative Safeguards - Log-in Monitoring: Implement procedures
+    for monitoring log-in attempts and reporting disc...'
+  checks:
+  - id: attest-164-308-a-5-ii-C
+    type: manual
+    title: "Attest \xA7164.308(a)(5)(ii)(C)"
+    instructions: "Document implementation for \xA7164.308(a)(5)(ii)(C). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-6-i
+  title: Implement policies and procedures to address security incid...
+  category: administrative
+  citation: "\xA7164.308(a)(6)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(6)(i)
+  description: 'Administrative Safeguards - Security Incident Procedures: Implement
+    policies and procedures to address security incid...'
+  checks:
+  - id: attest-164-308-a-6-i
+    type: manual
+    title: "Attest \xA7164.308(a)(6)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(6)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-6-ii
+  title: Identify and respond to suspected or known security incidents; mi...
+  category: administrative
+  citation: "\xA7164.308(a)(6)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(6)(ii)
+  description: 'Administrative Safeguards - Response and Reporting: Identify and respond
+    to suspected or known security incidents; mi...'
+  checks:
+  - id: attest-164-308-a-6-ii
+    type: manual
+    title: "Attest \xA7164.308(a)(6)(ii)"
+    instructions: "Document implementation for \xA7164.308(a)(6)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-7-i
+  title: Establish (and implement as needed) policies and procedures for respond...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(i)
+  description: 'Administrative Safeguards - Contingency Plan: Establish (and implement
+    as needed) policies and procedures for respond...'
+  checks:
+  - id: attest-164-308-a-7-i
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(i)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-308-a-7-ii-A
+  title: Establish and implement procedures to create and maintain retrievable e...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(ii)(A)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(ii)(A)
+  description: 'Administrative Safeguards - Data Backup Plan: Establish and implement
+    procedures to create and maintain retrievable e...'
+  checks:
+  - id: attest-164-308-a-7-ii-A
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(ii)(A)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(ii)(A). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-7-ii-B
+  title: Establish (and implement as needed) procedures to restore any los...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(ii)(B)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(ii)(B)
+  description: 'Administrative Safeguards - Disaster Recovery Plan: Establish (and
+    implement as needed) procedures to restore any los...'
+  checks:
+  - id: attest-164-308-a-7-ii-B
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(ii)(B)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(ii)(B). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-7-ii-C
+  title: Establish (and implement as needed)procedures to enable co...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(ii)(C)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(ii)(C)
+  description: 'Administrative Safeguards - Emergency Mode Operation Plan: Establish
+    (and implement as needed)procedures to enable co...'
+  checks:
+  - id: attest-164-308-a-7-ii-C
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(ii)(C)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(ii)(C). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-7-ii-D
+  title: Implement procedures for periodic testing and revision of...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(ii)(D)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(ii)(D)
+  description: 'Administrative Safeguards - Testing and Revision Procedure: Implement
+    procedures for periodic testing and revision of...'
+  checks:
+  - id: attest-164-308-a-7-ii-D
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(ii)(D)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(ii)(D). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-a-7-ii-E
+  title: Implement policies and procedures to assess t...
+  category: administrative
+  citation: "\xA7164.308(a)(7)(ii)(E)"
+  type: manual
+  severity: required
+  probo_id: 164.308(a)(7)(ii)(E)
+  description: 'Administrative Safeguards - Applications and Data Criticality Analysis:
+    Implement policies and procedures to assess t...'
+  checks:
+  - id: attest-164-308-a-7-ii-E
+    type: manual
+    title: "Attest \xA7164.308(a)(7)(ii)(E)"
+    instructions: "Document implementation for \xA7164.308(a)(7)(ii)(E). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-308-b-4
+  title: Document the satisfactory assurances required by p...
+  category: administrative
+  citation: "\xA7164.308(b)(4)"
+  type: manual
+  severity: required
+  probo_id: 164.308(b)(4)
+  description: 'Administrative Safeguards - Written Contract or Other Arrangement:
+    Document the satisfactory assurances required by p...'
+  checks:
+  - id: attest-164-308-b-4
+    type: manual
+    title: "Attest \xA7164.308(b)(4)"
+    instructions: "Document implementation for \xA7164.308(b)(4). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-a-2-i
+  title: Establish (and implement as needed) procedures that allow facility acce...
+  category: physical
+  citation: "\xA7164.310(a)(2)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.310(a)(2)(i)
+  description: 'Physical Safeguards - Contingency Operations: Establish (and implement
+    as needed) procedures that allow facility acce...'
+  checks:
+  - id: attest-164-310-a-2-i
+    type: manual
+    title: "Attest \xA7164.310(a)(2)(i)"
+    instructions: "Document implementation for \xA7164.310(a)(2)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-a-2-ii
+  title: Implement policies and procedures to safeguard the facility and the equ...
+  category: physical
+  citation: "\xA7164.310(a)(2)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.310(a)(2)(ii)
+  description: 'Physical Safeguards - Facility Security Plan: Implement policies and
+    procedures to safeguard the facility and the equ...'
+  checks:
+  - id: attest-164-310-a-2-ii
+    type: manual
+    title: "Attest \xA7164.310(a)(2)(ii)"
+    instructions: "Document implementation for \xA7164.310(a)(2)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-a-2-iii
+  title: Implement procedures to control and validate a person...
+  category: physical
+  citation: "\xA7164.310(a)(2)(iii)"
+  type: manual
+  severity: required
+  probo_id: 164.310(a)(2)(iii)
+  description: 'Physical Safeguards - Access Control and Validation Procedures: Implement
+    procedures to control and validate a person...'
+  checks:
+  - id: attest-164-310-a-2-iii
+    type: manual
+    title: "Attest \xA7164.310(a)(2)(iii)"
+    instructions: "Document implementation for \xA7164.310(a)(2)(iii). Cross-ref:\
+      \ Probo catalog."
+- id: HIPAA-PROBO-164-310-a-2-iv
+  title: Implement policies and procedures to document repairs and modifications to...
+  category: physical
+  citation: "\xA7164.310(a)(2)(iv)"
+  type: manual
+  severity: required
+  probo_id: 164.310(a)(2)(iv)
+  description: 'Physical Safeguards - Maintenance Records: Implement policies and
+    procedures to document repairs and modifications to...'
+  checks:
+  - id: attest-164-310-a-2-iv
+    type: manual
+    title: "Attest \xA7164.310(a)(2)(iv)"
+    instructions: "Document implementation for \xA7164.310(a)(2)(iv). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-b
+  title: Implement policies and procedures to ensure that workstations and other comput...
+  category: physical
+  citation: "\xA7164.310(b)"
+  type: manual
+  severity: required
+  probo_id: 164.310(b)
+  description: 'Physical Safeguards - Workstation Use: Implement policies and procedures
+    to ensure that workstations and other comput...'
+  checks:
+  - id: attest-164-310-b
+    type: manual
+    title: "Attest \xA7164.310(b)"
+    instructions: "Document implementation for \xA7164.310(b). Cross-ref: Probo catalog."
+- id: HIPAA-PROBO-164-310-c
+  title: Implement policies and procedures to ensure that all members of the workf...
+  category: physical
+  citation: "\xA7164.310(c)"
+  type: manual
+  severity: required
+  probo_id: 164.310(c)
+  description: 'Physical Safeguards - Workstation Security: Implement policies and
+    procedures to ensure that all members of the workf...'
+  checks:
+  - id: attest-164-310-c
+    type: manual
+    title: "Attest \xA7164.310(c)"
+    instructions: "Document implementation for \xA7164.310(c). Cross-ref: Probo catalog."
+- id: HIPAA-PROBO-164-310-d-2-i
+  title: Implement policies and procedures to address the final disposition of ePHI,
+    and/or th...
+  category: physical
+  citation: "\xA7164.310(d)(2)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.310(d)(2)(i)
+  description: 'Physical Safeguards - Disposal: Implement policies and procedures
+    to address the final disposition of ePHI, and/or th...'
+  checks:
+  - id: attest-164-310-d-2-i
+    type: manual
+    title: "Attest \xA7164.310(d)(2)(i)"
+    instructions: "Document implementation for \xA7164.310(d)(2)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-d-2-ii
+  title: Implement procedures for removal of ePHI from electronic media before the
+    media a...
+  category: physical
+  citation: "\xA7164.310(d)(2)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.310(d)(2)(ii)
+  description: 'Physical Safeguards - Media Re-Use: Implement procedures for removal
+    of ePHI from electronic media before the media a...'
+  checks:
+  - id: attest-164-310-d-2-ii
+    type: manual
+    title: "Attest \xA7164.310(d)(2)(ii)"
+    instructions: "Document implementation for \xA7164.310(d)(2)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-310-d-2-iv
+  title: Implement policies and procedures to create a retrievable, exact copy ...
+  category: physical
+  citation: "\xA7164.310(d)(2)(iv)"
+  type: manual
+  severity: required
+  probo_id: 164.310(d)(2)(iv)
+  description: 'Physical Safeguards - Data Backup and Storage: Implement policies
+    and procedures to create a retrievable, exact copy ...'
+  checks:
+  - id: attest-164-310-d-2-iv
+    type: manual
+    title: "Attest \xA7164.310(d)(2)(iv)"
+    instructions: "Document implementation for \xA7164.310(d)(2)(iv). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-312-a-2-ii
+  title: Establish (and implement as needed)procedures for obtaining necess...
+  category: technical
+  citation: "\xA7164.312(a)(2)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.312(a)(2)(ii)
+  description: 'Technical Safeguards - Emergency Access Procedure: Establish (and
+    implement as needed)procedures for obtaining necess...'
+  checks:
+  - id: attest-164-312-a-2-ii
+    type: manual
+    title: "Attest \xA7164.312(a)(2)(ii)"
+    instructions: "Document implementation for \xA7164.312(a)(2)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-312-e-2-i
+  title: An implement security measure to ensure that electronically transmitted eP...
+  category: technical
+  citation: "\xA7164.312(e)(2)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.312(e)(2)(i)
+  description: 'Technical Safeguards - Integrity Controls: An implement security measure
+    to ensure that electronically transmitted eP...'
+  checks:
+  - id: attest-164-312-e-2-i
+    type: manual
+    title: "Attest \xA7164.312(e)(2)(i)"
+    instructions: "Document implementation for \xA7164.312(e)(2)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-312-e-2-ii
+  title: Implement a mechanism to encrypt ePHIwhenever deemed appropriate.
+  category: technical
+  citation: "\xA7164.312(e)(2)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.312(e)(2)(ii)
+  description: 'Technical Safeguards - Encryption: Implement a mechanism to encrypt
+    ePHIwhenever deemed appropriate.'
+  checks:
+  - id: attest-164-312-e-2-ii
+    type: manual
+    title: "Attest \xA7164.312(e)(2)(ii)"
+    instructions: "Document implementation for \xA7164.312(e)(2)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-316-a
+  title: Implement reasonable and appropriate ...
+  category: administrative
+  citation: "\xA7164.316(a)"
+  type: manual
+  severity: required
+  probo_id: 164.316(a)
+  description: 'Policies & Procedures and Documentation Requirements - Policies and
+    Procedures: Implement reasonable and appropriate ...'
+  checks:
+  - id: attest-164-316-a
+    type: manual
+    title: "Attest \xA7164.316(a)"
+    instructions: "Document implementation for \xA7164.316(a). Cross-ref: Probo catalog."
+- id: HIPAA-PROBO-164-316-b-1-i
+  title: Maintain the policies and procedures implemente...
+  category: administrative
+  citation: "\xA7164.316(b)(1)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.316(b)(1)(i)
+  description: 'Policies & Procedures and Documentation Requirements - Documentation:
+    Maintain the policies and procedures implemente...'
+  checks:
+  - id: attest-164-316-b-1-i
+    type: manual
+    title: "Attest \xA7164.316(b)(1)(i)"
+    instructions: "Document implementation for \xA7164.316(b)(1)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-316-b-1-ii
+  title: If an action, activity, or assessment is requir...
+  category: administrative
+  citation: "\xA7164.316(b)(1)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.316(b)(1)(ii)
+  description: 'Policies & Procedures and Documentation Requirements - Documentation:
+    If an action, activity, or assessment is requir...'
+  checks:
+  - id: attest-164-316-b-1-ii
+    type: manual
+    title: "Attest \xA7164.316(b)(1)(ii)"
+    instructions: "Document implementation for \xA7164.316(b)(1)(ii). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-316-b-2-i
+  title: Retain the documentation required by paragraph(b)(...
+  category: administrative
+  citation: "\xA7164.316(b)(2)(i)"
+  type: manual
+  severity: required
+  probo_id: 164.316(b)(2)(i)
+  description: 'Policies & Procedures and Documentation Requirements - Time Limit:
+    Retain the documentation required by paragraph(b)(...'
+  checks:
+  - id: attest-164-316-b-2-i
+    type: manual
+    title: "Attest \xA7164.316(b)(2)(i)"
+    instructions: "Document implementation for \xA7164.316(b)(2)(i). Cross-ref: Probo\
+      \ catalog."
+- id: HIPAA-PROBO-164-316-b-2-ii
+  title: Make documentation available to those persons re...
+  category: administrative
+  citation: "\xA7164.316(b)(2)(ii)"
+  type: manual
+  severity: required
+  probo_id: 164.316(b)(2)(ii)
+  description: 'Policies & Procedures and Documentation Requirements - Availability:
+    Make documentation available to those persons re...'
+  checks:
+  - id: attest-164-316-b-2-ii
+    type: manual
+    title: "Attest \xA7164.316(b)(2)(ii)"
+    instructions: "Document implementation for \xA7164.316(b)(2)(ii). Cross-ref: Probo\
+      \ catalog."

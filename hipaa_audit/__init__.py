@@ -1,3 +1,3 @@
 """Open-source HIPAA Security Rule compliance auditor."""
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"

@@ -1,0 +1,26 @@
+# Policy acknowledgments — copy to compliance/acknowledgments.yaml
+# Do not commit real employee names to public repos; use employee_id only.
+
+policies:
+  - policy: hipaa-security-policy.md
+    version: "1.0"
+  - policy: hipaa-privacy-policy.md
+    version: "1.0"
+  - policy: acceptable-use-policy.md
+    version: "1.0"
+
+workforce:
+  - id: EMP001
+    active: true
+  - id: EMP002
+    active: true
+
+acknowledgments:
+  - employee_id: EMP001
+    policy: hipaa-security-policy.md
+    version: "1.0"
+    acknowledged_at: "2026-01-15"
+  - employee_id: EMP001
+    policy: hipaa-privacy-policy.md
+    version: "1.0"
+    acknowledged_at: "2026-01-15"

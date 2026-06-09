@@ -20,7 +20,10 @@ hipaa-audit export probo -o evidence/latest/probo-import.json
 echo "==> 5/6 Posture snapshot"
 cat evidence/history/posture-latest.json 2>/dev/null | head -20 || true
 
-echo "==> 6/6 Done"
+echo "==> 6/7 Probo catalog coverage"
+hipaa-audit catalog coverage
+
+echo "==> 7/7 Done"
 echo "    Dashboard: evidence/latest/dashboard.html"
 echo "    Probo:     evidence/latest/probo-import.json"
 echo "    Tasks:     compliance/tasks.yaml"

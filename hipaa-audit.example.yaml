@@ -74,3 +74,19 @@ tasks_path: compliance/tasks.yaml
 tasks:
   default_owner: security@your-org.com
   due_days: 14
+
+# Workforce compliance (Vanta personnel module)
+personnel:
+  enabled: false
+  acknowledgments_path: compliance/acknowledgments.yaml
+  training_csv: compliance/training-log.csv
+  initial_training_days: 30
+  annual_training_days: 365
+
+# Slack alerts on posture drop or failures
+notifications:
+  slack:
+    enabled: false
+    webhook_env: SLACK_WEBHOOK_URL
+    min_score_drop: 5
+    notify_on_fail: true

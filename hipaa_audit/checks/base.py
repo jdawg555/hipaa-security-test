@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from hipaa_audit.checks import aws, github, identity, integrations, policies, repo
+from hipaa_audit.checks import aws, github, identity, integrations, personnel, policies, repo
 from hipaa_audit.models import CheckResult, CheckStatus
 
 RUNNERS = {
@@ -11,6 +11,7 @@ RUNNERS = {
     "aws": aws,
     "github": github,
     "identity": identity,
+    "personnel": personnel,
     "policies": policies,
     "integrations": integrations,
 }

@@ -7,8 +7,11 @@ from rich.console import Console
 from rich.table import Table
 
 from hipaa_audit import __version__
+from hipaa_audit.catalog import coverage_report
 from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
 from hipaa_audit.engine import run_audit
+from hipaa_audit.notify import maybe_notify_slack
+from hipaa_audit.personnel import import_training_template
 from hipaa_audit.export_probo import write_probo_export
 from hipaa_audit.posture import compute_posture, record_history
 from hipaa_audit.report import write_reports
@@ -57,6 +60,11 @@ def scan(
         "--sync-tasks/--no-sync-tasks",
         help="Create remediation tasks for new failures",
     ),
+    notify: bool = typer.Option(
+        False,
+        "--notify/--no-notify",
+        help="Send Slack alert on posture drop or failures (requires SLACK_WEBHOOK_URL)",
+    ),
 ) -> None:
     """Run automated + manual HIPAA control checks and generate evidence."""
     cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
@@ -76,6 +84,17 @@ def scan(
     record_history(report, path.resolve())
     _print_summary(report)
     console.print(f"\n[bold cyan]Posture score:[/bold cyan] {posture['score']}%")
+
+    if notify or cfg.get("notifications", {}).get("slack", {}).get("enabled", False):
+        msg = maybe_notify_slack(
+            config=cfg,
+            repo_path=path.resolve(),
+            current_score=posture["score"],
+            summary=report.summary,
+            failing=posture.get("failing_controls", []),
+        )
+        if msg:
+            console.print(f"[dim]{msg}[/dim]")
 
     if sync_tasks:
         tasks_path = path / cfg.get("tasks_path", "compliance/tasks.yaml")
@@ -108,6 +127,7 @@ def init(
         (src / "scripts" / "collect-external-evidence.sh", path / "scripts" / "collect-external-evidence.sh"),
         (src / "scripts" / "run-e2e.sh", path / "scripts" / "run-e2e.sh"),
         (src / "compliance" / "tasks.example.yaml", path / "compliance" / "tasks.yaml"),
+        (src / "compliance" / "acknowledgments.example.yaml", path / "compliance" / "acknowledgments.yaml"),
         (src / "hipaa-audit.example.yaml", path / "hipaa-audit.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", path / ".github" / "workflows" / "compliance-audit.yml"),
     ]
@@ -253,6 +273,38 @@ def export_probo(
     write_probo_export(report, out)
     console.print(f"[green]Probo export[/green] → {out}")
     console.print("Import via Probo MCP or prb measure create — see docs/stacks/probo-hipaa-audit.md")
+
+
+@app.command("import-training")
+def import_training(
+    path: Path = typer.Argument(Path.cwd(), help="Project root"),
+    output: Path = typer.Option(Path("compliance/training-log.csv"), "--output", "-o"),
+) -> None:
+    """Bootstrap workforce training CSV template."""
+    out = path / output if not output.is_absolute() else output
+    import_training_template(out)
+    console.print(f"[green]Created[/green] {out}")
+
+
+@app.command()
+def catalog(
+    subcommand: str = typer.Argument("coverage", help="coverage"),
+) -> None:
+    """Probo HIPAA catalog crosswalk (60 CFR specs)."""
+    if subcommand != "coverage":
+        console.print("[red]Usage: hipaa-audit catalog coverage[/red]")
+        raise typer.Exit(1)
+    report = coverage_report()
+    table = Table(title="Probo HIPAA catalog coverage")
+    table.add_column("Metric")
+    table.add_column("Value")
+    table.add_row("Probo specs", str(report["probo_total"]))
+    table.add_row("hipaa-audit controls", str(report["hipaa_audit_controls"]))
+    table.add_row("Probo mapped", str(report["probo_mapped"]))
+    table.add_row("Coverage", f"{report['coverage_pct']}%")
+    console.print(table)
+    if report["probo_unmapped"]:
+        console.print(f"[yellow]{len(report['probo_unmapped'])} unmapped[/yellow] (run with supplement YAML)")
 
 
 @app.command()

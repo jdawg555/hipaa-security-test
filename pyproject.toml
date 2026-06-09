@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hipaa-audit"
-version = "1.4.0"
+version = "1.5.0"
 description = "Free, open-source HIPAA Security Rule compliance auditor — Vanta/Drata-style controls without the subscription."
 readme = "README.md"
 license = "MIT"
@@ -48,6 +48,7 @@ packages = ["hipaa_audit"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "controls" = "controls"
+"controls/probo-hipaa-catalog.json" = "controls/probo-hipaa-catalog.json"
 "policies" = "policies"
 "templates" = "templates"
 "integrations" = "integrations"

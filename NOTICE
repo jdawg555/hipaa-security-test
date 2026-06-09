@@ -21,6 +21,11 @@ When you integrate external scanners, their licenses apply separately:
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache 2.0 | Dependency CVEs |
 | [Checkov](https://github.com/bridgecrewio/checkov) | Apache 2.0 | IaC HIPAA checks |
 
+## Probo HIPAA catalog reference
+
+`controls/probo-hipaa-catalog.json` is sourced from [getprobo/probo](https://github.com/getprobo/probo)
+(ISC license) as a CFR crosswalk reference. Supplement controls use manual attestation only.
+
 ## Policy template lineage
 
 Starter policy wording may follow common open-source security-policy structures.

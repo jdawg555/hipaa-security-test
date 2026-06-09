@@ -4,7 +4,7 @@
 > policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.4](https://img.shields.io/badge/Version-1.4-blue.svg)](CHANGELOG.md)
+[![Version: 1.5](https://img.shields.io/badge/Version-1.5-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
 A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
@@ -16,7 +16,9 @@ subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 
 | Component | Description |
 |-----------|-------------|
-| **`hipaa-audit` CLI** | Scan repo + AWS + Okta/Google for 29 controls / 55+ checks |
+| **`hipaa-audit` CLI** | 76 controls — full Probo HIPAA catalog + automated checks |
+| **Personnel** | Policy acks + training CSV (Vanta workforce module) |
+| **Slack alerts** | `--notify` on posture drop or new failures |
 | **Posture score** | Weighted compliance % + history trend |
 | **Remediation tasks** | Auto-sync failures → `compliance/tasks.yaml` |
 | **Probo export** | `hipaa-audit export probo` for full GRC stack |
