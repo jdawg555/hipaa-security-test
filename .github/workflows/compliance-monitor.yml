@@ -1,0 +1,64 @@
+name: HIPAA Continuous Monitor
+
+on:
+  schedule:
+    - cron: "0 * * * *"  # Hourly — Vanta-style continuous monitoring
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    name: Hourly posture scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install hipaa-audit
+        run: pip install -e ".[github]"
+
+      - name: Run monitoring scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import yaml
+          src = Path("hipaa-audit.example.yaml")
+          cfg = yaml.safe_load(src.read_text())
+          cfg["org_name"] = "CI Monitor"
+          cfg.setdefault("github", {})["enabled"] = True
+          cfg.setdefault("workspace", {})["schedule_hours"] = 1
+          Path("hipaa-audit.yaml").write_text(yaml.dump(cfg))
+          PY
+          hipaa-audit scan . -o evidence/monitor-${{ github.run_id }} --no-sync-tasks
+
+      - name: Posture summary
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          reports = sorted(Path("evidence").glob("monitor-*/audit-report.json"))
+          if not reports:
+              raise SystemExit("No audit report produced")
+          data = json.loads(reports[-1].read_text())
+          s = data.get("summary", {})
+          posture = data.get("posture", {})
+          print(f"Posture: {posture.get('score', '—')}%")
+          print(f"Pass/Fail/Warn: {s.get('pass', 0)}/{s.get('fail', 0)}/{s.get('warn', 0)}")
+          fails = [c for c in data.get("controls", []) if c.get("status") in ("fail", "error")]
+          if fails:
+              print(f"::warning::{len(fails)} control(s) failing — review workspace /monitoring")
+          PY
+
+      - name: Upload monitor evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: hipaa-monitor-${{ github.run_id }}
+          path: evidence/monitor-${{ github.run_id }}/
+          retention-days: 14

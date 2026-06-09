@@ -33,7 +33,7 @@ def run(
             message="Install aws extras: pip install hipaa-audit[aws]",
         )
 
-    region = aws_config.get("region", "us-east-1")
+    regions = _regions_to_scan(aws_config)
     handlers: dict[str, Callable] = {
         "cloudtrail_enabled": _cloudtrail_enabled,
         "cloudtrail_log_validation": _cloudtrail_log_validation,
@@ -59,7 +59,23 @@ def run(
             status=CheckStatus.ERROR,
             message=f"Unknown AWS handler: {handler}",
         )
-    return fn(check, region=region, config=aws_config, evidence_dir=evidence_dir)
+    return fn(check, regions=regions, config=aws_config, evidence_dir=evidence_dir)
+
+
+def _regions_to_scan(aws_config: dict[str, Any]) -> list[str]:
+    explicit = aws_config.get("regions") or []
+    if explicit:
+        return list(explicit)
+    primary = aws_config.get("region", "us-east-1")
+    if not aws_config.get("multi_region", False):
+        return [primary]
+    try:
+        import boto3  # noqa: PLC0415
+
+        ec2 = boto3.client("ec2", region_name=primary)
+        return sorted(r["RegionName"] for r in ec2.describe_regions(AllRegions=True)["Regions"])
+    except Exception:  # noqa: BLE001
+        return [primary]
 
 
 def _write_evidence(evidence_dir, name: str, data: Any) -> str:
@@ -68,9 +84,10 @@ def _write_evidence(evidence_dir, name: str, data: Any) -> str:
     return str(path)
 
 
-def _cloudtrail_enabled(check, *, region, config, evidence_dir) -> CheckResult:
+def _cloudtrail_enabled(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
+    region = regions[0]
     client = boto3.client("cloudtrail", region_name=region)
     trails = client.describe_trails(includeShadowTrails=False).get("trailList", [])
     multi_region = [t for t in trails if t.get("IsMultiRegionTrail")]
@@ -102,10 +119,10 @@ def _cloudtrail_enabled(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _cloudtrail_log_validation(check, *, region, config, evidence_dir) -> CheckResult:
+def _cloudtrail_log_validation(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("cloudtrail", region_name=region)
+    client = boto3.client("cloudtrail", region_name=regions[0])
     trails = client.describe_trails(includeShadowTrails=False).get("trailList", [])
     bad = [t["Name"] for t in trails if not t.get("LogFileValidationEnabled")]
     evidence = _write_evidence(evidence_dir, "aws-cloudtrail-validation.json", bad)
@@ -134,10 +151,10 @@ def _cloudtrail_log_validation(check, *, region, config, evidence_dir) -> CheckR
     )
 
 
-def _s3_public_access_blocked(check, *, region, config, evidence_dir) -> CheckResult:
+def _s3_public_access_blocked(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("s3", region_name=region)
+    client = boto3.client("s3", region_name=regions[0])
     findings = []
     for bucket in client.list_buckets().get("Buckets", []):
         name = bucket["Name"]
@@ -174,10 +191,10 @@ def _s3_public_access_blocked(check, *, region, config, evidence_dir) -> CheckRe
     )
 
 
-def _s3_default_encryption(check, *, region, config, evidence_dir) -> CheckResult:
+def _s3_default_encryption(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("s3", region_name=region)
+    client = boto3.client("s3", region_name=regions[0])
     missing = []
     for bucket in client.list_buckets().get("Buckets", []):
         name = bucket["Name"]
@@ -206,10 +223,10 @@ def _s3_default_encryption(check, *, region, config, evidence_dir) -> CheckResul
     )
 
 
-def _rds_encryption(check, *, region, config, evidence_dir) -> CheckResult:
+def _rds_encryption(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("rds", region_name=region)
+    client = boto3.client("rds", region_name=regions[0])
     unencrypted = [
         inst["DBInstanceIdentifier"]
         for inst in client.describe_db_instances().get("DBInstances", [])
@@ -233,10 +250,10 @@ def _rds_encryption(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _rds_backup_enabled(check, *, region, config, evidence_dir) -> CheckResult:
+def _rds_backup_enabled(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("rds", region_name=region)
+    client = boto3.client("rds", region_name=regions[0])
     no_backup = [
         inst["DBInstanceIdentifier"]
         for inst in client.describe_db_instances().get("DBInstances", [])
@@ -260,10 +277,10 @@ def _rds_backup_enabled(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _kms_rotation(check, *, region, config, evidence_dir) -> CheckResult:
+def _kms_rotation(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("kms", region_name=region)
+    client = boto3.client("kms", region_name=regions[0])
     disabled = []
     for key in client.list_keys().get("Keys", []):
         meta = client.describe_key(KeyId=key["KeyId"])["KeyMetadata"]
@@ -290,86 +307,132 @@ def _kms_rotation(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _guardduty_enabled(check, *, region, config, evidence_dir) -> CheckResult:
+def _guardduty_enabled(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("guardduty", region_name=region)
-    detectors = client.list_detectors().get("DetectorIds", [])
-    evidence = _write_evidence(evidence_dir, "aws-guardduty.json", detectors)
-    if detectors:
+    coverage: dict[str, list[str]] = {}
+    missing: list[str] = []
+    for region in regions:
+        try:
+            client = boto3.client("guardduty", region_name=region)
+            detectors = client.list_detectors().get("DetectorIds", [])
+            coverage[region] = detectors
+            if not detectors:
+                missing.append(region)
+        except Exception as exc:  # noqa: BLE001
+            coverage[region] = [f"error: {exc}"]
+            missing.append(region)
+    evidence = _write_evidence(evidence_dir, "aws-guardduty.json", coverage)
+    if not missing:
+        label = f"all {len(regions)} region(s)" if len(regions) > 1 else "this region"
         return CheckResult(
             check_id=check["id"],
             title=check.get("title", check["id"]),
             status=CheckStatus.PASS,
-            message="GuardDuty detector enabled",
+            message=f"GuardDuty enabled in {label}",
+            evidence_path=evidence,
+        )
+    if len(missing) < len(regions):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"GuardDuty missing in {len(missing)} region(s): {', '.join(missing[:5])}",
             evidence_path=evidence,
         )
     return CheckResult(
         check_id=check["id"],
         title=check.get("title", check["id"]),
         status=CheckStatus.WARN,
-        message="GuardDuty not enabled in this region",
+        message="GuardDuty not enabled in scanned region(s)",
         evidence_path=evidence,
     )
 
 
-def _security_hub_enabled(check, *, region, config, evidence_dir) -> CheckResult:
+def _security_hub_enabled(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("securityhub", region_name=region)
-    try:
-        hubs = client.describe_hub().get("HubArn")
-        enabled = bool(hubs)
-        data = {"hub_arn": hubs}
-    except client.exceptions.ClientError as exc:
-        enabled = False
-        data = {"error": str(exc)}
+    data: dict[str, Any] = {}
+    enabled_regions: list[str] = []
+    for region in regions:
+        client = boto3.client("securityhub", region_name=region)
+        try:
+            hubs = client.describe_hub().get("HubArn")
+            if hubs:
+                enabled_regions.append(region)
+                data[region] = {"hub_arn": hubs}
+            else:
+                data[region] = {"enabled": False}
+        except client.exceptions.ClientError as exc:
+            data[region] = {"error": str(exc)}
     evidence = _write_evidence(evidence_dir, "aws-securityhub.json", data)
-    if enabled:
+    if enabled_regions and len(enabled_regions) == len(regions):
         return CheckResult(
             check_id=check["id"],
             title=check.get("title", check["id"]),
             status=CheckStatus.PASS,
-            message="Security Hub enabled",
+            message=f"Security Hub enabled in {len(enabled_regions)} region(s)",
+            evidence_path=evidence,
+        )
+    if enabled_regions:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"Security Hub enabled in {len(enabled_regions)}/{len(regions)} region(s)",
             evidence_path=evidence,
         )
     return CheckResult(
         check_id=check["id"],
         title=check.get("title", check["id"]),
         status=CheckStatus.WARN,
-        message="Security Hub not enabled",
+        message="Security Hub not enabled in scanned region(s)",
         evidence_path=evidence,
     )
 
 
-def _config_recorder_enabled(check, *, region, config, evidence_dir) -> CheckResult:
+def _config_recorder_enabled(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("config", region_name=region)
-    recorders = client.describe_configuration_recorders().get("ConfigurationRecorders", [])
-    active = [r["name"] for r in recorders if r.get("recordingGroup")]
-    evidence = _write_evidence(evidence_dir, "aws-config.json", recorders)
-    if active:
+    by_region: dict[str, list[str]] = {}
+    missing: list[str] = []
+    for region in regions:
+        client = boto3.client("config", region_name=region)
+        recorders = client.describe_configuration_recorders().get("ConfigurationRecorders", [])
+        active = [r["name"] for r in recorders if r.get("recordingGroup")]
+        by_region[region] = active
+        if not active:
+            missing.append(region)
+    evidence = _write_evidence(evidence_dir, "aws-config.json", by_region)
+    if not missing:
         return CheckResult(
             check_id=check["id"],
             title=check.get("title", check["id"]),
             status=CheckStatus.PASS,
-            message=f"{len(active)} AWS Config recorder(s)",
+            message=f"AWS Config recorder in {len(regions)} region(s)",
+            evidence_path=evidence,
+        )
+    if len(missing) < len(regions):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"AWS Config missing in {len(missing)} region(s)",
             evidence_path=evidence,
         )
     return CheckResult(
         check_id=check["id"],
         title=check.get("title", check["id"]),
         status=CheckStatus.FAIL,
-        message="No AWS Config recorder",
+        message="No AWS Config recorder in scanned region(s)",
         evidence_path=evidence,
     )
 
 
-def _iam_root_mfa(check, *, region, config, evidence_dir) -> CheckResult:
+def _iam_root_mfa(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("iam", region_name=region)
+    client = boto3.client("iam", region_name=regions[0])
     summary = client.get_account_summary()["SummaryMap"]
     mfa = summary.get("AccountMFAEnabled", 0)
     root_keys = summary.get("AccountAccessKeysPresent", 0)
@@ -397,10 +460,10 @@ def _iam_root_mfa(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _iam_password_policy(check, *, region, config, evidence_dir) -> CheckResult:
+def _iam_password_policy(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    client = boto3.client("iam", region_name=region)
+    client = boto3.client("iam", region_name=regions[0])
     try:
         policy = client.get_account_password_policy()["PasswordPolicy"]
     except client.exceptions.NoSuchEntityException:
@@ -434,9 +497,10 @@ def _iam_password_policy(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _vpc_flow_logs(check, *, region, config, evidence_dir) -> CheckResult:
+def _vpc_flow_logs(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
+    region = regions[0]
     ec2 = boto3.client("ec2", region_name=region)
     vpcs = ec2.describe_vpcs().get("Vpcs", [])
     logs = ec2.describe_flow_logs().get("FlowLogs", [])
@@ -468,10 +532,10 @@ def _vpc_flow_logs(check, *, region, config, evidence_dir) -> CheckResult:
     )
 
 
-def _ebs_encryption_by_default(check, *, region, config, evidence_dir) -> CheckResult:
+def _ebs_encryption_by_default(check, *, regions, config, evidence_dir) -> CheckResult:
     import boto3
 
-    ec2 = boto3.client("ec2", region_name=region)
+    ec2 = boto3.client("ec2", region_name=regions[0])
     try:
         enc = ec2.get_ebs_encryption_by_default()
         enabled = enc.get("EbsEncryptionByDefault", False)

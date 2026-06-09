@@ -36,12 +36,21 @@ from hipaa_audit.devices import load_devices, sync_devices_intune, sync_devices_
 from hipaa_audit.export_auditor import build_auditor_bundle
 from hipaa_audit.identity_users import list_okta_users
 from hipaa_audit.notify import maybe_notify_task_assigned, send_questionnaire_email, send_questionnaire_reminder
+from hipaa_audit.oauth_connect import (
+    OAUTH_PROVIDERS,
+    authorize_url,
+    exchange_code,
+    new_oauth_state,
+    oauth_available,
+    oauth_redirect_base,
+)
 from hipaa_audit.pbc_attachments import list_attachments, save_attachment
 from hipaa_audit.personnel import (
     ensure_workforce_tokens,
     find_worker_by_token,
     pending_policies_for_employee,
     record_acknowledgment,
+    sync_workforce_hris,
 )
 from hipaa_audit.policy_versions import list_versions, policy_diff, read_archive, snapshot_policy, sync_policy_version_to_acks
 from hipaa_audit.questionnaires import (
@@ -62,6 +71,7 @@ from hipaa_audit.vendors import add_vendor, delete_vendor, load_vendors, update_
 from hipaa_audit.workspace.secrets import (
     CONNECT_FIELDS,
     apply_workspace_secrets,
+    load_secrets,
     merge_secrets,
     secrets_path,
 )
@@ -122,7 +132,7 @@ def _bootstrap_repo(repo_path: Path, org_name: str) -> None:
     config = load_workspace_config(repo_path)
     config["org_name"] = org_name
     config.setdefault("workspace", {})["onboarded"] = True
-    config.setdefault("workspace", {})["schedule_hours"] = 24
+    config.setdefault("workspace", {})["schedule_hours"] = 1
     save_workspace_config(repo_path, config)
     (repo_path / "evidence").mkdir(exist_ok=True)
 
@@ -245,11 +255,14 @@ def create_app(repo_path: Path) -> FastAPI:
         config = load_workspace_config(repo_path)
         cards = {c["id"]: c for c in integration_status(config)}
         ctx = base_ctx("integrations")
+        sec = load_secrets(secrets_path(repo_path, config))
         ctx.update(
             {
                 "integration_id": integration_id,
                 "integration_name": cards.get(integration_id, {}).get("name", integration_id),
                 "fields": fields,
+                "oauth_available": oauth_available(integration_id, config=config, secrets=sec),
+                "oauth_provider": integration_id if integration_id in OAUTH_PROVIDERS else "",
             }
         )
         return _render("connect.html", **ctx)
@@ -268,6 +281,8 @@ def create_app(repo_path: Path) -> FastAPI:
         if integration_id != "aws":
             if integration_id in ("jamf", "intune"):
                 config.setdefault("devices", {})["enabled"] = True
+            elif integration_id == "rippling":
+                config.setdefault("personnel", {})["enabled"] = True
             else:
                 config = apply_integration_toggle(config, integration_id, True)
             save_workspace_config(repo_path, config)
@@ -290,6 +305,62 @@ def create_app(repo_path: Path) -> FastAPI:
         status = "ok" if result.ok else "fail"
         msg = result.message.replace(" ", "+")[:100]
         return RedirectResponse(f"/integrations?test={status}&msg={msg}", status_code=303)
+
+    @app.get("/integrations/oauth/{provider}/start")
+    def oauth_start(provider: str) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        sec = load_secrets(secrets_path(repo_path, config))
+        state = new_oauth_state()
+        redirect_uri = f"{oauth_redirect_base(config)}/integrations/oauth/{provider}/callback"
+        url = authorize_url(provider, redirect_uri=redirect_uri, state=state, config=config, secrets=sec)
+        if not url:
+            return RedirectResponse(
+                f"/integrations/connect/{provider}?flash=OAuth+not+configured",
+                status_code=303,
+            )
+        response = RedirectResponse(url, status_code=302)
+        response.set_cookie("oauth_state", state, httponly=True, max_age=600, samesite="lax")
+        return response
+
+    @app.get("/integrations/oauth/{provider}/callback")
+    def oauth_callback(
+        provider: str,
+        request: Request,
+        code: str = "",
+        state: str = "",
+    ) -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        if not code or state != request.cookies.get("oauth_state"):
+            return RedirectResponse(f"/integrations/connect/{provider}?flash=OAuth+state+mismatch", status_code=303)
+        sec = load_secrets(secrets_path(repo_path, config))
+        redirect_uri = f"{oauth_redirect_base(config)}/integrations/oauth/{provider}/callback"
+        token, err = exchange_code(
+            provider,
+            code=code,
+            redirect_uri=redirect_uri,
+            config=config,
+            secrets=sec,
+        )
+        if err or not token:
+            return RedirectResponse(
+                f"/integrations/connect/{provider}?flash=OAuth+failed",
+                status_code=303,
+            )
+        meta = OAUTH_PROVIDERS.get(provider, {})
+        token_key = meta.get("token_secret", "github_token")
+        merge_secrets(secrets_path(repo_path, config), {token_key: token})
+        if provider == "github":
+            config.setdefault("github", {})["enabled"] = True
+            save_workspace_config(repo_path, config)
+        apply_workspace_secrets(repo_path, config)
+        result = test_integration_connection(provider, config, repo_path=repo_path)
+        config = load_workspace_config(repo_path)
+        config = record_connection_test(config, provider, result)
+        save_workspace_config(repo_path, config)
+        status = "ok" if result.ok else "fail"
+        response = RedirectResponse(f"/integrations/connect/{provider}?test={status}", status_code=303)
+        response.delete_cookie("oauth_state")
+        return response
 
     @app.get("/tasks", response_class=HTMLResponse)
     def tasks_page(request: Request) -> HTMLResponse:
@@ -332,7 +403,7 @@ def create_app(repo_path: Path) -> FastAPI:
         return RedirectResponse("/tasks?flash=Task+not+found", status_code=303)
 
     @app.get("/personnel", response_class=HTMLResponse)
-    def personnel() -> HTMLResponse:
+    def personnel(request: Request) -> HTMLResponse:
         config = load_workspace_config(repo_path)
         ack_path = repo_path / config.get("personnel", {}).get(
             "acknowledgments_path", "compliance/acknowledgments.yaml"
@@ -350,8 +421,31 @@ def create_app(repo_path: Path) -> FastAPI:
         if training_path.exists():
             training_rows = max(0, len(training_path.read_text().strip().splitlines()) - 1)
         ctx = base_ctx("personnel")
-        ctx.update({"ack_count": ack_count, "training_rows": training_rows, "workforce": workforce})
+        ctx.update(
+            {
+                "ack_count": ack_count,
+                "training_rows": training_rows,
+                "workforce": workforce,
+                "flash": request.query_params.get("flash", ""),
+                "flash_error": request.query_params.get("flash_error", ""),
+            }
+        )
         return _render("personnel.html", **ctx)
+
+    @app.post("/personnel/sync-rippling")
+    def personnel_sync_rippling() -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        ack_path = repo_path / config.get("personnel", {}).get(
+            "acknowledgments_path", "compliance/acknowledgments.yaml"
+        )
+        from hipaa_audit.platform.adapters.rippling import RipplingAdapter
+
+        workers = RipplingAdapter().discover(config)
+        if not workers:
+            return RedirectResponse("/personnel?flash_error=No+workforce+from+Rippling", status_code=303)
+        count = sync_workforce_hris(ack_path, workers)
+        return RedirectResponse(f"/personnel?flash=Synced+{count}+employee(s)+from+Rippling", status_code=303)
 
     @app.get("/vendors", response_class=HTMLResponse)
     def vendors_page(request: Request) -> HTMLResponse:
@@ -999,6 +1093,13 @@ def create_app(repo_path: Path) -> FastAPI:
         config["org_name"] = str(form.get("org_name", ""))
         config.setdefault("github", {})["repo"] = str(form.get("github_repo", ""))
         config.setdefault("identity", {}).setdefault("okta", {})["domain"] = str(form.get("okta_domain", ""))
+        config.setdefault("identity", {}).setdefault("azure", {})["enabled"] = form.get("azure_enabled") == "on"
+        config.setdefault("aws", {})["multi_region"] = form.get("aws_multi_region") == "on"
+        regions_text = str(form.get("aws_regions", "")).strip()
+        if regions_text:
+            config.setdefault("aws", {})["regions"] = [
+                r.strip() for r in regions_text.replace(",", " ").split() if r.strip()
+            ]
         config.setdefault("frameworks", {})["soc2"] = form.get("soc2") == "on"
         config.setdefault("frameworks", {})["iso27001"] = form.get("iso27001") == "on"
         config.setdefault("workspace", {})["schedule_hours"] = max(

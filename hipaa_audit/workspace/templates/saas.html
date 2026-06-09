@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>SaaS inventory</h1>
-<p class="subtitle">Discovered apps from Okta/Google — link to vendors for shadow IT control.</p>
+<p class="subtitle">Discovered apps from Okta, Google Workspace, or Azure AD — link to vendors for shadow IT control.</p>
 
 <p>
   <form method="post" action="/saas/discover" style="display:inline">
@@ -41,6 +41,6 @@
   </tbody>
 </table>
 {% else %}
-<p style="margin-top:1rem">No apps inventoried. Enable Okta or Google, add credentials via <a href="/integrations">Integrations</a>, then discover.</p>
+<p style="margin-top:1rem">No apps inventoried. Enable Okta, Google, or Azure AD, add credentials via <a href="/integrations">Integrations</a>, then discover.</p>
 {% endif %}
 {% endblock %}

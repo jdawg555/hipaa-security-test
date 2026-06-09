@@ -12,6 +12,14 @@
   <label class="full">Okta domain
     <input type="text" name="okta_domain" value="{{ config.get('identity', {}).get('okta', {}).get('domain', '') }}">
   </label>
+  <label><input type="checkbox" name="azure_enabled" {% if config.get('identity', {}).get('azure', {}).get('enabled') %}checked{% endif %}> Azure AD app discovery (uses Intune Graph credentials)</label>
+  <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+    <legend>AWS scanning</legend>
+    <label><input type="checkbox" name="aws_multi_region" {% if config.get('aws', {}).get('multi_region') %}checked{% endif %}> Scan all AWS regions (GuardDuty, Security Hub, Config)</label><br>
+    <label style="margin-top:.5rem">Explicit regions <small style="font-weight:400;color:var(--muted)">optional, space-separated</small>
+      <input type="text" name="aws_regions" value="{{ (config.get('aws', {}).get('regions') or [])|join(' ') }}">
+    </label>
+  </fieldset>
   <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
     <legend>Frameworks</legend>
     <label><input type="checkbox" name="soc2" {% if config.get('frameworks', {}).get('soc2') %}checked{% endif %}> SOC 2 TSC</label><br>

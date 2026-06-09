@@ -196,6 +196,43 @@ def google_config_from_identity(config: dict[str, Any]) -> tuple[str, str] | Non
     return None
 
 
+def discover_azure_ad_apps(config: dict[str, Any]) -> list[dict[str, Any]]:
+    from hipaa_audit.azure_graph import azure_enabled, graph_token_from_env
+
+    if not azure_enabled(config):
+        return []
+    token = graph_token_from_env()
+    if not token:
+        return []
+    import httpx  # noqa: PLC0415
+
+    apps: list[dict[str, Any]] = []
+    url = "https://graph.microsoft.com/v1.0/servicePrincipals?$select=displayName,appId,id&$top=200"
+    try:
+        resp = httpx.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=30.0)
+        if resp.status_code != 200:
+            return []
+        for row in resp.json().get("value", []):
+            name = row.get("displayName") or row.get("appId", "")
+            if not name:
+                continue
+            app_id = row.get("appId") or row.get("id", name)
+            apps.append(
+                {
+                    "id": f"azure-{app_id}",
+                    "name": name,
+                    "provider": "azure_ad",
+                    "status": "active",
+                    "sso": True,
+                    "vendor_id": None,
+                    "phi_risk": "unknown",
+                }
+            )
+    except Exception:  # noqa: BLE001
+        return []
+    return apps
+
+
 def discover_from_config(config: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
     """Discover SaaS apps from enabled identity providers. Returns (apps, source_label)."""
     discovered: list[dict[str, Any]] = []
@@ -212,6 +249,11 @@ def discover_from_config(config: dict[str, Any]) -> tuple[list[dict[str, Any]], 
         creds_path, admin = google
         discovered.extend(discover_google_apps(creds_path, admin))
         sources.append("google")
+
+    azure_apps = discover_azure_ad_apps(config)
+    if azure_apps:
+        discovered.extend(azure_apps)
+        sources.append("azure_ad")
 
     return discovered, "+".join(sources) if sources else ""
 

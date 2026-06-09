@@ -169,6 +169,26 @@ def record_acknowledgment(path: Path, *, employee_id: str, policy: str, version:
     save_acknowledgments(path, data)
 
 
+def sync_workforce_hris(ack_path: Path, workers: list[dict[str, Any]]) -> int:
+    """Merge HRIS workforce rows into acknowledgments register."""
+    data = ensure_workforce_tokens(ack_path)
+    existing = {w.get("id") or w.get("employee_id"): w for w in data.get("workforce", [])}
+    count = 0
+    for worker in workers:
+        wid = worker.get("id") or worker.get("employee_id")
+        if not wid:
+            continue
+        merged = {**existing.get(wid, {}), **worker, "id": wid}
+        if worker.get("email"):
+            merged["email"] = worker["email"]
+        existing[wid] = merged
+        count += 1
+    data["workforce"] = list(existing.values())
+    save_acknowledgments(ack_path, data)
+    ensure_workforce_tokens(ack_path)
+    return count
+
+
 def import_training_template(output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():

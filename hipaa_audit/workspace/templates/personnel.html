@@ -2,6 +2,15 @@
 {% block content %}
 <h1>Personnel</h1>
 <p class="subtitle">Workforce compliance — policy acknowledgments and HIPAA training (Vanta Personnel module).</p>
+{% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+{% if flash_error %}<p class="flash" style="background:#fef2f2;color:#991b1b">{{ flash_error }}</p>{% endif %}
+
+<p>
+  <form method="post" action="/personnel/sync-rippling" style="display:inline">
+    <button class="btn secondary" type="submit">Sync workforce from Rippling</button>
+  </form>
+  <span style="color:var(--muted);font-size:.85rem;margin-left:.5rem">Connect Rippling on <a href="/integrations/connect/rippling">Integrations</a></span>
+</p>
 
 <div class="grid">
   <div class="card"><strong class="stat">{{ ack_count }}</strong>Policy acknowledgments</div>

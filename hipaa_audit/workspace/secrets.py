@@ -17,6 +17,9 @@ SECRET_ENV_MAP = {
     "azure_tenant_id": "AZURE_TENANT_ID",
     "azure_client_id": "AZURE_CLIENT_ID",
     "azure_client_secret": "AZURE_CLIENT_SECRET",
+    "github_oauth_client_id": "GITHUB_OAUTH_CLIENT_ID",
+    "github_oauth_client_secret": "GITHUB_OAUTH_CLIENT_SECRET",
+    "rippling_api_token": "RIPPLING_API_TOKEN",
 }
 
 
@@ -58,7 +61,12 @@ def apply_workspace_secrets(repo_path: Path, config: dict[str, Any]) -> None:
 
 CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
     "github": [
-        {"key": "github_token", "label": "GitHub token", "type": "password", "hint": "repo + read:org scope"},
+        {"key": "github_oauth_client_id", "label": "OAuth client ID", "type": "text", "hint": "Or use Connect with GitHub below"},
+        {"key": "github_oauth_client_secret", "label": "OAuth client secret", "type": "password"},
+        {"key": "github_token", "label": "Personal access token (manual)", "type": "password", "hint": "repo + read:org scope"},
+    ],
+    "rippling": [
+        {"key": "rippling_api_token", "label": "Rippling API token", "type": "password", "hint": "Platform API bearer token"},
     ],
     "okta": [
         {"key": "okta_api_token", "label": "Okta API token", "type": "password", "hint": "SSWS admin token"},

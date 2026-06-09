@@ -5,9 +5,10 @@ org_name: "Your Organization Name"
 
 # Workspace UI (hipaa-audit serve) — auto-scan interval in hours, 0 = manual only
 workspace:
-  schedule_hours: 24
+  schedule_hours: 1
   onboarded: false
   secrets_path: compliance/.workspace-secrets.yaml
+  oauth_redirect_base: http://127.0.0.1:8787
 
 # Frameworks to include in scans (HIPAA always on; SOC 2 optional)
 frameworks:
@@ -68,6 +69,8 @@ integrations:
 aws:
   enabled: false
   region: us-east-1
+  multi_region: false
+  regions: []
 
 github:
   enabled: false
@@ -85,6 +88,9 @@ identity:
     enabled: false
     admin_email: admin@your-org.com
     credentials_env: GOOGLE_APPLICATION_CREDENTIALS
+  azure:
+    enabled: false
+    # Uses AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET (same as Intune)
 
 # Remediation tasks (auto-created on scan failures)
 tasks_path: compliance/tasks.yaml

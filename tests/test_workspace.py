@@ -264,6 +264,43 @@ def test_policy_diff_route(tmp_path):
     assert "diff" in r.text.lower() or "After" in r.text
 
 
+def test_github_oauth_start_redirects(tmp_path):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    secrets = tmp_path / "compliance" / ".workspace-secrets.yaml"
+    secrets.write_text(
+        "github_oauth_client_id: test-client\n"
+        "github_oauth_client_secret: test-secret\n"
+    )
+    r = client.get("/integrations/oauth/github/start")
+    assert r.status_code == 302
+    assert "github.com/login/oauth/authorize" in r.headers["location"]
+
+
+def test_personnel_rippling_sync(tmp_path, monkeypatch):
+    app = create_app(tmp_path)
+    client = TestClient(app, follow_redirects=False)
+    client.post("/onboarding", data={"org_name": "Test", "bootstrap": "yes"})
+    ack = tmp_path / "compliance" / "acknowledgments.yaml"
+    ack.write_text("policies: []\nworkforce: []\nacknowledgments: []\n")
+
+    class FakeRippling:
+        def discover(self, config):
+            return [{"id": "E1", "email": "e@test.com", "active": True}]
+
+    monkeypatch.setattr(
+        "hipaa_audit.platform.adapters.rippling.RipplingAdapter",
+        lambda: FakeRippling(),
+    )
+    r = client.post("/personnel/sync-rippling")
+    assert r.status_code == 303
+    import yaml
+
+    data = yaml.safe_load(ack.read_text())
+    assert data["workforce"][0]["id"] == "E1"
+
+
 def test_access_review_campaign_builder(tmp_path):
     app = create_app(tmp_path)
     client = TestClient(app, follow_redirects=False)

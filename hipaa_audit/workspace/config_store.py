@@ -122,6 +122,13 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "testable": True,
         },
         {
+            "id": "rippling",
+            "name": "Rippling HRIS",
+            "enabled": config.get("personnel", {}).get("enabled", False),
+            "hint": "Set RIPPLING_API_TOKEN for workforce sync",
+            "testable": True,
+        },
+        {
             "id": "saas_inventory",
             "name": "SaaS inventory",
             "enabled": config.get("saas_inventory", {}).get("enabled", False),

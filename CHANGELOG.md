@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.6.0] — 2026-05-28
+
+### Phase 2–4 — Connection depth and continuous monitoring
+
+- **GitHub OAuth connect (P-03)** — PKCE-style authorize/callback flow; tokens saved to workspace secrets
+- **Hourly monitoring default (P-04)** — onboarding sets 1h auto-scan; new `compliance-monitor.yml` hourly CI workflow
+- **AWS multi-region (P-21)** — `aws.multi_region` and `aws.regions` scan GuardDuty, Security Hub, and Config across regions
+- **Azure AD SaaS discovery (P-14)** — Graph `servicePrincipals` ingest on `/saas` discover
+- **Rippling HRIS (P-10)** — `RipplingAdapter` + workforce sync on Personnel page
+- **Identity settings (P-24)** — Azure AD toggle in Settings; shared Graph credentials with Intune
+
 ## [2.5.0] — 2026-05-28
 
 ### Phase 4–6 — Workflow polish and audit depth

@@ -3,6 +3,15 @@
 <h1>Connect {{ integration_name }}</h1>
 <p class="subtitle">Credentials are saved to <code>compliance/.workspace-secrets.yaml</code> (gitignored).</p>
 
+{% if oauth_available and oauth_provider %}
+<div class="card" style="max-width:560px;margin-bottom:1rem">
+  <h2 style="font-size:1rem;margin:0 0 .5rem">Connect with OAuth</h2>
+  <p style="color:var(--muted);font-size:.85rem;margin:0 0 .75rem">Authorize via your IdP — no manual token paste required.</p>
+  <a class="btn" href="/integrations/oauth/{{ oauth_provider }}/start">Connect with {{ integration_name }}</a>
+</div>
+<p style="max-width:560px;color:var(--muted);font-size:.85rem">Or enter credentials manually:</p>
+{% endif %}
+
 <form method="post" action="/integrations/connect/{{ integration_id }}" class="form-grid" style="max-width:560px">
   {% for field in fields %}
   {% if field.type == 'info' %}

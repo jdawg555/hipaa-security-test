@@ -33,21 +33,19 @@ capabilities:
   - id: P-03
     name: Integration connection UX
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
     surfaces: [workspace.integrations, workspace.connect]
-    gaps: [oauth_connect]
-    modules: [platform.adapters, workspace.secrets]
+    modules: [platform.adapters, workspace.secrets, oauth_connect]
 
   - id: P-04
     name: Continuous monitoring
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
     surfaces: [workspace.dashboard, workspace.monitoring]
-    gaps: [hourly_default_ci_polish]
     modules: [scan_runner]
 
   - id: P-05
@@ -97,11 +95,11 @@ capabilities:
   - id: P-10
     name: Personnel training
     phase: 4
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [hris_integration]
-    modules: [personnel]
+    surfaces: [workspace.personnel]
+    modules: [personnel, platform.adapters.rippling]
 
   - id: P-11
     name: Policy acknowledgments
@@ -133,12 +131,11 @@ capabilities:
   - id: P-14
     name: SaaS application inventory
     phase: 3
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [azure_ad_apps]
     surfaces: [workspace.saas]
-    modules: [apps]
+    modules: [apps, azure_graph]
 
   - id: P-15
     name: Vendor risk register
@@ -204,11 +201,11 @@ capabilities:
   - id: P-24
     name: Identity provider checks
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    surfaces: [workspace.connect]
-    modules: [identity]
+    surfaces: [workspace.connect, workspace.settings]
+    modules: [identity, azure_graph]
 
   - id: P-27
     name: Slack notifications
