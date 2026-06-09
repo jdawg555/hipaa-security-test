@@ -366,3 +366,65 @@ controls:
         module: aws
         handler: guardduty_enabled
         title: GuardDuty threat detection
+
+  # ── External scanner evidence (Prowler, Trivy, OSV) ───────────────────────
+
+  - id: HIPAA-INT-001
+    title: Third-party scanner evidence ingestion
+    category: technical
+    citation: "§164.308(a)(1) — risk analysis"
+    type: hybrid
+    severity: required
+    description: Ingest OSS scanner output as audit evidence (optional but recommended).
+    checks:
+      - id: prowler-evidence
+        module: integrations
+        handler: prowler_findings
+        title: Prowler AWS findings (no FAIL)
+        remediation: "prowler aws -M json -o evidence/prowler/"
+      - id: trivy-evidence
+        module: integrations
+        handler: trivy_vulnerabilities
+        title: Trivy critical/high vulnerabilities
+        remediation: "trivy fs --format json -o evidence/trivy/report.json ."
+      - id: evidence-freshness
+        module: integrations
+        handler: evidence_freshness
+        title: Compliance evidence refreshed within SLA
+
+  # ── AI systems (addressable — required if clinical AI in scope) ───────────
+
+  - id: HIPAA-AI-001
+    title: AI / ML risk management
+    category: administrative
+    citation: "§164.308(a)(1) — risk analysis"
+    type: hybrid
+    severity: addressable
+    description: LLM and clinical decision-support risk rows when AI touches PHI.
+    checks:
+      - id: ai-risk-register
+        module: integrations
+        handler: ai_risk_register
+        title: AI risk register documented
+      - id: ai-human-oversight
+        type: manual
+        title: Human-in-the-loop for clinical AI outputs
+        instructions: Document clinician review requirements before AI-generated content reaches patients.
+
+  # ── State privacy overlays (beyond HIPAA federal floor) ───────────────────
+
+  - id: HIPAA-STATE-001
+    title: State privacy law overlay
+    category: administrative
+    citation: "State law (varies)"
+    type: manual
+    severity: addressable
+    checks:
+      - id: state-overlay
+        module: integrations
+        handler: state_law_overlay
+        title: State overlay completed for applicable jurisdictions
+      - id: state-counsel-review
+        type: manual
+        title: Counsel reviewed state overlays
+        instructions: Privacy counsel signs off on templates/state-law-overlay.md for your patient geography.

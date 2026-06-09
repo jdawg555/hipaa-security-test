@@ -7,7 +7,7 @@ POLICY_HEADER = """# {title}
 **Review cadence:** Annual + after material change
 **Last reviewed:** [DATE]
 
-> Starter template from [hipaa-security-test](https://github.com/jdawg555/hipaa-security-test).
+> Starter template from [hipaa-audit](https://github.com/jdawg555/hipaa-security-test) (MIT).
 > Not legal advice. Have counsel review before production use.
 
 ## 1. Purpose

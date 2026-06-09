@@ -61,16 +61,21 @@ EOF
 hipaa-audit scan .
 ```
 
-## Integrate Prowler / Trivy (optional)
+## Integrate Prowler / Trivy / OSV (optional)
 
-Run your existing scanners and drop output in `evidence/`:
+Enable integrations in `hipaa-audit.yaml`, then collect evidence:
 
 ```bash
+bash scripts/collect-external-evidence.sh .
+# or manually:
 prowler aws -M json -o evidence/prowler/
-trivy fs --format json -o evidence/trivy/report.json .
+trivy fs --format json --output evidence/trivy/report.json .
+osv-scanner --format json --output evidence/osv/report.json -r .
+hipaa-audit scan .
 ```
 
-Future versions will auto-ingest these artifacts into the control mapping.
+Controls `HIPAA-INT-001`, `HIPAA-AI-001`, and `HIPAA-STATE-001` ingest scanner output,
+check evidence freshness, and prompt for AI/state-law registers when configured.
 
 ## Annual HIPAA workflow
 

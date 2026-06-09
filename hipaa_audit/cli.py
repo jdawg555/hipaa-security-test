@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from hipaa_audit import __version__
-from hipaa_audit.controls import PACKAGE_ROOT, load_config
+from hipaa_audit.controls import PACKAGE_ROOT, load_config, load_controls
 from hipaa_audit.engine import run_audit
 from hipaa_audit.report import write_reports
 
@@ -78,6 +78,7 @@ def init(
     targets = [
         (src / "policies", path / "policies"),
         (src / "templates", path / "templates"),
+        (src / "scripts" / "collect-external-evidence.sh", path / "scripts" / "collect-external-evidence.sh"),
         (src / "hipaa-audit.example.yaml", path / "hipaa-audit.yaml"),
         (src / ".github" / "workflows" / "compliance-audit.yml", path / ".github" / "workflows" / "compliance-audit.yml"),
     ]
@@ -98,7 +99,8 @@ def init(
     console.print("\n[bold]Next steps:[/bold]")
     console.print("  1. Edit hipaa-audit.yaml with your org name")
     console.print("  2. Customize policies/ and complete templates/sra-template.md")
-    console.print("  3. Run: hipaa-audit scan")
+    console.print("  3. Optional: bash scripts/collect-external-evidence.sh .")
+    console.print("  4. Run: hipaa-audit scan")
 
 
 @app.command()

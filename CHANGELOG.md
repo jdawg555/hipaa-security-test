@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0] — 2026-05-28
+
+### Added
+
+- **Integrations module** — ingest Prowler, Trivy, and OSV-Scanner JSON evidence
+- **Controls:** `HIPAA-INT-001` (scanner evidence), `HIPAA-AI-001`, `HIPAA-STATE-001`
+- **Templates:** `ai-risk-register.md`, `state-law-overlay.md`, `workforce-training-log.md`
+- **OSS docs:** `CONTRIBUTING.md`, `NOTICE.md`, `SECURITY.md` (MIT template guidelines)
+- **Script:** `scripts/collect-external-evidence.sh` for optional scanner collection
+- **Tests:** integration check handlers
+
+### Changed
+
+- **MIT license** — generic `hipaa-audit contributors` copyright; org-specific branding removed
+- **SRA template** — neutral placeholders only
+- **`hipaa-audit init`** — copies evidence collection script
+- **Config example** — `integrations` block with freshness, AI register, state overlay
+
 ## [1.0.0] — 2026-06-09
 
 ### Added — full open-source HIPAA compliance platform

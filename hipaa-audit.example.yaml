@@ -1,35 +1,42 @@
 # hipaa-audit configuration — copy to hipaa-audit.yaml in your project root
+# MIT licensed — customize for your organization. Do not commit secrets.
 
 org_name: "Your Organization Name"
 
-# Where your customized policies live (after hipaa-audit init)
 policy_dir: policies
+templates_dir: templates
 
-# Optional paths to your completed artifacts
 sra_path: templates/sra-template.md
 risk_register_path: templates/risk-register.md
 baa_register_path: templates/baa-register.md
 
-# AWS automated checks (requires: pip install hipaa-audit[aws] + credentials)
-aws:
-  enabled: false
-  region: us-east-1
-  # account_id: "123456789012"  # optional, for evidence metadata
-
-# GitHub checks (requires: gh CLI auth or GITHUB_TOKEN)
-github:
-  enabled: false
-  repo: "your-org/your-repo"  # auto-detected from git remote if omitted
-  default_branch: main
-
-# Integrate external scanners (run separately, drop evidence here)
+# External scanner evidence (run scripts/collect-external-evidence.sh)
 integrations:
+  max_evidence_age_days: 7
+  freshness_globs:
+    - evidence/latest/*.json
+    - evidence/prowler/*.json
+    - evidence/trivy/*.json
   prowler:
     enabled: false
     evidence_glob: evidence/prowler/*.json
   trivy:
     enabled: false
     evidence_glob: evidence/trivy/*.json
-  steampipe:
+    fail_severities: [CRITICAL, HIGH]
+  osv:
     enabled: false
-    evidence_glob: evidence/steampipe/*.json
+    evidence_glob: evidence/osv/*.json
+  # Set true if LLMs/clinical AI touch PHI
+  require_ai_register: false
+  # US state codes where patients/consumers reside (triggers state-law overlay)
+  applicable_states: []
+
+aws:
+  enabled: false
+  region: us-east-1
+
+github:
+  enabled: false
+  repo: your-org/your-repo
+  default_branch: main

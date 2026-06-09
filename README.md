@@ -1,33 +1,32 @@
 # hipaa-audit
 
-> **Free, open-source HIPAA compliance platform** — Vanta/Drata-style continuous monitoring, control mapping, policy library, and evidence collection. **$0 forever.**
+> **Free, open-source HIPAA compliance toolkit** — continuous monitoring, control mapping,
+> policy library, and evidence collection. MIT licensed. No subscription.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Version: 1.0](https://img.shields.io/badge/Version-1.0-blue.svg)](CHANGELOG.md)
+[![Version: 1.1](https://img.shields.io/badge/Version-1.1-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](pyproject.toml)
 
-Built by [Luxon Medical](https://luxonmedical.com) for healthcare teams who need HIPAA Security Rule compliance without a $10k/yr GRC subscription.
+A community-maintained alternative to paid GRC platforms (Vanta, Drata, etc.) for teams
+subject to the **HIPAA Security Rule** (45 CFR Part 164 Subpart C).
 
 ---
 
-## What this is
-
-A **complete HIPAA compliance toolkit** in one repo:
+## Features
 
 | Component | Description |
 |-----------|-------------|
-| **`hipaa-audit` CLI** | Scan your repo + cloud for 25+ HIPAA Security Rule controls |
-| **Control catalog** | `controls/hipaa-security-rule.yaml` — §164.308/310/312 mapped to checks |
-| **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors, training… |
-| **SRA + registers** | Risk assessment, BAA register, vendor risk register |
-| **HTML dashboard** | Open `evidence/latest/dashboard.html` — pass/fail by control |
-| **GitHub Actions** | Weekly continuous monitoring + PR gate |
-| **AWS + GitHub checks** | CloudTrail, S3, RDS, KMS, branch protection, secret scanning |
+| **`hipaa-audit` CLI** | Scan repo + optional cloud for 30+ mapped controls |
+| **Control catalog** | `controls/hipaa-security-rule.yaml` with CFR citations |
+| **12 policy templates** | Privacy, security, access, IR, breach, encryption, vendors… |
+| **Registers** | SRA, risk, BAA, vendor risk, **AI risk**, **state law overlay** |
+| **Integrations** | Ingest **Prowler**, **Trivy**, **OSV-Scanner** JSON evidence |
+| **HTML dashboard** | Pass/fail dashboard for auditors and security reviews |
+| **GitHub Actions** | Weekly compliance workflow |
 
 ```bash
 pip install git+https://github.com/jdawg555/hipaa-security-test.git
-hipaa-audit init          # bootstrap your app repo
-hipaa-audit scan .        # run all checks
+hipaa-audit init && hipaa-audit scan .
 open evidence/latest/dashboard.html
 ```
 
@@ -36,114 +35,93 @@ open evidence/latest/dashboard.html
 ## Quick start
 
 ```bash
-# Clone and install
 git clone https://github.com/jdawg555/hipaa-security-test.git
 cd hipaa-security-test
-pip install -e ".[aws,github]"
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
 
-# Self-audit (this repo audits itself)
-hipaa-audit scan .
-
-# Bootstrap your healthcare application
-cd /path/to/your-app
-hipaa-audit init
-# Edit hipaa-audit.yaml + customize policies/
-hipaa-audit scan .
+hipaa-audit scan .                 # audit this repo
+hipaa-audit init                   # bootstrap your app repo
+bash scripts/collect-external-evidence.sh /path/to/your-app
 ```
 
-See [docs/getting-started.md](docs/getting-started.md) for AWS/GitHub setup.
+Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml` and set `org_name`.
+
+Full guide: [docs/getting-started.md](docs/getting-started.md)
 
 ---
 
-## Architecture
+## Repository layout
 
 ```
-hipaa-security-test/
-├── hipaa_audit/           # Python CLI + check engine
-│   └── checks/            # repo, aws, github, policies modules
-├── controls/              # HIPAA control catalog (YAML)
-├── policies/              # 12 customizable policy templates
-├── templates/             # SRA, risk register, BAA register
-├── evidence/              # Scan output (gitignored in your app)
-└── .github/workflows/     # Continuous compliance CI
+├── hipaa_audit/          # CLI + check engine
+├── controls/             # HIPAA control catalog (YAML)
+├── policies/             # Customizable policy templates
+├── templates/            # SRA, registers, AI + state overlays
+├── scripts/              # External evidence collection helper
+└── .github/workflows/    # compliance-audit.yml
 ```
 
-**Check flow:** `hipaa-audit scan` → load controls → run automated checks → collect evidence JSON → generate dashboard + audit report.
-
 ---
 
-## Control coverage
-
-| HIPAA area | Controls | Automated |
-|------------|----------|-----------|
-| Administrative (§164.308) | Risk analysis, workforce, access, training, IR, BAA | Partial |
-| Physical (§164.310) | Facility, device/media | Manual |
-| Technical (§164.312) | Access, audit, integrity, authentication, transmission | **Yes** |
-| Documentation (§164.316) | Policy library, review cadence | **Yes** |
-| Developer hygiene | Secrets, PHI in repo, lockfiles, CI gates | **Yes** |
-| AWS hardening | CloudTrail, S3, RDS, KMS, GuardDuty | **Yes** (optional) |
-
-List all controls: `hipaa-audit controls`
-
----
-
-## vs Vanta / Drata
-
-| | Vanta/Drata | hipaa-audit |
-|---|-------------|-------------|
-| Cost | ~$10–15k/yr | **Free (MIT)** |
-| HIPAA controls | ✅ | ✅ |
-| Evidence export | ✅ | ✅ JSON + HTML |
-| AWS monitoring | ✅ | ✅ (Prowler-compatible) |
-| Policy templates | ✅ | ✅ |
-| Personnel/device agents | ✅ | ❌ (manual) |
-| Auditor trust center | ✅ | HTML dashboard |
-| Self-hosted / git-native | ❌ | ✅ |
-
-Full comparison: [docs/vanta-comparison.md](docs/vanta-comparison.md)
-
-Pair with **[Prowler](https://github.com/prowler-cloud/prowler)** + **[Trivy](https://github.com/aquasecurity/trivy)** for enterprise-grade evidence at zero license cost.
-
----
-
-## Configuration
-
-Copy `hipaa-audit.example.yaml` → `hipaa-audit.yaml`:
+## Configuration (generic)
 
 ```yaml
-org_name: "Acme Health"
+org_name: "Your Organization"
+
+integrations:
+  max_evidence_age_days: 7
+  prowler:
+    enabled: true
+    evidence_glob: evidence/prowler/*.json
+  trivy:
+    enabled: true
+    fail_severities: [CRITICAL, HIGH]
+  require_ai_register: false   # true if clinical AI in scope
+  applicable_states: []        # e.g. [CA, TX, WA] for state overlay
+
 aws:
-  enabled: true
+  enabled: false
   region: us-east-1
+
 github:
-  enabled: true
-  repo: acme-health/platform
+  enabled: false
+  repo: your-org/your-repo
 ```
+
+---
+
+## vs paid GRC platforms
+
+| | Vanta / Drata | hipaa-audit |
+|---|---------------|-------------|
+| License cost | ~$10k+/yr | **$0 (MIT)** |
+| HIPAA controls | ✅ | ✅ |
+| Evidence export | ✅ | JSON + HTML |
+| AWS / code checks | ✅ | ✅ + Prowler/Trivy ingest |
+| Personnel MDM | ✅ | Manual attestation templates |
+| Self-hosted / git-native | ❌ | ✅ |
+
+See [docs/vanta-comparison.md](docs/vanta-comparison.md)
 
 ---
 
 ## What this is NOT
 
-- ❌ Legal advice or a substitute for counsel
-- ❌ A finished Security Risk Assessment (use `templates/sra-template.md`)
-- ❌ SOC 2 / HITRUST certification (HIPAA-focused; mappings are informative)
-- ❌ Laptop MDM or workforce training tracking (manual attestation)
+- Legal or compliance advice ([NOTICE](NOTICE))
+- A substitute for counsel-reviewed policies
+- SOC 2 / HITRUST certification
+- Workforce MDM or training platform
 
 ---
 
 ## Contributing
 
-PRs welcome — especially:
-
-- New check modules (Azure, GCP, Okta, Telnyx…)
-- State privacy law overlays (CCPA, TX HB 300, WA My Health My Data)
-- Prowler/Trivy evidence ingestion
-- AI-specific risk rows (model drift, prompt injection)
+PRs welcome — keep checks **vendor-neutral** and **org-agnostic**.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ---
 
 ## License
 
-[MIT](LICENSE) — use commercially, fork freely.
-
-Maintained by **[Luxon Medical](https://luxonmedical.com)** · Questions: luxonmed@gmail.com
+[MIT](LICENSE) — use, modify, sublicense, commercially. See [NOTICE](NOTICE) for disclaimers.

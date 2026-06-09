@@ -1,0 +1,27 @@
+# NOTICE
+
+## hipaa-audit
+
+Copyright (c) 2026 hipaa-audit contributors. Licensed under the MIT License (see LICENSE).
+
+## Disclaimer
+
+Templates and automated checks are **informational tools only**. They do not constitute
+legal, regulatory, or professional compliance advice. Consult qualified counsel and a
+HIPAA security professional before production use.
+
+## Recommended third-party tools (not bundled)
+
+When you integrate external scanners, their licenses apply separately:
+
+| Tool | License | Use |
+|------|---------|-----|
+| [Prowler](https://github.com/prowler-cloud/prowler) | Apache 2.0 | AWS evidence |
+| [Trivy](https://github.com/aquasecurity/trivy) | Apache 2.0 | Vulnerability scan |
+| [OSV-Scanner](https://github.com/google/osv-scanner) | Apache 2.0 | Dependency CVEs |
+
+## Policy template lineage
+
+Starter policy wording may follow common open-source security-policy structures.
+Customize all policies for your organization; do not ship generic text to auditors
+without review.
