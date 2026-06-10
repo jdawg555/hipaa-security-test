@@ -21,6 +21,7 @@ SECRET_ENV_MAP = {
     "github_oauth_client_id": "GITHUB_OAUTH_CLIENT_ID",
     "github_oauth_client_secret": "GITHUB_OAUTH_CLIENT_SECRET",
     "rippling_api_token": "RIPPLING_API_TOKEN",
+    "snyk_token": "SNYK_TOKEN",
 }
 
 
@@ -68,6 +69,9 @@ CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
     ],
     "rippling": [
         {"key": "rippling_api_token", "label": "Rippling API token", "type": "password", "hint": "Platform API bearer token"},
+    ],
+    "snyk": [
+        {"key": "snyk_token", "label": "Snyk API token", "type": "password", "hint": "service account or personal token"},
     ],
     "okta": [
         {"key": "okta_api_token", "label": "Okta API token", "type": "password", "hint": "SSWS admin token"},

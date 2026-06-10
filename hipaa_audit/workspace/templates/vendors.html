@@ -26,6 +26,39 @@
   </form>
 </div>
 
+{% if ai_enabled %}
+<div class="card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1rem;margin:0 0 .75rem">AI assist — SIG-lite draft</h2>
+  <p style="color:var(--muted);font-size:.9rem;margin:0 0 .75rem">Paste vendor security documentation (no PHI). Suggestions are drafts — verify before recording.</p>
+  <form method="post" action="/vendors/assist">
+    <label class="full">Vendor security text
+      <textarea name="vendor_text" rows="6" style="width:100%">{{ vendor_text or '' }}</textarea>
+    </label>
+    <button class="btn secondary" type="submit">Suggest answers</button>
+  </form>
+  {% if assist_result %}
+  {% if assist_result.error %}
+  <p style="color:#b45309;margin-top:.75rem">{{ assist_result.error }}</p>
+  {% else %}
+  <p style="margin-top:.75rem;font-size:.85rem;color:var(--muted)">Method: {{ assist_result.method }} — {{ assist_result.disclaimer }}</p>
+  <table style="margin-top:.5rem">
+    <thead><tr><th>Question</th><th>Suggested</th><th>Confidence</th><th>Rationale</th></tr></thead>
+    <tbody>
+      {% for key, row in assist_result.suggestions.items() %}
+      <tr>
+        <td><code>{{ key }}</code></td>
+        <td>{% if row.suggested is sameas true %}Yes{% elif row.suggested is sameas false %}No{% else %}—{% endif %}</td>
+        <td>{{ row.confidence }}</td>
+        <td>{{ row.rationale }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="card" style="margin-bottom:1.5rem">
   <h2 style="font-size:1rem;margin:0 0 .75rem">Send questionnaire</h2>
   <form method="post" action="/vendors/questionnaire/send" class="form-grid">

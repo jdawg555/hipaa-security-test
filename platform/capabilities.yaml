@@ -170,6 +170,7 @@ capabilities:
     vanta: full
     drata: full
     modules: [trust_center]
+    note: Custom domain guide + public_url in Settings
 
   - id: P-19
     name: Auditor portal and PBC
@@ -222,6 +223,23 @@ capabilities:
     surfaces: [workspace.connect, workspace.settings]
     modules: [identity, azure_graph]
 
+  - id: P-25
+    name: Vulnerability scanning
+    phase: 3
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [integrations.snyk, integrations.trivy, integrations.osv, platform.adapters.snyk]
+
+  - id: P-26
+    name: IaC scanning
+    phase: 2
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [integrations.checkov]
+    note: Checkov PR workflow + evidence ingest check
+
   - id: P-27
     name: Slack notifications
     phase: 2
@@ -239,10 +257,21 @@ capabilities:
     drata: full
     note: SSO reverse-proxy pattern documented in docs/rbac-proxy.md
 
+  - id: P-29
+    name: AI questionnaire assist
+    phase: 6
+    status: shipped
+    vanta: partial
+    drata: partial
+    surfaces: [workspace.vendors, workspace.settings]
+    modules: [ai_assist]
+    note: Opt-in keyword + optional LLM; PHI guard; human review required
+
   - id: P-30
     name: 300+ SaaS integrations
     phase: 6
-    status: wont
+    status: partial
     vanta: full
     drata: full
-    note: Adapter SDK + curated registry; ingest for the rest
+    modules: [platform.connector_catalog, platform.adapters]
+    note: Curated connector catalog CLI; adapter SDK for the rest

@@ -53,6 +53,11 @@ integrations:
   osv:
     enabled: false
     evidence_glob: evidence/osv/*.json
+  snyk:
+    enabled: false
+    evidence_glob: evidence/snyk/*.json
+    fail_severities: [high, critical]
+    token_env: SNYK_TOKEN
   checkov:
     enabled: false
     evidence_glob: evidence/checkov/*.json
@@ -157,9 +162,18 @@ saas_inventory:
 # Public trust center (Vanta/Probo compliance page)
 trust_center:
   output_dir: compliance/trust-center
+  public_url: https://trust.your-org.com
   contact_email: security@your-org.com
   certifications_path: compliance/certifications.yaml
   request_access_note: "Request auditor evidence bundle under NDA via contact email."
+
+# Optional AI assist for vendor SIG-lite drafts (human review required)
+ai_assist:
+  enabled: false
+  use_llm: false
+  disallow_phi: true
+  api_key_env: OPENAI_API_KEY
+  model: gpt-4o-mini
 
 # Auditor portal (read-only, optional passphrase gate)
 auditor_portal:

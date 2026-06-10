@@ -210,3 +210,16 @@ integrations:
     status: shipped
     parity_id: P-10
     phase: 4
+
+  - id: snyk
+    name: Snyk
+    category: vulnerabilities
+    auth: env_vars
+    env_vars: [SNYK_TOKEN]
+    config_key: integrations.snyk.enabled
+    check_module: integrations
+    workspace_toggle: true
+    connection_test: snyk.api
+    parity_id: P-25
+    phase: 3
+    status: shipped

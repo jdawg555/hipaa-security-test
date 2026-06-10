@@ -17,6 +17,7 @@ from hipaa_audit.platform.adapters.intune import IntuneAdapter
 from hipaa_audit.platform.adapters.jamf import JamfAdapter
 from hipaa_audit.platform.adapters.okta import OktaAdapter
 from hipaa_audit.platform.adapters.rippling import RipplingAdapter
+from hipaa_audit.platform.adapters.snyk import SnykAdapter
 
 _ADAPTERS: dict[str, IntegrationAdapter] = {
     a.id: a
@@ -30,6 +31,7 @@ _ADAPTERS: dict[str, IntegrationAdapter] = {
         JamfAdapter(),
         IntuneAdapter(),
         RipplingAdapter(),
+        SnykAdapter(),
     )
 }
 

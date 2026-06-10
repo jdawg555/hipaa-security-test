@@ -33,8 +33,17 @@
   <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
     <legend>Multi-cloud Prowler</legend>
     <label><input type="checkbox" name="prowler_azure" {% if config.get('integrations', {}).get('prowler_azure', {}).get('enabled') %}checked{% endif %}> Prowler Azure HIPAA crosswalk</label><br>
-    <label><input type="checkbox" name="prowler_gcp" {% if config.get('integrations', {}).get('prowler_gcp', {}).get('enabled') %}checked{% endif %}> Prowler GCP HIPAA crosswalk</label>
+    <label><input type="checkbox" name="prowler_gcp" {% if config.get('integrations', {}).get('prowler_gcp', {}).get('enabled') %}checked{% endif %}> Prowler GCP HIPAA crosswalk</label><br>
+    <label><input type="checkbox" name="snyk_enabled" {% if config.get('integrations', {}).get('snyk', {}).get('enabled') %}checked{% endif %}> Snyk vulnerability ingest</label>
   </fieldset>
+  <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+    <legend>Vendor AI assist (P-29)</legend>
+    <label><input type="checkbox" name="ai_assist_enabled" {% if config.get('ai_assist', {}).get('enabled') %}checked{% endif %}> Enable SIG-lite draft suggestions on Vendors page</label><br>
+    <label><input type="checkbox" name="ai_assist_llm" {% if config.get('ai_assist', {}).get('use_llm') %}checked{% endif %}> Use LLM when OPENAI_API_KEY is set (keyword fallback otherwise)</label>
+  </fieldset>
+  <label class="full">Trust center public URL <small style="font-weight:400;color:var(--muted)">for custom domain — see docs/trust-center-custom-domain.md</small>
+    <input type="url" name="trust_public_url" value="{{ config.get('trust_center', {}).get('public_url', '') }}" placeholder="https://trust.your-org.com">
+  </label>
   <label>Auto-scan interval (hours, 0 = manual)
     <input type="number" name="schedule_hours" value="{{ schedule_hours }}" min="0" max="168">
   </label>

@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.8.0] — 2026-05-28
+
+### Phase 6 polish — AI assist, Snyk, Checkov PR, connector catalog
+
+- **AI SIG-lite assist (P-29)** — keyword + optional LLM draft suggestions on Vendors page; PHI guard; Settings toggles
+- **Snyk integration (P-25)** — API connection test, evidence ingest check, connect wizard secrets
+- **Checkov PR workflow (P-26)** — `.github/workflows/checkov-pr.yml` fails PRs on IaC policy violations
+- **Trust center custom domain (P-18)** — `trust_center.public_url` in Settings; `docs/trust-center-custom-domain.md`
+- **Connector catalog (P-30)** — `platform/connector-catalog.yaml` + `hipaa-audit connectors` CLI
+
 ## [2.7.0] — 2026-05-28
 
 ### Multi-cloud, GitLab, and framework crosswalks

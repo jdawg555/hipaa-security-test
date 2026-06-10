@@ -109,6 +109,33 @@ def parity(
     console.print("Build kit: [link]docs/architecture/EXTENSION_MODEL.md[/link]")
 
 
+@app.command()
+def connectors(
+    status: str | None = typer.Option(None, "--status", "-s", help="Filter: shipped|planned"),
+) -> None:
+    """Curated connector catalog — scaffold targets for integrations."""
+    from hipaa_audit.platform.parity import load_connector_catalog
+
+    data = load_connector_catalog()
+    items = data.get("connectors", [])
+    if status:
+        items = [c for c in items if c.get("status") == status]
+    table = Table(title="Connector catalog")
+    table.add_column("ID")
+    table.add_column("Name")
+    table.add_column("Category")
+    table.add_column("Status")
+    for c in items:
+        table.add_row(
+            c.get("id", ""),
+            (c.get("name", "") or "")[:28],
+            c.get("category", ""),
+            c.get("status", ""),
+        )
+    console.print(table)
+    console.print(f"\n{len(items)} connector(s). Scaffold: hipaa-audit scaffold integration <id>")
+
+
 @scaffold_app.command("module")
 def scaffold_module_cmd(
     name: str = typer.Argument(..., help="Module name e.g. baa_tracking"),

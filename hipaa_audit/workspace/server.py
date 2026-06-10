@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from hipaa_audit import __version__
+from hipaa_audit.ai_assist import suggest_sig_lite_responses
 from hipaa_audit.access_reviews import (
     complete_campaign,
     load_campaigns,
@@ -460,6 +461,25 @@ def create_app(repo_path: Path) -> FastAPI:
         ctx["vendors"] = load_vendors(vpath).get("vendors", [])
         ctx["questionnaires"] = load_questionnaires(qpath).get("questionnaires", [])
         ctx["flash"] = request.query_params.get("flash", "")
+        ctx["ai_enabled"] = config.get("ai_assist", {}).get("enabled", False)
+        ctx["assist_result"] = None
+        return _render("vendors.html", **ctx)
+
+    @app.post("/vendors/assist")
+    async def vendors_assist(request: Request) -> HTMLResponse:
+        config = load_workspace_config(repo_path)
+        form = await request.form()
+        vendor_text = str(form.get("vendor_text", ""))
+        vpath = repo_path / config.get("vendors", {}).get("register_path", "compliance/vendors.yaml")
+        qpath = repo_path / config.get("vendors", {}).get("questionnaires_path", "compliance/vendor-questionnaires.yaml")
+        result = suggest_sig_lite_responses(vendor_text, config)
+        ctx = base_ctx("vendors")
+        ctx["vendors"] = load_vendors(vpath).get("vendors", [])
+        ctx["questionnaires"] = load_questionnaires(qpath).get("questionnaires", [])
+        ctx["ai_enabled"] = config.get("ai_assist", {}).get("enabled", False)
+        ctx["assist_result"] = result
+        ctx["vendor_text"] = vendor_text
+        ctx["flash"] = ""
         return _render("vendors.html", **ctx)
 
     @app.post("/vendors/add")
@@ -1112,6 +1132,10 @@ def create_app(repo_path: Path) -> FastAPI:
         integrations = config.setdefault("integrations", {})
         integrations.setdefault("prowler_azure", {})["enabled"] = form.get("prowler_azure") == "on"
         integrations.setdefault("prowler_gcp", {})["enabled"] = form.get("prowler_gcp") == "on"
+        integrations.setdefault("snyk", {})["enabled"] = form.get("snyk_enabled") == "on"
+        config.setdefault("ai_assist", {})["enabled"] = form.get("ai_assist_enabled") == "on"
+        config.setdefault("ai_assist", {})["use_llm"] = form.get("ai_assist_llm") == "on"
+        config.setdefault("trust_center", {})["public_url"] = str(form.get("trust_public_url", "")).strip()
         config.setdefault("workspace", {})["schedule_hours"] = max(
             0, min(168, int(form.get("schedule_hours", 0) or 0))
         )

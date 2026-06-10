@@ -36,6 +36,7 @@ def run(
         "prowler_gcp_hipaa_crosswalk": _prowler_gcp_hipaa_crosswalk,
         "trivy_vulnerabilities": _trivy_vulnerabilities,
         "osv_vulnerabilities": _osv_vulnerabilities,
+        "snyk_vulnerabilities": _snyk_vulnerabilities,
         "checkov_findings": _checkov_findings,
         "compliancekit_mapping": _compliancekit_mapping,
         "sra_json_imported": _sra_json_imported,
@@ -587,6 +588,57 @@ def _osv_vulnerabilities(check, *, repo_path, config, evidence_dir) -> CheckResu
         title=check.get("title", check["id"]),
         status=CheckStatus.PASS,
         message="OSV-Scanner evidence shows no vulnerabilities",
+    )
+
+
+def _snyk_vulnerabilities(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    snyk_cfg = config.get("snyk", {})
+    if not snyk_cfg.get("enabled", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.SKIP,
+            message="Snyk integration disabled",
+        )
+    pattern = snyk_cfg.get("evidence_glob", "evidence/snyk/*.json")
+    files = _glob_files(repo_path, pattern)
+    if not files:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"No Snyk evidence at {pattern}. Run: snyk test --json-file-output=evidence/snyk/report.json",
+            remediation=check.get("remediation"),
+        )
+    block = {s.lower() for s in snyk_cfg.get("fail_severities", ["high", "critical"])}
+    hits: list[str] = []
+    for path in files:
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            hits.append(f"invalid JSON: {path.name}")
+            continue
+        for vuln in data.get("vulnerabilities", []) or data.get("issues", []):
+            sev = str(vuln.get("severity", vuln.get("issueData", {}).get("severity", ""))).lower()
+            if sev in block:
+                title = vuln.get("title") or vuln.get("issueData", {}).get("title", "?")
+                hits.append(f"{title} ({sev})")
+    out = evidence_dir / "integration-snyk-summary.json"
+    out.write_text(json.dumps({"hits": hits[:50]}, indent=2))
+    if hits:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.FAIL,
+            message=f"Snyk: {len(hits)} {block} issue(s)",
+            evidence_path=str(out),
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.PASS,
+        message="No high/critical Snyk issues in evidence",
+        evidence_path=str(out),
     )
 
 

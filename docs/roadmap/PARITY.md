@@ -43,19 +43,19 @@ Run live status: `hipaa-audit parity`
 | P-15 | Vendor register | VRM | **shipped** YAML | UI CRUD | vendors workspace forms | 3 |
 | P-16 | Vendor questionnaires | Portal + email | **partial** portal + SMTP (v2.4) | email reminders | `vendor_portal.py` + `notify.py` | 4 |
 | P-17 | BAA tracking | Document store | **partial** markdown register | structured BAA objects | `compliance/baas.yaml` | 3 |
-| P-18 | Trust Center | Hosted public | **shipped** static publish | custom domain helper | `trust_center.py` | 2 |
+| P-18 | Trust Center | Hosted public | **shipped** static publish + custom domain doc | `public_url` in Settings | `trust_center.py` | 2 |
 | P-19 | Auditor portal | Login + requests | **partial** PBC queue + threads (v2.4) | file uploads | `auditor_requests.py` SQLite | 5 |
 | P-20 | Auditor evidence ZIP | One-click PBC | **shipped** export auditor | scheduled auto-export | `export_auditor.py` | 2 |
 | P-21 | Cloud AWS | Deep checks | **partial** crosswalk rollup (v2.4) | full 85-check catalog + multi-region | `prowler_crosswalk.py` | 2 |
 | P-22 | Cloud GCP/Azure | Multi-cloud | **planned** | Prowler Azure/GCP | integrations adapter | 5 |
 | P-23 | GitHub / GitLab | Repo security | **partial** GitHub | GitLab parity | `github.py` + `gitlab.py` | 4 |
 | P-24 | IdP Okta/Google | MFA, users | **partial** API checks | connection wizard | `identity.py` | 2 |
-| P-25 | Vuln scanning | Snyk, etc. | **partial** Trivy/OSV ingest | Snyk API optional | `integrations.py` | 3 |
-| P-26 | IaC scanning | Built-in | **partial** Checkov ingest | PR check Action | checkov in CI template | 2 |
+| P-25 | Vuln scanning | Snyk, etc. | **shipped** Trivy/OSV + Snyk API | — | `integrations.py` + `SnykAdapter` | 3 |
+| P-26 | IaC scanning | Built-in | **shipped** Checkov ingest + PR Action | — | `checkov-pr.yml` | 2 |
 | P-27 | Slack notifications | Alerts | **shipped** `--notify` | workspace notification settings | `notify.py` | 2 |
 | P-28 | Multi-user RBAC | Roles | **wont** single-tenant OSS | optional auth proxy doc | document SSO reverse proxy | 6 |
-| P-29 | AI questionnaire fill | Agents | **planned** | optional local LLM assist | separate opt-in module | 6 |
-| P-30 | 300+ SaaS integrations | Marketplace | **wont** full parity | curated registry + adapter SDK | `platform/` adapter interface | ongoing |
+| P-29 | AI questionnaire fill | Agents | **shipped** keyword + optional LLM | — | `ai_assist.py` + Vendors UI | 6 |
+| P-30 | 300+ SaaS integrations | Marketplace | **partial** curated catalog | adapter SDK for rest | `connector-catalog.yaml` + `connectors` CLI | ongoing |
 
 ---
 

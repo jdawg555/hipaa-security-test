@@ -108,6 +108,13 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "testable": True,
         },
         {
+            "id": "snyk",
+            "name": "Snyk",
+            "enabled": config.get("integrations", {}).get("snyk", {}).get("enabled", False),
+            "hint": "Set SNYK_TOKEN — ingest JSON to evidence/snyk/",
+            "testable": True,
+        },
+        {
             "id": "personnel",
             "name": "Personnel",
             "enabled": config.get("personnel", {}).get("enabled", False),
@@ -188,6 +195,8 @@ def apply_integration_toggle(config: dict[str, Any], integration_id: str, enable
         config.setdefault("integrations", {}).setdefault("prowler_azure", {})["enabled"] = enabled
     elif integration_id == "prowler_gcp":
         config.setdefault("integrations", {}).setdefault("prowler_gcp", {})["enabled"] = enabled
+    elif integration_id == "snyk":
+        config.setdefault("integrations", {}).setdefault("snyk", {})["enabled"] = enabled
     elif integration_id == "personnel":
         config.setdefault("personnel", {})["enabled"] = enabled
     elif integration_id == "vendors":

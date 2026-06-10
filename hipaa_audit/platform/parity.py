@@ -20,6 +20,11 @@ def load_integrations() -> dict[str, Any]:
     return yaml.safe_load(path.read_text()) or {}
 
 
+def load_connector_catalog() -> dict[str, Any]:
+    path = PLATFORM_ROOT / "connector-catalog.yaml"
+    return yaml.safe_load(path.read_text()) or {}
+
+
 def parity_report(*, phase: int | None = None) -> dict[str, Any]:
     data = load_capabilities()
     caps = data.get("capabilities", [])

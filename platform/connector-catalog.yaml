@@ -1,0 +1,126 @@
+# Curated connector catalog — scaffold targets for hipaa-audit integrations
+# Full marketplace parity is intentionally out of scope (see P-30)
+
+version: "1.0"
+
+connectors:
+  - id: aws
+    name: Amazon Web Services
+    category: cloud
+    status: shipped
+    scaffold: false
+
+  - id: gcp
+    name: Google Cloud Platform
+    category: cloud
+    status: shipped
+    scaffold: false
+
+  - id: prowler_azure
+    name: Prowler Azure HIPAA
+    category: cloud
+    status: shipped
+    scaffold: false
+
+  - id: github
+    name: GitHub
+    category: code
+    status: shipped
+    scaffold: false
+
+  - id: gitlab
+    name: GitLab
+    category: code
+    status: shipped
+    scaffold: false
+
+  - id: okta
+    name: Okta
+    category: identity
+    status: shipped
+    scaffold: false
+
+  - id: google
+    name: Google Workspace
+    category: identity
+    status: shipped
+    scaffold: false
+
+  - id: intune
+    name: Microsoft Intune
+    category: endpoints
+    status: shipped
+    scaffold: false
+
+  - id: jamf
+    name: Jamf Pro
+    category: endpoints
+    status: shipped
+    scaffold: false
+
+  - id: rippling
+    name: Rippling HRIS
+    category: workforce
+    status: shipped
+    scaffold: false
+
+  - id: snyk
+    name: Snyk
+    category: vulnerabilities
+    status: shipped
+    scaffold: false
+
+  - id: prowler
+    name: Prowler AWS
+    category: cloud
+    status: shipped
+    scaffold: false
+
+  - id: trivy
+    name: Trivy
+    category: vulnerabilities
+    status: shipped
+    ingest_only: true
+
+  - id: checkov
+    name: Checkov
+    category: iac
+    status: shipped
+    ingest_only: true
+
+  - id: osv
+    name: OSV-Scanner
+    category: vulnerabilities
+    status: shipped
+    ingest_only: true
+
+  - id: bamboohr
+    name: BambooHR
+    category: workforce
+    status: planned
+    scaffold: true
+    parity_id: P-10
+
+  - id: datadog
+    name: Datadog
+    category: observability
+    status: planned
+    scaffold: true
+
+  - id: slack
+    name: Slack
+    category: notifications
+    status: shipped
+    scaffold: false
+
+  - id: linear
+    name: Linear
+    category: ticketing
+    status: planned
+    scaffold: true
+
+  - id: jira
+    name: Jira
+    category: ticketing
+    status: planned
+    scaffold: true

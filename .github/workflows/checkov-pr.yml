@@ -1,0 +1,72 @@
+name: Checkov IaC PR Scan
+
+on:
+  pull_request:
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - "**/terraform/**"
+      - "**/infra/**"
+      - "examples/terraform-minimal/**"
+      - ".github/workflows/checkov-pr.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  checkov:
+    name: Checkov policy scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Run Checkov on changed IaC
+        run: |
+          mkdir -p evidence/checkov-pr
+          SCAN_DIRS=""
+          for d in terraform infra examples/terraform-minimal; do
+            if [ -d "$d" ]; then SCAN_DIRS="$SCAN_DIRS -d $d"; fi
+          done
+          if [ -z "$SCAN_DIRS" ]; then
+            echo "No IaC directories found — skipping"
+            exit 0
+          fi
+          checkov $SCAN_DIRS --framework terraform -o json --output-file-path evidence/checkov-pr || true
+          if [ -f evidence/checkov-pr/results_json.json ]; then
+            mv evidence/checkov-pr/results_json.json evidence/checkov-pr/report.json
+          fi
+
+      - name: Fail on Checkov failures
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          from pathlib import Path
+          paths = list(Path("evidence/checkov-pr").glob("*.json"))
+          if not paths:
+              print("No Checkov output")
+              sys.exit(0)
+          data = json.loads(paths[0].read_text())
+          failed = []
+          payloads = data if isinstance(data, list) else [data]
+          for payload in payloads:
+              for item in (payload.get("results") or {}).get("failed_checks") or []:
+                  failed.append(item.get("check_id", "?"))
+          if failed:
+              print(f"::error::{len(failed)} Checkov check(s) failed")
+              for f in failed[:15]:
+                  print(f"  - {f}")
+              sys.exit(1)
+          print("Checkov passed")
+          PY
+
+      - name: Upload Checkov evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-pr-${{ github.run_id }}
+          path: evidence/checkov-pr/
+          retention-days: 14

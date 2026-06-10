@@ -520,6 +520,11 @@ controls:
         handler: trivy_vulnerabilities
         title: Trivy critical/high vulnerabilities
         remediation: "trivy fs --format json -o evidence/trivy/report.json ."
+      - id: snyk-evidence
+        module: integrations
+        handler: snyk_vulnerabilities
+        title: Snyk high/critical vulnerabilities
+        remediation: "snyk test --json-file-output=evidence/snyk/report.json"
       - id: checkov-evidence
         module: integrations
         handler: checkov_findings
