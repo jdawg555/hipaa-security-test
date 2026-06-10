@@ -8,6 +8,7 @@ import yaml
 
 from hipaa_audit.controls import PACKAGE_ROOT
 from hipaa_audit.platform.adapters.aws import AwsAdapter
+from hipaa_audit.platform.adapters.bamboohr import BambooHRAdapter
 from hipaa_audit.platform.adapters.base import ConnectionResult, IntegrationAdapter
 from hipaa_audit.platform.adapters.github import GithubAdapter
 from hipaa_audit.platform.adapters.gitlab import GitLabAdapter
@@ -23,6 +24,7 @@ _ADAPTERS: dict[str, IntegrationAdapter] = {
     a.id: a
     for a in (
         AwsAdapter(),
+        BambooHRAdapter(),
         GithubAdapter(),
         GitLabAdapter(),
         GcpAdapter(),

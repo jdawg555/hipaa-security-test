@@ -20,6 +20,18 @@ OAUTH_PROVIDERS: dict[str, dict[str, Any]] = {
         "client_secret_secret": "github_oauth_client_secret",
         "token_secret": "github_token",
     },
+    "gitlab": {
+        "name": "GitLab",
+        "authorize_url": "https://gitlab.com/oauth/authorize",
+        "token_url": "https://gitlab.com/oauth/token",
+        "scopes": ["read_api", "read_repository"],
+        "token_grant_type": "authorization_code",
+        "client_id_env": "GITLAB_OAUTH_CLIENT_ID",
+        "client_secret_env": "GITLAB_OAUTH_CLIENT_SECRET",
+        "client_id_secret": "gitlab_oauth_client_id",
+        "client_secret_secret": "gitlab_oauth_client_secret",
+        "token_secret": "gitlab_token",
+    },
 }
 
 
@@ -72,6 +84,7 @@ def authorize_url(
         "redirect_uri": redirect_uri,
         "scope": " ".join(meta["scopes"]),
         "state": state,
+        "response_type": "code",
     }
     return f"{meta['authorize_url']}?{urllib.parse.urlencode(params)}"
 
@@ -90,17 +103,18 @@ def exchange_code(
     if not meta or not creds:
         return None, "OAuth credentials not configured"
     client_id, client_secret = creds
-    payload = urllib.parse.urlencode(
-        {
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "code": code,
-            "redirect_uri": redirect_uri,
-        }
-    ).encode()
+    payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "code": code,
+        "redirect_uri": redirect_uri,
+    }
+    if meta.get("token_grant_type"):
+        payload["grant_type"] = meta["token_grant_type"]
+    payload_bytes = urllib.parse.urlencode(payload).encode()
     req = urllib.request.Request(
         meta["token_url"],
-        data=payload,
+        data=payload_bytes,
         headers={"Accept": "application/json"},
         method="POST",
     )

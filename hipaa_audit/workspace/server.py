@@ -288,6 +288,11 @@ def create_app(repo_path: Path) -> FastAPI:
                 config.setdefault("devices", {})["enabled"] = True
             elif integration_id == "rippling":
                 config.setdefault("personnel", {})["enabled"] = True
+            elif integration_id == "bamboohr":
+                config.setdefault("personnel", {})["enabled"] = True
+                company = updates.get("bamboohr_company", "")
+                if company:
+                    config.setdefault("personnel", {}).setdefault("bamboohr", {})["company_domain"] = company
             else:
                 config = apply_integration_toggle(config, integration_id, True)
             save_workspace_config(repo_path, config)
@@ -356,6 +361,9 @@ def create_app(repo_path: Path) -> FastAPI:
         merge_secrets(secrets_path(repo_path, config), {token_key: token})
         if provider == "github":
             config.setdefault("github", {})["enabled"] = True
+            save_workspace_config(repo_path, config)
+        elif provider == "gitlab":
+            config.setdefault("gitlab", {})["enabled"] = True
             save_workspace_config(repo_path, config)
         apply_workspace_secrets(repo_path, config)
         result = test_integration_connection(provider, config, repo_path=repo_path)
@@ -451,6 +459,21 @@ def create_app(repo_path: Path) -> FastAPI:
             return RedirectResponse("/personnel?flash_error=No+workforce+from+Rippling", status_code=303)
         count = sync_workforce_hris(ack_path, workers)
         return RedirectResponse(f"/personnel?flash=Synced+{count}+employee(s)+from+Rippling", status_code=303)
+
+    @app.post("/personnel/sync-bamboohr")
+    def personnel_sync_bamboohr() -> RedirectResponse:
+        config = load_workspace_config(repo_path)
+        apply_workspace_secrets(repo_path, config)
+        ack_path = repo_path / config.get("personnel", {}).get(
+            "acknowledgments_path", "compliance/acknowledgments.yaml"
+        )
+        from hipaa_audit.platform.adapters.bamboohr import BambooHRAdapter
+
+        workers = BambooHRAdapter().discover(config)
+        if not workers:
+            return RedirectResponse("/personnel?flash_error=No+workforce+from+BambooHR", status_code=303)
+        count = sync_workforce_hris(ack_path, workers)
+        return RedirectResponse(f"/personnel?flash=Synced+{count}+employee(s)+from+BambooHR", status_code=303)
 
     @app.get("/vendors", response_class=HTMLResponse)
     def vendors_page(request: Request) -> HTMLResponse:
@@ -883,6 +906,7 @@ def create_app(repo_path: Path) -> FastAPI:
             {
                 "flash": request.query_params.get("flash", ""),
                 "trust_exists": trust.exists(),
+                "trust_public_url": config.get("trust_center", {}).get("public_url", "").strip(),
                 "auditor_exists": auditor.exists(),
                 "pbc_requests": list_requests(adb),
             }

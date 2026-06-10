@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.9.0] — 2026-05-28
+
+### HRIS, OAuth, and trust center wiring
+
+- **BambooHR adapter (P-10)** — workforce sync on Personnel page; connect wizard + API connection test
+- **GitLab OAuth (P-03)** — second OAuth provider alongside GitHub; enables GitLab checks on connect
+- **Trust center public URL (P-18)** — canonical link in published HTML, `trust_center_public_url` in auditor ZIP manifest, Audits page external link
+- **Docs sync** — PARITY.md and integrations registry updated for v2.7–v2.9 shipped items
+
 ## [2.8.0] — 2026-05-28
 
 ### Phase 6 polish — AI assist, Snyk, Checkov PR, connector catalog

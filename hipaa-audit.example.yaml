@@ -129,6 +129,8 @@ personnel:
   training_csv: compliance/training-log.csv
   initial_training_days: 30
   annual_training_days: 365
+  bamboohr:
+    company_domain: yourcompany
 
 # Vendor risk + SIG-lite questionnaire (Vanta vendor module)
 vendors:

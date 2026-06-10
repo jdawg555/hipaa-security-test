@@ -54,6 +54,9 @@ def build_auditor_bundle(repo_path: Path, output: Path, *, config: dict[str, Any
         "generated_at": datetime.now(UTC).isoformat(),
         "files": [],
     }
+    public_url = config.get("trust_center", {}).get("public_url", "").strip()
+    if public_url:
+        manifest["trust_center_public_url"] = public_url
 
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for pattern in INCLUDE_GLOBS:

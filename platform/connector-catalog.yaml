@@ -97,9 +97,8 @@ connectors:
   - id: bamboohr
     name: BambooHR
     category: workforce
-    status: planned
-    scaffold: true
-    parity_id: P-10
+    status: shipped
+    scaffold: false
 
   - id: datadog
     name: Datadog

@@ -21,6 +21,10 @@ SECRET_ENV_MAP = {
     "github_oauth_client_id": "GITHUB_OAUTH_CLIENT_ID",
     "github_oauth_client_secret": "GITHUB_OAUTH_CLIENT_SECRET",
     "rippling_api_token": "RIPPLING_API_TOKEN",
+    "bamboohr_api_key": "BAMBOOHR_API_KEY",
+    "bamboohr_company": "BAMBOOHR_COMPANY",
+    "gitlab_oauth_client_id": "GITLAB_OAUTH_CLIENT_ID",
+    "gitlab_oauth_client_secret": "GITLAB_OAUTH_CLIENT_SECRET",
     "snyk_token": "SNYK_TOKEN",
 }
 
@@ -70,6 +74,10 @@ CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
     "rippling": [
         {"key": "rippling_api_token", "label": "Rippling API token", "type": "password", "hint": "Platform API bearer token"},
     ],
+    "bamboohr": [
+        {"key": "bamboohr_company", "label": "Company subdomain", "type": "text", "hint": "yourcompany from yourcompany.bamboohr.com"},
+        {"key": "bamboohr_api_key", "label": "BambooHR API key", "type": "password", "hint": "Settings → API Keys in BambooHR"},
+    ],
     "snyk": [
         {"key": "snyk_token", "label": "Snyk API token", "type": "password", "hint": "service account or personal token"},
     ],
@@ -77,7 +85,9 @@ CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
         {"key": "okta_api_token", "label": "Okta API token", "type": "password", "hint": "SSWS admin token"},
     ],
     "gitlab": [
-        {"key": "gitlab_token", "label": "GitLab personal access token", "type": "password", "hint": "api scope"},
+        {"key": "gitlab_oauth_client_id", "label": "OAuth application ID", "type": "text", "hint": "Or use Connect with GitLab below"},
+        {"key": "gitlab_oauth_client_secret", "label": "OAuth application secret", "type": "password"},
+        {"key": "gitlab_token", "label": "Personal access token (manual)", "type": "password", "hint": "api scope"},
     ],
     "gcp": [
         {

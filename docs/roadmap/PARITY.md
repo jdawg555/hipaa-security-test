@@ -28,14 +28,14 @@ Run live status: `hipaa-audit parity`
 |----|------------|-------------|----------|--------|---------------|-------|
 | P-01 | Web compliance workspace | SaaS app | **shipped** v2 `serve` | full | `workspace/server.py` | 1 |
 | P-02 | Onboarding wizard | Guided setup | **shipped** | full | `/onboarding` + bootstrap | 1 |
-| P-03 | Integration toggles | Connect UI | **partial** toggles + test button | OAuth connect flow | `platform/adapters/` + Integrations page | 2 |
+| P-03 | Integration toggles | Connect UI | **shipped** OAuth (GitHub, GitLab) + test button | — | `oauth_connect.py` + Integrations page | 2 |
 | P-04 | Continuous monitoring | Hourly cloud tests | **partial** manual + scheduler |默认 24h + CI | `scan_runner` + `workspace.schedule_hours` | 2 |
 | P-05 | Control library + CFR | Pre-built | **shipped** 77+ HIPAA | + HITRUST slice | `controls/hipaa-*.yaml` | 1 |
 | P-06 | Multi-framework crosswalk | Test once, map many | **partial** SOC2+ISO supplements | shared check refs | `controls/soc2-*` `iso27001-*` | 2 |
 | P-07 | Posture score + history | Dashboard KPI | **shipped** | trend charts in UI | `posture.py` + workspace charts | 3 |
 | P-08 | Remediation tasks + owners | Assigned tasks | **shipped** v2.2 `/tasks` UI | Slack notify | `tasks.py` + workspace tasks page | 3 |
 | P-09 | Policy library | In-app editor | **partial** v2.4 editor + versions | diff view + auto re-ack | `policy_versions.py` | 4 |
-| P-10 | Personnel training | LMS integration | **partial** CSV | HRIS adapter (Bamboo, Rippling) | `personnel/` + HRIS registry | 4 |
+| P-10 | Personnel training | LMS integration | **shipped** CSV + Rippling + BambooHR | — | `personnel/` + HRIS adapters | 4 |
 | P-11 | Policy acknowledgments | In-app ack | **partial** YAML | employee portal link | extend personnel module | 4 |
 | P-12 | MDM / endpoints | Agent (Jamf/Kandji) | **partial** Jamf API sync (v2.4) | Intune Graph | `devices.py` + `JamfAdapter.discover` | 4 |
 | P-13 | Access reviews | In-app campaigns | **partial** UI builder (v2.2) | IdP user picker | `access_reviews.py` + workspace forms | 3 |
@@ -43,12 +43,12 @@ Run live status: `hipaa-audit parity`
 | P-15 | Vendor register | VRM | **shipped** YAML | UI CRUD | vendors workspace forms | 3 |
 | P-16 | Vendor questionnaires | Portal + email | **partial** portal + SMTP (v2.4) | email reminders | `vendor_portal.py` + `notify.py` | 4 |
 | P-17 | BAA tracking | Document store | **partial** markdown register | structured BAA objects | `compliance/baas.yaml` | 3 |
-| P-18 | Trust Center | Hosted public | **shipped** static publish + custom domain doc | `public_url` in Settings | `trust_center.py` | 2 |
+| P-18 | Trust Center | Hosted public | **shipped** static publish + public URL in bundle | — | `trust_center.py` | 2 |
 | P-19 | Auditor portal | Login + requests | **partial** PBC queue + threads (v2.4) | file uploads | `auditor_requests.py` SQLite | 5 |
 | P-20 | Auditor evidence ZIP | One-click PBC | **shipped** export auditor | scheduled auto-export | `export_auditor.py` | 2 |
 | P-21 | Cloud AWS | Deep checks | **partial** crosswalk rollup (v2.4) | full 85-check catalog + multi-region | `prowler_crosswalk.py` | 2 |
-| P-22 | Cloud GCP/Azure | Multi-cloud | **planned** | Prowler Azure/GCP | integrations adapter | 5 |
-| P-23 | GitHub / GitLab | Repo security | **partial** GitHub | GitLab parity | `github.py` + `gitlab.py` | 4 |
+| P-22 | Cloud GCP/Azure | Multi-cloud | **shipped** Prowler Azure/GCP crosswalks | — | integrations adapter | 5 |
+| P-23 | GitHub / GitLab | Repo security | **shipped** GitHub + GitLab (+ GitLab OAuth) | — | `github.py` + `gitlab.py` | 4 |
 | P-24 | IdP Okta/Google | MFA, users | **partial** API checks | connection wizard | `identity.py` | 2 |
 | P-25 | Vuln scanning | Snyk, etc. | **shipped** Trivy/OSV + Snyk API | — | `integrations.py` + `SnykAdapter` | 3 |
 | P-26 | IaC scanning | Built-in | **shipped** Checkov ingest + PR Action | — | `checkov-pr.yml` | 2 |

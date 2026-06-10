@@ -6,7 +6,7 @@ version: "1.0"
 auth_types:
   env_vars: Credentials via environment variables
   file_path: Path to key file (e.g. GCP service account JSON)
-  oauth: OAuth2 connect flow (planned — Phase 2)
+  oauth: OAuth2 connect flow (GitHub and GitLab)
   ingest_only: No live API; ingest scanner output files
 
 integrations:
@@ -223,3 +223,15 @@ integrations:
     parity_id: P-25
     phase: 3
     status: shipped
+
+  - id: bamboohr
+    name: BambooHR
+    category: workforce
+    auth: env_vars
+    env_vars: [BAMBOOHR_API_KEY, BAMBOOHR_COMPANY]
+    config_key: personnel.enabled
+    connection_test: bamboohr.api
+    workspace_toggle: true
+    status: shipped
+    parity_id: P-10
+    phase: 4

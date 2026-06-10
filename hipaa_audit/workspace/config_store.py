@@ -164,6 +164,13 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "testable": True,
         },
         {
+            "id": "bamboohr",
+            "name": "BambooHR",
+            "enabled": config.get("personnel", {}).get("enabled", False),
+            "hint": "Set BAMBOOHR_API_KEY + BAMBOOHR_COMPANY for workforce sync",
+            "testable": True,
+        },
+        {
             "id": "saas_inventory",
             "name": "SaaS inventory",
             "enabled": config.get("saas_inventory", {}).get("enabled", False),

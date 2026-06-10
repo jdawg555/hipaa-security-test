@@ -98,7 +98,7 @@ capabilities:
     vanta: full
     drata: full
     surfaces: [workspace.personnel]
-    modules: [personnel, platform.adapters.rippling]
+    modules: [personnel, platform.adapters.rippling, platform.adapters.bamboohr]
 
   - id: P-11
     name: Policy acknowledgments
@@ -170,7 +170,7 @@ capabilities:
     vanta: full
     drata: full
     modules: [trust_center]
-    note: Custom domain guide + public_url in Settings
+    note: Custom domain guide, public_url in Settings, wired into publish + auditor ZIP
 
   - id: P-19
     name: Auditor portal and PBC

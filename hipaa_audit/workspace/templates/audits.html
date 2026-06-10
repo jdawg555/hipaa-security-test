@@ -8,7 +8,12 @@
     <strong>Trust center</strong>
     <p style="font-size:.88rem;color:var(--muted)">Public compliance page for prospects.</p>
     {% if trust_exists %}
-    <p><a class="btn secondary" href="/portals/trust" target="_blank">Open trust center</a></p>
+    <p>
+      <a class="btn secondary" href="/portals/trust" target="_blank">Open trust center (local)</a>
+      {% if trust_public_url %}
+      <a class="btn secondary" href="{{ trust_public_url }}" target="_blank" style="margin-left:.35rem">Open public URL</a>
+      {% endif %}
+    </p>
     {% else %}
     <p style="font-size:.85rem">Run a scan to generate.</p>
     {% endif %}
