@@ -96,6 +96,10 @@ def _framework_label(control_id: str) -> str:
         return "SOC 2"
     if control_id.startswith("ISO27001-"):
         return "ISO 27001"
+    if control_id.startswith("HITRUST-"):
+        return "HITRUST CSF"
+    if control_id.startswith("PCI-"):
+        return "PCI DSS"
     return "HIPAA"
 
 
@@ -1092,6 +1096,7 @@ def create_app(repo_path: Path) -> FastAPI:
         config = load_workspace_config(repo_path)
         config["org_name"] = str(form.get("org_name", ""))
         config.setdefault("github", {})["repo"] = str(form.get("github_repo", ""))
+        config.setdefault("gitlab", {})["project"] = str(form.get("gitlab_project", ""))
         config.setdefault("identity", {}).setdefault("okta", {})["domain"] = str(form.get("okta_domain", ""))
         config.setdefault("identity", {}).setdefault("azure", {})["enabled"] = form.get("azure_enabled") == "on"
         config.setdefault("aws", {})["multi_region"] = form.get("aws_multi_region") == "on"
@@ -1102,6 +1107,11 @@ def create_app(repo_path: Path) -> FastAPI:
             ]
         config.setdefault("frameworks", {})["soc2"] = form.get("soc2") == "on"
         config.setdefault("frameworks", {})["iso27001"] = form.get("iso27001") == "on"
+        config.setdefault("frameworks", {})["hitrust"] = form.get("hitrust") == "on"
+        config.setdefault("frameworks", {})["pci"] = form.get("pci") == "on"
+        integrations = config.setdefault("integrations", {})
+        integrations.setdefault("prowler_azure", {})["enabled"] = form.get("prowler_azure") == "on"
+        integrations.setdefault("prowler_gcp", {})["enabled"] = form.get("prowler_gcp") == "on"
         config.setdefault("workspace", {})["schedule_hours"] = max(
             0, min(168, int(form.get("schedule_hours", 0) or 0))
         )

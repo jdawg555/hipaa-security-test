@@ -10,6 +10,8 @@ from hipaa_audit.controls import PACKAGE_ROOT
 from hipaa_audit.platform.adapters.aws import AwsAdapter
 from hipaa_audit.platform.adapters.base import ConnectionResult, IntegrationAdapter
 from hipaa_audit.platform.adapters.github import GithubAdapter
+from hipaa_audit.platform.adapters.gitlab import GitLabAdapter
+from hipaa_audit.platform.adapters.gcp import GcpAdapter
 from hipaa_audit.platform.adapters.google import GoogleAdapter
 from hipaa_audit.platform.adapters.intune import IntuneAdapter
 from hipaa_audit.platform.adapters.jamf import JamfAdapter
@@ -21,6 +23,8 @@ _ADAPTERS: dict[str, IntegrationAdapter] = {
     for a in (
         AwsAdapter(),
         GithubAdapter(),
+        GitLabAdapter(),
+        GcpAdapter(),
         OktaAdapter(),
         GoogleAdapter(),
         JamfAdapter(),
@@ -62,11 +66,27 @@ def test_integration_connection(
             return ConnectionResult(False, "Workspace path required for Prowler ingest check")
         glob = list((repo_path / "evidence" / "prowler").glob("*.json"))
         if glob:
-            return ConnectionResult(True, f"Found {len(glob)} Prowler evidence file(s)")
+            return ConnectionResult(True, f"Found {len(glob)} Prowler AWS evidence file(s)")
         return ConnectionResult(
             False,
             "No Prowler output in evidence/prowler/ — run collect-external-evidence.sh",
         )
+
+    if integration_id == "prowler_azure":
+        if repo_path is None:
+            return ConnectionResult(False, "Workspace path required")
+        glob = list((repo_path / "evidence" / "prowler-azure").glob("*.json"))
+        if glob:
+            return ConnectionResult(True, f"Found {len(glob)} Prowler Azure evidence file(s)")
+        return ConnectionResult(False, "No Prowler output in evidence/prowler-azure/")
+
+    if integration_id == "prowler_gcp":
+        if repo_path is None:
+            return ConnectionResult(False, "Workspace path required")
+        glob = list((repo_path / "evidence" / "prowler-gcp").glob("*.json"))
+        if glob:
+            return ConnectionResult(True, f"Found {len(glob)} Prowler GCP evidence file(s)")
+        return ConnectionResult(False, "No Prowler output in evidence/prowler-gcp/")
 
     if integration_id in _REGISTER_INTEGRATIONS:
         section, key, default = _REGISTER_INTEGRATIONS[integration_id]

@@ -1,0 +1,109 @@
+# HITRUST CSF supplement (shared hipaa-audit checks)
+# Enable: frameworks.hitrust: true in hipaa-audit.yaml
+
+version: "1.0"
+framework: HITRUST CSF
+citations:
+  - "HITRUST CSF v11 — Control categories"
+
+controls:
+  - id: HITRUST-01
+    title: Risk management program
+    category: risk
+    citation: 01.a
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-sra
+        module: repo
+        handler: sra_template_present
+        title: Security risk assessment documented
+      - id: hitrust-risk-register
+        module: repo
+        handler: risk_register_present
+        title: Risk register maintained
+
+  - id: HITRUST-09
+    title: Access control
+    category: access
+    citation: 09.ab
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-access-policy
+        module: repo
+        handler: file_exists
+        paths: [policies/access-control-policy.md]
+        title: Access control policy documented
+      - id: hitrust-access-reviews
+        module: access_reviews
+        handler: access_review_campaign
+        title: Periodic access reviews performed
+      - id: hitrust-mfa-okta
+        module: identity
+        handler: okta_mfa_policy
+        title: MFA enrollment policy (Okta)
+
+  - id: HITRUST-10
+    title: Audit logging and monitoring
+    category: technical
+    citation: 10.a
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-cloudtrail
+        module: aws
+        handler: cloudtrail_enabled
+        title: Cloud audit logging enabled
+      - id: hitrust-evidence-fresh
+        module: integrations
+        handler: evidence_freshness
+        title: Compliance evidence refreshed
+
+  - id: HITRUST-06
+    title: Encryption and key management
+    category: technical
+    citation: 06.e
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-s3-encryption
+        module: aws
+        handler: s3_default_encryption
+        title: Storage encryption at rest
+      - id: hitrust-encryption-policy
+        module: repo
+        handler: encryption_docs_present
+        title: Encryption policy documented
+
+  - id: HITRUST-13
+    title: Third-party assurance
+    category: vendors
+    citation: 13.c
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-vendors
+        module: vendors
+        handler: vendor_register_current
+        title: Vendor risk register current
+      - id: hitrust-questionnaires
+        module: questionnaires
+        handler: vendor_questionnaires_current
+        title: Vendor security questionnaires current
+
+  - id: HITRUST-02
+    title: Workforce security
+    category: personnel
+    citation: 02.e
+    type: hybrid
+    severity: required
+    checks:
+      - id: hitrust-policy-acks
+        module: personnel
+        handler: policy_acknowledgments
+        title: Policy acknowledgments current
+      - id: hitrust-training
+        module: personnel
+        handler: training_csv_current
+        title: HIPAA training current

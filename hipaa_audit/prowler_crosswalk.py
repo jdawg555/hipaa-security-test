@@ -8,9 +8,18 @@ import yaml
 
 from hipaa_audit.controls import PACKAGE_ROOT
 
+CROSSWALK_FILES = {
+    "aws": "prowler-hipaa-crosswalk.yaml",
+    "azure": "prowler-azure-hipaa-crosswalk.yaml",
+    "gcp": "prowler-gcp-hipaa-crosswalk.yaml",
+}
 
-def load_crosswalk() -> dict[str, Any]:
-    path = PACKAGE_ROOT / "controls" / "prowler-hipaa-crosswalk.yaml"
+
+def load_crosswalk(*, provider: str = "aws") -> dict[str, Any]:
+    filename = CROSSWALK_FILES.get(provider, CROSSWALK_FILES["aws"])
+    path = PACKAGE_ROOT / "controls" / filename
+    if not path.exists():
+        return {"requirements": []}
     return yaml.safe_load(path.read_text()) or {"requirements": []}
 
 
@@ -61,8 +70,8 @@ def collect_finding_statuses(files: list[Path]) -> dict[str, str]:
     return statuses
 
 
-def rollup_requirements(finding_statuses: dict[str, str]) -> list[dict[str, Any]]:
-    crosswalk = load_crosswalk()
+def rollup_requirements(finding_statuses: dict[str, str], *, provider: str = "aws") -> list[dict[str, Any]]:
+    crosswalk = load_crosswalk(provider=provider)
     results: list[dict[str, Any]] = []
     for req in crosswalk.get("requirements", []):
         checks = req.get("prowler_checks", [])

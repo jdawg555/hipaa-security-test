@@ -59,6 +59,34 @@ def integration_status(config: dict[str, Any]) -> list[dict[str, Any]]:
             "testable": True,
         },
         {
+            "id": "gitlab",
+            "name": "GitLab",
+            "enabled": config.get("gitlab", {}).get("enabled", False),
+            "hint": "Set GITLAB_TOKEN and gitlab.project in Settings",
+            "testable": True,
+        },
+        {
+            "id": "gcp",
+            "name": "Google Cloud",
+            "enabled": config.get("gcp", {}).get("enabled", False),
+            "hint": "GOOGLE_APPLICATION_CREDENTIALS + Prowler GCP evidence",
+            "testable": True,
+        },
+        {
+            "id": "prowler_azure",
+            "name": "Prowler Azure",
+            "enabled": config.get("integrations", {}).get("prowler_azure", {}).get("enabled", False),
+            "hint": "Run prowler azure --compliance hipaa_azure",
+            "testable": True,
+        },
+        {
+            "id": "prowler_gcp",
+            "name": "Prowler GCP",
+            "enabled": config.get("integrations", {}).get("prowler_gcp", {}).get("enabled", False),
+            "hint": "Run prowler gcp --compliance hipaa_gcp",
+            "testable": True,
+        },
+        {
             "id": "okta",
             "name": "Okta",
             "enabled": config.get("identity", {}).get("okta", {}).get("enabled", False),
@@ -146,12 +174,20 @@ def apply_integration_toggle(config: dict[str, Any], integration_id: str, enable
         config.setdefault("aws", {})["enabled"] = enabled
     elif integration_id == "github":
         config.setdefault("github", {})["enabled"] = enabled
+    elif integration_id == "gitlab":
+        config.setdefault("gitlab", {})["enabled"] = enabled
+    elif integration_id == "gcp":
+        config.setdefault("gcp", {})["enabled"] = enabled
     elif integration_id == "okta":
         config.setdefault("identity", {}).setdefault("okta", {})["enabled"] = enabled
     elif integration_id == "google":
         config.setdefault("identity", {}).setdefault("google", {})["enabled"] = enabled
     elif integration_id == "prowler":
         config.setdefault("integrations", {}).setdefault("prowler", {})["enabled"] = enabled
+    elif integration_id == "prowler_azure":
+        config.setdefault("integrations", {}).setdefault("prowler_azure", {})["enabled"] = enabled
+    elif integration_id == "prowler_gcp":
+        config.setdefault("integrations", {}).setdefault("prowler_gcp", {})["enabled"] = enabled
     elif integration_id == "personnel":
         config.setdefault("personnel", {})["enabled"] = enabled
     elif integration_id == "vendors":

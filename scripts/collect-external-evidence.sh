@@ -6,13 +6,27 @@ set -euo pipefail
 
 ROOT="${1:-.}"
 cd "$ROOT"
-mkdir -p evidence/prowler evidence/trivy evidence/osv evidence/latest
+mkdir -p evidence/prowler evidence/prowler-azure evidence/prowler-gcp evidence/trivy evidence/osv evidence/latest
 
 echo "==> Prowler (AWS HIPAA mode)"
 if command -v prowler &>/dev/null; then
   prowler aws --compliance hipaa_aws -M json -o evidence/prowler/ --output-formats json-ocsf || true
 else
   echo "    skip — prowler not installed (pip install prowler-cloud)"
+fi
+
+echo "==> Prowler (Azure HIPAA mode)"
+if command -v prowler &>/dev/null; then
+  prowler azure --compliance hipaa_azure -M json -o evidence/prowler-azure/ --output-formats json-ocsf || true
+else
+  echo "    skip — prowler not installed"
+fi
+
+echo "==> Prowler (GCP HIPAA mode)"
+if command -v prowler &>/dev/null; then
+  prowler gcp --compliance hipaa_gcp -M json -o evidence/prowler-gcp/ --output-formats json-ocsf || true
+else
+  echo "    skip — prowler not installed"
 fi
 
 echo "==> Checkov (IaC)"

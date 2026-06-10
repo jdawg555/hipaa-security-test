@@ -1,0 +1,120 @@
+# PCI DSS 3.2.1 supplement slice (shared hipaa-audit checks for healthcare payment touchpoints)
+# Enable: frameworks.pci: true in hipaa-audit.yaml
+
+version: "1.0"
+framework: PCI DSS
+citations:
+  - "PCI DSS v3.2.1 Requirements 1–12 (subset)"
+
+controls:
+  - id: PCI-1.2
+    title: Network security controls
+    category: technical
+    citation: Req 1.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-vpc-flow-logs
+        module: aws
+        handler: vpc_flow_logs
+        title: Network flow logging enabled
+      - id: pci-s3-public-block
+        module: aws
+        handler: s3_public_access_blocked
+        title: Public access restricted on object storage
+
+  - id: PCI-2.2
+    title: Secure system configurations
+    category: technical
+    citation: Req 2.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-iac-scan
+        module: integrations
+        handler: checkov_findings
+        title: IaC misconfiguration scanning (Checkov)
+      - id: pci-branch-protection
+        module: github
+        handler: branch_protection
+        title: Change control via protected branches
+
+  - id: PCI-3.4
+    title: Protect stored cardholder data
+    category: technical
+    citation: Req 3.4
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-rds-encryption
+        module: aws
+        handler: rds_encryption
+        title: Database encryption at rest
+      - id: pci-kms-rotation
+        module: aws
+        handler: kms_rotation
+        title: Cryptographic key rotation
+
+  - id: PCI-8.2
+    title: User authentication
+    category: access
+    citation: Req 8.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-iam-password
+        module: aws
+        handler: iam_password_policy
+        title: Strong password policy
+      - id: pci-root-mfa
+        module: aws
+        handler: iam_root_mfa
+        title: Root account MFA and no access keys
+
+  - id: PCI-10.2
+    title: Audit trails
+    category: technical
+    citation: Req 10.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-cloudtrail-validation
+        module: aws
+        handler: cloudtrail_log_validation
+        title: Audit log integrity validation
+      - id: pci-cloudtrail-enabled
+        module: aws
+        handler: cloudtrail_enabled
+        title: Centralized audit logging
+
+  - id: PCI-11.2
+    title: Vulnerability scanning
+    category: technical
+    citation: Req 11.2
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-trivy
+        module: integrations
+        handler: trivy_vulnerabilities
+        title: Container/filesystem vulnerability scan
+      - id: pci-osv
+        module: integrations
+        handler: osv_vulnerabilities
+        title: Dependency vulnerability scan (OSV)
+
+  - id: PCI-12.8
+    title: Service provider management
+    category: vendors
+    citation: Req 12.8
+    type: hybrid
+    severity: required
+    checks:
+      - id: pci-vendor-register
+        module: vendors
+        handler: vendor_register_current
+        title: Third-party service providers tracked
+      - id: pci-baa-register
+        module: repo
+        handler: baa_register_present
+        title: Business associate agreements on file

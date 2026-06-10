@@ -9,6 +9,7 @@ import yaml
 SECRET_ENV_MAP = {
     "github_token": "GITHUB_TOKEN",
     "okta_api_token": "OKTA_API_TOKEN",
+    "gitlab_token": "GITLAB_TOKEN",
     "google_credentials_path": "GOOGLE_APPLICATION_CREDENTIALS",
     "slack_webhook_url": "SLACK_WEBHOOK_URL",
     "jamf_url": "JAMF_URL",
@@ -70,6 +71,17 @@ CONNECT_FIELDS: dict[str, list[dict[str, str]]] = {
     ],
     "okta": [
         {"key": "okta_api_token", "label": "Okta API token", "type": "password", "hint": "SSWS admin token"},
+    ],
+    "gitlab": [
+        {"key": "gitlab_token", "label": "GitLab personal access token", "type": "password", "hint": "api scope"},
+    ],
+    "gcp": [
+        {
+            "key": "google_credentials_path",
+            "label": "Service account JSON path",
+            "type": "text",
+            "hint": "Sets GOOGLE_APPLICATION_CREDENTIALS for GCP / Prowler",
+        },
     ],
     "google": [
         {

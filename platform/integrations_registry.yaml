@@ -34,6 +34,54 @@ integrations:
     parity_id: P-23
     phase: 2
 
+  - id: gitlab
+    name: GitLab
+    category: code
+    auth: env_vars
+    env_vars: [GITLAB_TOKEN]
+    config_keys: [gitlab.enabled, gitlab.project]
+    check_module: gitlab
+    workspace_toggle: true
+    connection_test: gitlab.project_metadata
+    status: shipped
+    parity_id: P-23
+    phase: 4
+
+  - id: gcp
+    name: Google Cloud Platform
+    category: cloud
+    auth: file_path
+    env_vars: [GOOGLE_APPLICATION_CREDENTIALS]
+    config_key: gcp.enabled
+    check_module: integrations
+    workspace_toggle: true
+    connection_test: gcp.resource_manager
+    status: shipped
+    parity_id: P-22
+    phase: 5
+
+  - id: prowler_azure
+    name: Prowler Azure
+    category: cloud
+    auth: ingest_only
+    config_key: integrations.prowler_azure.enabled
+    check_module: integrations
+    workspace_toggle: true
+    status: shipped
+    parity_id: P-22
+    phase: 5
+
+  - id: prowler_gcp
+    name: Prowler GCP
+    category: cloud
+    auth: ingest_only
+    config_key: integrations.prowler_gcp.enabled
+    check_module: integrations
+    workspace_toggle: true
+    status: shipped
+    parity_id: P-22
+    phase: 5
+
   - id: okta
     name: Okta
     category: identity

@@ -9,6 +9,9 @@
   <label class="full">GitHub repo (org/name)
     <input type="text" name="github_repo" value="{{ config.get('github', {}).get('repo', '') }}">
   </label>
+  <label class="full">GitLab project (group/name)
+    <input type="text" name="gitlab_project" value="{{ config.get('gitlab', {}).get('project', '') }}">
+  </label>
   <label class="full">Okta domain
     <input type="text" name="okta_domain" value="{{ config.get('identity', {}).get('okta', {}).get('domain', '') }}">
   </label>
@@ -23,7 +26,14 @@
   <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
     <legend>Frameworks</legend>
     <label><input type="checkbox" name="soc2" {% if config.get('frameworks', {}).get('soc2') %}checked{% endif %}> SOC 2 TSC</label><br>
-    <label><input type="checkbox" name="iso27001" {% if config.get('frameworks', {}).get('iso27001') %}checked{% endif %}> ISO 27001</label>
+    <label><input type="checkbox" name="iso27001" {% if config.get('frameworks', {}).get('iso27001') %}checked{% endif %}> ISO 27001</label><br>
+    <label><input type="checkbox" name="hitrust" {% if config.get('frameworks', {}).get('hitrust') %}checked{% endif %}> HITRUST CSF</label><br>
+    <label><input type="checkbox" name="pci" {% if config.get('frameworks', {}).get('pci') %}checked{% endif %}> PCI DSS (subset)</label>
+  </fieldset>
+  <fieldset class="full" style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+    <legend>Multi-cloud Prowler</legend>
+    <label><input type="checkbox" name="prowler_azure" {% if config.get('integrations', {}).get('prowler_azure', {}).get('enabled') %}checked{% endif %}> Prowler Azure HIPAA crosswalk</label><br>
+    <label><input type="checkbox" name="prowler_gcp" {% if config.get('integrations', {}).get('prowler_gcp', {}).get('enabled') %}checked{% endif %}> Prowler GCP HIPAA crosswalk</label>
   </fieldset>
   <label>Auto-scan interval (hours, 0 = manual)
     <input type="number" name="schedule_hours" value="{{ schedule_hours }}" min="0" max="168">

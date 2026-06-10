@@ -32,6 +32,8 @@ def run(
     handlers = {
         "prowler_findings": _prowler_findings,
         "prowler_hipaa_crosswalk": _prowler_hipaa_crosswalk,
+        "prowler_azure_hipaa_crosswalk": _prowler_azure_hipaa_crosswalk,
+        "prowler_gcp_hipaa_crosswalk": _prowler_gcp_hipaa_crosswalk,
         "trivy_vulnerabilities": _trivy_vulnerabilities,
         "osv_vulnerabilities": _osv_vulnerabilities,
         "checkov_findings": _checkov_findings,
@@ -131,6 +133,83 @@ def _prowler_findings(check, *, repo_path, config, evidence_dir) -> CheckResult:
     )
 
 
+def _prowler_cloud_crosswalk(
+    check,
+    *,
+    repo_path,
+    config,
+    evidence_dir,
+    provider: str,
+    config_key: str,
+    evidence_subdir: str,
+) -> CheckResult:
+    from hipaa_audit.prowler_crosswalk import collect_finding_statuses, rollup_requirements
+
+    prowler_cfg = config.get(config_key, {})
+    if not prowler_cfg.get("enabled", False):
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.SKIP,
+            message=f"Prowler {provider} integration disabled",
+        )
+    pattern = prowler_cfg.get("evidence_glob", f"evidence/{evidence_subdir}/*.json")
+    files = _glob_files(repo_path, pattern)
+    if not files:
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.WARN,
+            message=f"No Prowler {provider} evidence at {pattern}",
+            remediation=f"Run: prowler {provider} --compliance hipaa_{provider} -M json -o evidence/{evidence_subdir}/",
+        )
+    statuses = collect_finding_statuses(files)
+    rollup = rollup_requirements(statuses, provider=provider)
+    failed_reqs = [r for r in rollup if r["status"] == "fail"]
+    out = evidence_dir / f"integration-prowler-{provider}-crosswalk.json"
+    out.write_text(json.dumps({"requirements": rollup, "finding_count": len(statuses)}, indent=2))
+    if failed_reqs:
+        names = ", ".join(r["id"] for r in failed_reqs[:3])
+        return CheckResult(
+            check_id=check["id"],
+            title=check.get("title", check["id"]),
+            status=CheckStatus.FAIL,
+            message=f"Prowler {provider} HIPAA: {len(failed_reqs)} requirement(s) failing ({names})",
+            evidence_path=str(out),
+        )
+    return CheckResult(
+        check_id=check["id"],
+        title=check.get("title", check["id"]),
+        status=CheckStatus.PASS,
+        message=f"Prowler {provider} HIPAA crosswalk: {len(rollup)} requirement(s) assessed",
+        evidence_path=str(out),
+    )
+
+
+def _prowler_azure_hipaa_crosswalk(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    return _prowler_cloud_crosswalk(
+        check,
+        repo_path=repo_path,
+        config=config,
+        evidence_dir=evidence_dir,
+        provider="azure",
+        config_key="prowler_azure",
+        evidence_subdir="prowler-azure",
+    )
+
+
+def _prowler_gcp_hipaa_crosswalk(check, *, repo_path, config, evidence_dir) -> CheckResult:
+    return _prowler_cloud_crosswalk(
+        check,
+        repo_path=repo_path,
+        config=config,
+        evidence_dir=evidence_dir,
+        provider="gcp",
+        config_key="prowler_gcp",
+        evidence_subdir="prowler-gcp",
+    )
+
+
 def _prowler_hipaa_crosswalk(check, *, repo_path, config, evidence_dir) -> CheckResult:
     from hipaa_audit.prowler_crosswalk import collect_finding_statuses, rollup_requirements
 
@@ -154,7 +233,7 @@ def _prowler_hipaa_crosswalk(check, *, repo_path, config, evidence_dir) -> Check
         )
 
     statuses = collect_finding_statuses(files)
-    rollup = rollup_requirements(statuses)
+    rollup = rollup_requirements(statuses, provider="aws")
     failed_reqs = [r for r in rollup if r["status"] == "fail"]
     unknown_reqs = [r for r in rollup if r["status"] == "unknown"]
 

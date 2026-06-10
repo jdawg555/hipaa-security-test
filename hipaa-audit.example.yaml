@@ -15,6 +15,8 @@ frameworks:
   hipaa: true
   soc2: false
   iso27001: false
+  hitrust: false
+  pci: false
 
 policy_dir: policies
 templates_dir: templates
@@ -38,6 +40,12 @@ integrations:
   prowler:
     enabled: false
     evidence_glob: evidence/prowler/*.json
+  prowler_azure:
+    enabled: false
+    evidence_glob: evidence/prowler-azure/*.json
+  prowler_gcp:
+    enabled: false
+    evidence_glob: evidence/prowler-gcp/*.json
   trivy:
     enabled: false
     evidence_glob: evidence/trivy/*.json
@@ -76,6 +84,17 @@ github:
   enabled: false
   repo: your-org/your-repo
   default_branch: main
+
+gitlab:
+  enabled: false
+  project: your-group/your-project
+  default_branch: main
+  base_url: https://gitlab.com
+
+gcp:
+  enabled: false
+  project_id: your-gcp-project
+  credentials_env: GOOGLE_APPLICATION_CREDENTIALS
 
 # Identity providers (set env: OKTA_API_TOKEN, GOOGLE_APPLICATION_CREDENTIALS)
 identity:

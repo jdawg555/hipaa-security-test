@@ -1,0 +1,235 @@
+# Prowler hipaa crosswalk — GCP
+# Source: prowler/compliance/gcp/hipaa_gcp.json
+
+version: "1.0"
+
+requirements:
+  - id: "164_308_a_1_ii_a"
+    title: "Risk analysis"
+    hipaa_refs: ["164.308(a)(1)(ii)(A)"]
+    prowler_checks:
+      - essentialcontacts_security_contacts_configured
+      - iam_cloud_asset_inventory_enabled
+      - securitycenter_security_health_analytics_enabled
+
+  - id: "164_308_a_1_ii_b"
+    title: "Risk Management"
+    hipaa_refs: ["164.308(a)(1)(ii)(B)"]
+    prowler_checks:
+      - bigquery_dataset_cmek_encryption
+      - bigquery_dataset_public_access
+      - cloudsql_instance_automatic_backups_enabled
+      - cloudsql_instance_encryption_enabled
+      - cloudsql_instance_public_access
+      - cloudstorage_bucket_encryption
+      - cloudstorage_bucket_public_access
+      - cloudstorage_bucket_uniform_access
+      - compute_disk_encryption_enabled
+      - compute_firewall_rdp_access_from_internet_restricted
+      - compute_firewall_ssh_access_from_internet_restricted
+      - compute_instance_public_ip
+      - compute_network_legacy_network_not_used
+      - gemini_api_disabled
+      - gke_cluster_master_authorized_networks_enabled
+      - gke_cluster_private_cluster_enabled
+      - iam_no_service_roles_at_project_level
+      - iam_sa_no_administrative_privileges
+      - kms_key_rotation_enabled
+
+  - id: "164_308_a_1_ii_d"
+    title: "Information system activity review"
+    hipaa_refs: ["164.308(a)(1)(ii)(D)"]
+    prowler_checks:
+      - logging_log_metric_filter_and_alert_for_audit_configuration_changes_enabled
+      - logging_log_metric_filter_and_alert_for_bucket_permission_changes_enabled
+      - logging_log_metric_filter_and_alert_for_custom_role_changes_enabled
+      - logging_log_metric_filter_and_alert_for_project_ownership_changes_enabled
+      - logging_log_metric_filter_and_alert_for_sql_instance_configuration_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_firewall_rule_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_network_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_network_route_changes_enabled
+      - logging_sink_created
+
+  - id: "164_308_a_3_i"
+    title: "Workforce security"
+    hipaa_refs: ["164.308(a)(3)(i)"]
+    prowler_checks:
+      - iam_no_service_roles_at_project_level
+      - iam_role_kms_enforce_separation_of_duties
+      - iam_role_sa_enforce_separation_of_duties
+      - iam_sa_no_administrative_privileges
+      - iam_sa_no_user_managed_keys
+      - iam_sa_user_managed_key_unused
+
+  - id: "164_308_a_4_i"
+    title: "Information access management"
+    hipaa_refs: ["164.308(a)(4)(i)"]
+    prowler_checks:
+      - bigquery_dataset_public_access
+      - cloudsql_instance_public_access
+      - cloudstorage_bucket_public_access
+      - iam_account_access_approval_enabled
+      - iam_no_service_roles_at_project_level
+      - iam_organization_essential_contacts_configured
+      - iam_sa_no_administrative_privileges
+
+  - id: "164_308_a_5_ii_c"
+    title: "Log-in monitoring"
+    hipaa_refs: ["164.308(a)(5)(ii)(C)"]
+    prowler_checks:
+      - logging_log_metric_filter_and_alert_for_custom_role_changes_enabled
+      - logging_log_metric_filter_and_alert_for_project_ownership_changes_enabled
+      - logging_sink_created
+
+  - id: "164_308_a_6_ii"
+    title: "Response and reporting"
+    hipaa_refs: ["164.308(a)(6)(ii)"]
+    prowler_checks:
+      - essentialcontacts_security_contacts_configured
+      - logging_sink_created
+      - securitycenter_security_health_analytics_enabled
+
+  - id: "164_308_a_7_i"
+    title: "Contingency plan"
+    hipaa_refs: ["164.308(a)(7)(i)"]
+    prowler_checks:
+      - cloudsql_instance_automatic_backups_enabled
+      - compute_disk_snapshot_encryption_enabled
+      - gke_cluster_stackdriver_logging_enabled
+
+  - id: "164_308_a_7_ii_a"
+    title: "Data backup plan"
+    hipaa_refs: ["164.308(a)(7)(ii)(A)"]
+    prowler_checks:
+      - cloudsql_instance_automatic_backups_enabled
+      - cloudstorage_bucket_object_versioning
+      - compute_disk_snapshot_encryption_enabled
+
+  - id: "164_308_a_7_ii_b"
+    title: "Disaster recovery plan"
+    hipaa_refs: ["164.308(a)(7)(ii)(B)"]
+    prowler_checks:
+      - cloudsql_instance_automatic_backups_enabled
+      - cloudsql_instance_point_in_time_recovery_enabled
+      - cloudstorage_bucket_object_versioning
+
+  - id: "164_308_b_1"
+    title: "Business associate contracts and other arrangements"
+    hipaa_refs: ["164.308(b)(1)"]
+    prowler_checks:
+      - gemini_api_disabled
+
+  - id: "164_308_b_2"
+    title: "164.308(b)(2)"
+    hipaa_refs: ["164.308(b)(2)"]
+    prowler_checks:
+      - gemini_api_disabled
+
+  - id: "164_310_a_1"
+    title: "Facility access controls"
+    hipaa_refs: ["164.310(a)(1)"]
+    prowler_checks:
+      - compute_firewall_rdp_access_from_internet_restricted
+      - compute_firewall_ssh_access_from_internet_restricted
+      - compute_instance_public_ip
+      - gke_cluster_private_cluster_enabled
+
+  - id: "164_310_d_1"
+    title: "Device and media controls"
+    hipaa_refs: ["164.310(d)(1)"]
+    prowler_checks:
+      - cloudstorage_bucket_encryption
+      - compute_disk_encryption_enabled
+      - compute_disk_snapshot_encryption_enabled
+
+  - id: "164_312_a_1"
+    title: "Access control"
+    hipaa_refs: ["164.312(a)(1)"]
+    prowler_checks:
+      - bigquery_dataset_public_access
+      - cloudsql_instance_public_access
+      - cloudstorage_bucket_public_access
+      - cloudstorage_bucket_uniform_access
+      - compute_instance_public_ip
+      - gke_cluster_private_cluster_enabled
+      - iam_account_access_approval_enabled
+      - iam_no_service_roles_at_project_level
+      - iam_sa_no_administrative_privileges
+
+  - id: "164_312_a_2_i"
+    title: "Unique user identification"
+    hipaa_refs: ["164.312(a)(2)(i)"]
+    prowler_checks:
+      - iam_sa_no_user_managed_keys
+      - iam_sa_user_managed_key_unused
+
+  - id: "164_312_a_2_iv"
+    title: "Encryption and decryption"
+    hipaa_refs: ["164.312(a)(2)(iv)"]
+    prowler_checks:
+      - bigquery_dataset_cmek_encryption
+      - cloudsql_instance_encryption_enabled
+      - cloudstorage_bucket_encryption
+      - compute_disk_encryption_enabled
+      - compute_disk_snapshot_encryption_enabled
+      - kms_key_rotation_enabled
+
+  - id: "164_312_b"
+    title: "Audit controls"
+    hipaa_refs: ["164.312(b)"]
+    prowler_checks:
+      - gke_cluster_stackdriver_logging_enabled
+      - logging_log_metric_filter_and_alert_for_audit_configuration_changes_enabled
+      - logging_log_metric_filter_and_alert_for_bucket_permission_changes_enabled
+      - logging_log_metric_filter_and_alert_for_custom_role_changes_enabled
+      - logging_log_metric_filter_and_alert_for_project_ownership_changes_enabled
+      - logging_log_metric_filter_and_alert_for_sql_instance_configuration_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_firewall_rule_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_network_changes_enabled
+      - logging_log_metric_filter_and_alert_for_vpc_network_route_changes_enabled
+      - logging_sink_created
+
+  - id: "164_312_c_1"
+    title: "Integrity"
+    hipaa_refs: ["164.312(c)(1)"]
+    prowler_checks:
+      - cloudsql_instance_automatic_backups_enabled
+      - cloudsql_instance_point_in_time_recovery_enabled
+      - cloudstorage_bucket_object_versioning
+      - kms_key_rotation_enabled
+
+  - id: "164_312_d"
+    title: "Person or entity authentication"
+    hipaa_refs: ["164.312(d)"]
+    prowler_checks:
+      - iam_account_access_approval_enabled
+      - iam_sa_no_user_managed_keys
+
+  - id: "164_312_e_1"
+    title: "Transmission security"
+    hipaa_refs: ["164.312(e)(1)"]
+    prowler_checks:
+      - cloudsql_instance_ssl_required
+      - cloudstorage_bucket_encryption
+      - compute_firewall_rdp_access_from_internet_restricted
+      - compute_firewall_ssh_access_from_internet_restricted
+      - gke_cluster_master_authorized_networks_enabled
+
+  - id: "164_312_e_2_i"
+    title: "Integrity controls"
+    hipaa_refs: ["164.312(e)(2)(i)"]
+    prowler_checks:
+      - cloudsql_instance_automatic_backups_enabled
+      - cloudstorage_bucket_object_versioning
+      - logging_sink_created
+
+  - id: "164_312_e_2_ii"
+    title: "Encryption"
+    hipaa_refs: ["164.312(e)(2)(ii)"]
+    prowler_checks:
+      - bigquery_dataset_cmek_encryption
+      - cloudsql_instance_encryption_enabled
+      - cloudsql_instance_ssl_required
+      - cloudstorage_bucket_encryption
+      - compute_disk_encryption_enabled
+      - kms_key_rotation_enabled

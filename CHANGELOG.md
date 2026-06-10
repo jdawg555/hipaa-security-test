@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.7.0] — 2026-05-28
+
+### Multi-cloud, GitLab, and framework crosswalks
+
+- **GitLab parity (P-23)** — branch protection, secret detection, dependency scanning checks + connect wizard
+- **Prowler Azure/GCP (P-22)** — HIPAA crosswalk YAML (34 + 23 requirements), ingest checks, Settings toggles
+- **HITRUST CSF supplement (P-06)** — `controls/hitrust-csf-supplement.yaml`, `hipaa-audit framework hitrust`
+- **PCI DSS supplement (P-06)** — `controls/pci-dss-supplement.yaml`, `hipaa-audit framework pci`
+- **GCP adapter** — Cloud Resource Manager connection test
+- **collect-external-evidence.sh** — runs prowler azure and gcp HIPAA modes
+
 ## [2.6.0] — 2026-05-28
 
 ### Phase 2–4 — Connection depth and continuous monitoring

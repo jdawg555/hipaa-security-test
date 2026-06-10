@@ -59,11 +59,10 @@ capabilities:
   - id: P-06
     name: Multi-framework crosswalk
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    modules: [controls.soc2, controls.iso27001]
-    gaps: [hitrust, pci_slice]
+    modules: [controls.soc2, controls.iso27001, controls.hitrust, controls.pci]
 
   - id: P-07
     name: Posture score and history
@@ -192,11 +191,27 @@ capabilities:
   - id: P-21
     name: AWS cloud monitoring
     phase: 2
-    status: partial
+    status: shipped
     vanta: full
     drata: full
-    gaps: [multi_region]
     modules: [aws, integrations.prowler, prowler_crosswalk]
+
+  - id: P-22
+    name: Multi-cloud GCP and Azure monitoring
+    phase: 5
+    status: shipped
+    vanta: full
+    drata: full
+    modules: [integrations.prowler_azure, integrations.prowler_gcp, prowler_crosswalk, platform.adapters.gcp]
+
+  - id: P-23
+    name: GitHub and GitLab repo security
+    phase: 4
+    status: shipped
+    vanta: full
+    drata: full
+    surfaces: [workspace.integrations, workspace.settings]
+    modules: [github, gitlab, platform.adapters.gitlab]
 
   - id: P-24
     name: Identity provider checks

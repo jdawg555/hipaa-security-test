@@ -26,7 +26,7 @@ from hipaa_audit.apps import (
 )
 from hipaa_audit.devices import device_csv_template, import_devices_csv, load_devices
 from hipaa_audit.auditor_portal import publish_auditor_portal
-from hipaa_audit.frameworks import iso27001_report, soc2_report
+from hipaa_audit.frameworks import hitrust_report, iso27001_report, pci_report, soc2_report
 from hipaa_audit.questionnaires import (
     find_questionnaire,
     import_response,
@@ -947,6 +947,40 @@ def framework_iso27001(
     console.print(table)
     if not report["enabled"]:
         console.print("[dim]Run scan with frameworks.iso27001: true to include ISO27001-* controls[/dim]")
+
+
+@framework_app.command("hitrust")
+def framework_hitrust(
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Show HITRUST CSF supplement status."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = hitrust_report(cfg)
+    table = Table(title="HITRUST CSF supplement")
+    table.add_column("Metric")
+    table.add_column("Value")
+    table.add_row("HITRUST enabled", "yes" if report["enabled"] else "no (set frameworks.hitrust: true)")
+    table.add_row("HITRUST controls", str(report["hitrust_controls"]))
+    table.add_row("HIPAA controls", str(report["hipaa_controls"]))
+    table.add_row("Total when enabled", str(report["total_controls"]))
+    console.print(table)
+
+
+@framework_app.command("pci")
+def framework_pci(
+    config: Path = typer.Option(Path("hipaa-audit.yaml"), "--config", "-c"),
+) -> None:
+    """Show PCI DSS supplement status."""
+    cfg = load_config(config if config.exists() else PACKAGE_ROOT / "hipaa-audit.example.yaml")
+    report = pci_report(cfg)
+    table = Table(title="PCI DSS supplement")
+    table.add_column("Metric")
+    table.add_column("Value")
+    table.add_row("PCI enabled", "yes" if report["enabled"] else "no (set frameworks.pci: true)")
+    table.add_row("PCI controls", str(report["pci_controls"]))
+    table.add_row("HIPAA controls", str(report["hipaa_controls"]))
+    table.add_row("Total when enabled", str(report["total_controls"]))
+    console.print(table)
 
 
 @app.command("import-training")

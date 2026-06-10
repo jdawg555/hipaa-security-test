@@ -233,6 +233,10 @@ controls:
         module: github
         handler: branch_protection
         title: Production branch protected
+      - id: gitlab-branch-protection
+        module: gitlab
+        handler: branch_protection
+        title: GitLab production branch protected
 
   - id: HIPAA-164.312-a2
     title: Emergency access procedure
@@ -388,6 +392,14 @@ controls:
         module: github
         handler: secret_scanning
         title: GitHub secret scanning enabled
+      - id: gitlab-dependency-scanning
+        module: gitlab
+        handler: dependency_scanning
+        title: GitLab dependency scanning configured
+      - id: gitlab-secret-detection
+        module: gitlab
+        handler: secret_detection
+        title: GitLab secret detection enabled
 
   - id: HIPAA-AWS-001
     title: AWS infrastructure hardening
@@ -493,6 +505,16 @@ controls:
         handler: prowler_hipaa_crosswalk
         title: Prowler HIPAA requirement crosswalk
         remediation: "prowler aws --compliance hipaa_aws -M json -o evidence/prowler/"
+      - id: prowler-azure-crosswalk
+        module: integrations
+        handler: prowler_azure_hipaa_crosswalk
+        title: Prowler Azure HIPAA crosswalk
+        remediation: "prowler azure --compliance hipaa_azure -M json -o evidence/prowler-azure/"
+      - id: prowler-gcp-crosswalk
+        module: integrations
+        handler: prowler_gcp_hipaa_crosswalk
+        title: Prowler GCP HIPAA crosswalk
+        remediation: "prowler gcp --compliance hipaa_gcp -M json -o evidence/prowler-gcp/"
       - id: trivy-evidence
         module: integrations
         handler: trivy_vulnerabilities
