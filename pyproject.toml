@@ -49,15 +49,12 @@ packages = ["hipaa_audit"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "controls" = "controls"
-"controls/probo-hipaa-catalog.json" = "controls/probo-hipaa-catalog.json"
 "policies" = "policies"
 "templates" = "templates"
 "integrations" = "integrations"
 "hipaa-audit.example.yaml" = "hipaa-audit.example.yaml"
 "compliance" = "compliance"
 "scripts" = "scripts"
-"hipaa_audit/workspace/static" = "hipaa_audit/workspace/static"
-"hipaa_audit/workspace/templates" = "hipaa_audit/workspace/templates"
 "platform" = "platform"
 
 [tool.ruff]
